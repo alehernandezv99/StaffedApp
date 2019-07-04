@@ -1,0 +1,17 @@
+.btn-0A9FF2 {
+    border:1px solid #0A9FF2 !important;
+    color: #0A9FF2 !important;
+}
+
+.btn-0A9FF2:hover {
+    background-color: #0A9FF2 !important;
+    color:white !important;
+}
+
+.color-0A9FF2 {
+    color:#0A9FF2 !important;
+}
+
+.box-shadow {
+    box-shadow:0 5px 5px 0 rgba(0,0,0,0.2);
+}
