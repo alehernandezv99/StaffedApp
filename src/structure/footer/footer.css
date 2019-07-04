@@ -1,0 +1,31 @@
+.btn-custom-instagram {
+    background-color:rgb(182, 44, 90);
+    color:white;
+    border: 1px solid rgb(182, 44, 90);
+}
+
+.btn-custom-instagram:hover {
+    background-color:transparent;
+    color:rgb(182, 44, 90);
+}
+
+.btn-custom-instagram i {
+    font-size:25px;
+}
+
+
+
+.btn-custom-twitter {
+    background-color:#55ACEE;
+    color:white;
+    border: 1px solid #55ACEE;
+}
+
+.btn-custom-twitter:hover {
+    background-color:transparent;
+    color:#55ACEE;
+}
+
+.btn-custom-twitter i {
+    font-size: 25px;
+}

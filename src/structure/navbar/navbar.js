@@ -9,7 +9,7 @@ export default class Navbar extends React.Component {
 
     render(){
         return(
-            <nav className="navbar navbar-expand-md box-shadow">
+            <nav className="navbar navbar-expand-md shadow-sm bg-white sticky-top">
 
   <a className="navbar-brand" href="#">
       <img src={logo}  style={{width:'40px'}}/>
@@ -39,10 +39,10 @@ export default class Navbar extends React.Component {
 
     <ul className="navbar-nav">
       <li className="nav-item mr-sm-2">
-        <a className="btn btn-0A9FF2" href="#">Login</a>
+        <a className="btn btn-custom-1" href="#">Login</a>
       </li>
       <li className="nav-item">
-        <a className="btn btn-0A9FF2" href="#">Sign Up</a>
+        <a className="btn btn-custom-1" href="#">Sign Up</a>
       </li> 
     </ul>
   </div> 
