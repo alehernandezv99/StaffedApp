@@ -1,17 +1,40 @@
 import React from 'react';
 import "./landingPage.css";
-import logo from "../../../logo.svg"
+import logo from "../../../logo.svg";
+import firebase from "../../../firebaseSetUp";
 
 export default class LandingPage extends React.Component {
     constructor(props){
         super(props);
+        this.changeState = this.changeState.bind(this);
+
+        this.state = {
+            loginData:{
+                email:"",
+                password:"",
+            },
+            signUpData:{
+                email:"",
+                password:"",
+                confirmPassword:""
+            }
+        }
     }
+
+    changeState(object, field, value){
+        this.setState(state => {
+            let objectRef = state[object];
+            object[field] = value
+            return ({[object]:objectRef});
+        })
+    }
+
 
     render(){
         return(
             <div>
             <div className="container-fluid  text-center padding-1" >
-                <h1 className="m-b-3">Welcome to the Freelancer's Page</h1>
+                <h1>Welcome to the Freelancer's Page</h1>
                 <h5 style={{fontWeight:"normal"}} className="m-3">The freelancer's pages is lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem 
                     ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
                 </h5>
