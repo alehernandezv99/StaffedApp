@@ -1,46 +1,159 @@
 import React from 'react';
 import "./landingPage.css";
 import logo from "../../../logo.svg";
+import Navbar from "../../navbar";
+import LoadingSpinner from "../../loading/loadingSpinner";
 import firebase from "../../../firebaseSetUp";
 
 export default class LandingPage extends React.Component {
     constructor(props){
         super(props);
         this.changeState = this.changeState.bind(this);
+        this.handleAuth = this.handleAuth.bind(this);
+        this.toggleLoading = this.toggleLoading.bind(this);
 
         this.state = {
             loginData:{
                 email:"",
                 password:"",
+                remember:false
             },
             signUpData:{
                 email:"",
                 password:"",
-                confirmPassword:""
-            }
+                confirmPassword:"",
+                remember:false
+            },
+            isLoading:false,
         }
     }
 
-    changeState(object, field, value){
-        this.setState(state => {
+    componentDidMount(){
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+              // User is signed in.
+              var displayName = user.displayName;
+              var email = user.email;
+              var emailVerified = user.emailVerified;
+              var photoURL = user.photoURL;
+              var isAnonymous = user.isAnonymous;
+              var uid = user.uid;
+              var providerData = user.providerData;
+              
+              window.location.href = "/welcome";
+              // ...
+            } else {
+              // User is signed out.
+              // ...
+            }
+          });
+    }
+
+    async changeState(object, field, value){
+        await this.setState(state => {
             let objectRef = state[object];
-            object[field] = value
+            objectRef[field] = value
             return ({[object]:objectRef});
         })
     }
 
+    handleAuth(type, email, password, cPassword){
+        this.toggleLoading();
+        if(type === "login"){
+            firebase.auth().signInWithEmailAndPassword(email, password)
+            .then(result => {
+                this.toggleLoading()
+                alert("Successfull Sign In");
+            })
+            .catch(e => {
+                this.toggleLoading()
+                alert("An error has occurred")
+                console.log(e);
+            })
+        }else if(type === "signUp"){
+            if(password === cPassword){
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then(result => {
+                this.toggleLoading()
+                alert("Successfull Sign Up")
+                window.location.href = "/welcome";
+            })
+            .catch(e => {
+                this.toggleLoading()
+                alert("An Error has ocurred")
+                console.log(e);
+            })
+        }else {
+            alert("Passwords are not equal");
+        }
+        }
+    }
+
+    toggleLoading(){
+        this.setState(state => ({
+            isLoading:!state.isLoading
+        }))
+    }
 
     render(){
         return(
             <div>
-            <div className="container-fluid  text-center padding-1" >
+                {this.state.isLoading === true? <LoadingSpinner />:null}
+                <Navbar leftElements={
+                    [
+                        {
+                            type:"link",
+                            text:"About",
+                            href:"#about",
+                            key:1
+                        },
+                        {
+                            type:"link",
+                            text:"Product Info",
+                            href:"#productInfo",
+                            key:2
+                        },
+                        {
+                            type:"link",
+                            text:"How To Use",
+                            href:"#howToUse",
+                            key:3
+                        },
+                        {
+                            type:"link",
+                            text:"Contact",
+                            href:"#contact",
+                            key:4
+                        }
+                    ]
+                } 
+                rightElements={
+                    [
+                        {
+                            type:"button",
+                            text:"Login",
+                            dataToggle:"modal",
+                            dataTarget:"#loginPanel",
+                            key:5
+                        },
+                        {
+                            type:"button",
+                            text:"Sign Up",
+                            dataToggle:"modal",
+                            dataTarget:"#signUpPanel",
+                            key:6
+                        }
+                    ]
+                }
+                />
+            <div className="container-fluid  text-center padding-1"  id="about">
                 <h1>Welcome to the Freelancer's Page</h1>
                 <h5 style={{fontWeight:"normal"}} className="m-3">The freelancer's pages is lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem 
                     ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
                 </h5>
                 <button type="button" data-toggle="modal" data-target="#signUpPanel" className="btn btn-custom-1 btn-lg m-3">Join Today</button>
             </div>
-            <div className="container-fluid text-center bg-gradient-1 padding-2">
+            <div className="container-fluid text-center bg-gradient-1 padding-2" id="productInfo">
                 <h2 className="m-b-3" style={{color:"white"}}>Product Info</h2>
                 <div className="row text-center">
                     <div className="col bg-color-white rounded m-3 p-3">
@@ -60,7 +173,7 @@ export default class LandingPage extends React.Component {
                     </div>
                 </div>
             </div>
-            <div className="container-fluid text-center  padding-2">
+            <div className="container-fluid text-center  padding-2" id="howToUse">
                 <h2>How To Use</h2>
                 <div className="row">
                     <div className="col bg-color-white rounded m-3 p-3 shadow-sm">
@@ -97,21 +210,21 @@ export default class LandingPage extends React.Component {
                             </div>
 
                             <div className="modal-body">
-                            <form action="/action_page.php">
-                              <div class="form-group">
-                                <label for="email">Email address:</label>
-                                <input type="email" class="form-control" id="email" />
+                            <form>
+                              <div className="form-group">
+                                <label>Email address:</label>
+                                <input type="email" className="form-control" id="email" onChange={(e) => {this.changeState("loginData","email",e.target.value)} } />
                               </div>
-                              <div class="form-group">
-                                <label for="pwd">Password:</label>
-                                <input type="password" class="form-control" id="pwd"/>
+                              <div className="form-group">
+                                <label>Password:</label>
+                                <input type="password" className="form-control" id="pwd" onChange={(e) => {this.changeState("loginData","password", e.target.value)}}/>
                               </div>
-                              <div class="form-group form-check">
-                                <label class="form-check-label">
-                                <input class="form-check-input" type="checkbox" /> Remember me
+                              <div className="form-group form-check">
+                                <label className="form-check-label">
+                                <input className="form-check-input" type="checkbox"  onChange={(e) => {this.changeState("loginData","remember", e.target.checked)}}/> Remember me
                               </label>
                               </div>
-                              <button type="submit" class="btn btn-custom-1 btn-block">Enter</button>
+                              <button type="button" className="btn btn-custom-1 btn-block" onClick={()=> {this.handleAuth("login",this.state.loginData.email, this.state.loginData.password)}}>Enter</button>
                               <p className="text-center mt-3">You dont have an account? <a href="#" data-toggle="modal" data-target="#signUpPanel">Sign Up</a></p>
                             </form>
                             </div>
@@ -130,25 +243,25 @@ export default class LandingPage extends React.Component {
                                 <button type="button" className="close" data-dismiss="modal">&times;</button>
                             </div>
                             <div className="modal-body">
-                            <form action="/action_page.php">
-                              <div class="form-group">
-                                <label for="email">Email address:</label>
-                                <input type="email" class="form-control" id="email" />
+                            <form>
+                              <div className="form-group">
+                                <label>Email address:</label>
+                                <input type="email" className="form-control" id="email" onChange={(e) => {this.changeState("signUpData","email",e.target.value)}} />
                               </div>
-                              <div class="form-group">
-                                <label for="pwd">Password:</label>
-                                <input type="password" class="form-control" id="pwd"/>
+                              <div className="form-group">
+                                <label>Password:</label>
+                                <input type="password" className="form-control" id="pwd" onChange={(e) => {this.changeState("signUpData","password",e.target.value)}}/>
                               </div>
-                              <div class="form-group">
-                                <label for="pwd">Confirm Password:</label>
-                                <input type="password" class="form-control" id="pwd"/>
+                              <div className="form-group">
+                                <label >Confirm Password:</label>
+                                <input type="password" className="form-control" id="pwd" onChange={(e) => {this.changeState("signUpData","confirmPassword",e.target.value)}}/>
                               </div>
-                              <div class="form-group form-check">
-                                <label class="form-check-label">
-                                <input class="form-check-input" type="checkbox" /> Remember me
+                              <div className="form-group form-check">
+                                <label className="form-check-label">
+                                <input className="form-check-input" type="checkbox" onChange={(e) => {this.changeState("signUpData","remember",e.target.checked)}}/> Remember me
                               </label>
                               </div>
-                              <button type="submit" class="btn btn-custom-1 btn-block">Sign Up</button>
+                              <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.handleAuth("signUp",this.state.signUpData.email, this.state.signUpData.password, this.state.signUpData.confirmPassword)}}>Sign Up</button>
                               <p className="text-center mt-3">Already have an account? <a href="#" data-toggle="modal" data-target="#signUpPanel">Login</a></p>
                             </form>
                             </div>

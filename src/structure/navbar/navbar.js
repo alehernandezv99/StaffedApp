@@ -1,6 +1,7 @@
 import React from 'react';
 import './navbar.css';
 import logo from '../../logo.svg';
+import NavItem from "./navItem";
 
 export default class Navbar extends React.Component {
     constructor(props){
@@ -23,27 +24,15 @@ export default class Navbar extends React.Component {
 
   <div className="collapse navbar-collapse" id="collapsibleNavbar">
   <ul className="navbar-nav mr-auto">
-        <li className="nav-item mr-sm-2">
-            <a className="nav-link color-0A9FF2" href="#">About</a>
-        </li>
-        <li className="nav-item mr-sm-2">
-            <a className="nav-link color-0A9FF2" href="#">Product Info</a>
-        </li>
-        <li className="nav-item mr-sm-2">
-            <a className="nav-link color-0A9FF2" href="#">How To Use</a>
-        </li>
-        <li className="nav-item mr-sm-2">
-            <a className="nav-link color-0A9FF2" href="#">Contact</a>
-        </li>
+        {this.props.leftElements.map(element => {
+          return <NavItem type={element.type} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} />
+        })}
     </ul>
 
     <ul className="navbar-nav">
-      <li className="nav-item mr-sm-2">
-        <a className="btn btn-custom-1" href="#" data-toggle="modal" data-target="#loginPanel">Login</a>
-      </li>
-      <li className="nav-item">
-        <a className="btn btn-custom-1" href="#" data-toggle="modal" data-target="#signUpPanel">Sign Up</a>
-      </li> 
+      {this.props.rightElements.map(element => {
+        return <NavItem type={element.type} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} />
+      })}
     </ul>
   </div> 
 </nav>

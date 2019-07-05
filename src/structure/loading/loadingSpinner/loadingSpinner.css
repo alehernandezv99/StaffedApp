@@ -1,0 +1,28 @@
+.background-spinner {
+    position: fixed;
+    width:100vw;
+    height:100vh;
+    background-color:rgba(0,0,0,0.5);
+    top:0;
+    left:0;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    z-index:99999;
+}
+
+.spinner-custom {
+    width:4em;
+    height:4em;
+    border-radius:50%;
+    border:4px solid red;
+    border-color: rgba(58,123,213,1) white rgba(58,123,213,1) white;
+    animation-name:spinnerCustom;
+    animation-duration: 0.7s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes spinnerCustom  {
+    0%{transform:rotate(0deg);}
+    100%{transform:rotate(360deg);}
+}
