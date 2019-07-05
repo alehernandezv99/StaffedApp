@@ -39,10 +39,10 @@ export default class Navbar extends React.Component {
 
     <ul className="navbar-nav">
       <li className="nav-item mr-sm-2">
-        <a className="btn btn-custom-1" href="#">Login</a>
+        <a className="btn btn-custom-1" href="#" data-toggle="modal" data-target="#loginPanel">Login</a>
       </li>
       <li className="nav-item">
-        <a className="btn btn-custom-1" href="#">Sign Up</a>
+        <a className="btn btn-custom-1" href="#" data-toggle="modal" data-target="#signUpPanel">Sign Up</a>
       </li> 
     </ul>
   </div> 

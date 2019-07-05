@@ -9,7 +9,20 @@ export default function Footer(){
                 <button type="button" className="btn btn-custom-twitter m-2  p-3" ><i className="fa fa-twitter align-middle "></i></button>
             </div>
             <div className="row text-center">
-
+                <div className="col ">
+                    <ul className="list-group">
+                        <a href="#" className="list-group-item list-group-item-action">First Item</a>
+                        <a href="#" className="list-group-item list-group-item-action">Second Item</a>
+                        <a href="#" className="list-group-item list-group-item-action">Third Item</a>
+                    </ul>
+                </div>
+                <div className="col">
+                <ul className="list-group">
+                        <a href="#" className="list-group-item list-group-item-action">First Item</a>
+                        <a href="#" className="list-group-item list-group-item-action">Second Item</a>
+                        <a href="#" className="list-group-item list-group-item-action">Third Item</a>
+                    </ul>
+                </div>
             </div>
         </footer>
     )

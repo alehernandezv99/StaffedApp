@@ -15,7 +15,7 @@ export default class LandingPage extends React.Component {
                 <h5 style={{fontWeight:"normal"}} className="m-3">The freelancer's pages is lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem 
                     ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
                 </h5>
-                <button type="button" className="btn btn-custom-1 btn-lg m-3">Join Today</button>
+                <button type="button" data-toggle="modal" data-target="#signUpPanel" className="btn btn-custom-1 btn-lg m-3">Join Today</button>
             </div>
             <div className="container-fluid text-center bg-gradient-1 padding-2">
                 <h2 className="m-b-3" style={{color:"white"}}>Product Info</h2>
@@ -59,6 +59,81 @@ export default class LandingPage extends React.Component {
                         <h4>Steep 4</h4>
                         <p>Exaplain the steep 4</p>
                         <img src={logo} alt="steep 1" style={{width:"70%"}}/>
+                    </div>
+                </div>
+            </div>
+
+            <div className="container-fluid">
+                <div className="modal fade" id="loginPanel">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+
+                            <div className="modal-header">
+                                <h4 className="modal-title text-center">Login</h4>
+                                <button type="button" className="close" data-dismiss="modal">&times;</button>
+                            </div>
+
+                            <div className="modal-body">
+                            <form action="/action_page.php">
+                              <div class="form-group">
+                                <label for="email">Email address:</label>
+                                <input type="email" class="form-control" id="email" />
+                              </div>
+                              <div class="form-group">
+                                <label for="pwd">Password:</label>
+                                <input type="password" class="form-control" id="pwd"/>
+                              </div>
+                              <div class="form-group form-check">
+                                <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" /> Remember me
+                              </label>
+                              </div>
+                              <button type="submit" class="btn btn-custom-1 btn-block">Enter</button>
+                              <p className="text-center mt-3">You dont have an account? <a href="#" data-toggle="modal" data-target="#signUpPanel">Sign Up</a></p>
+                            </form>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-danger" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="modal fade" id="signUpPanel">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h4 className="modal-title text-center">Sign Up</h4>
+                                <button type="button" className="close" data-dismiss="modal">&times;</button>
+                            </div>
+                            <div className="modal-body">
+                            <form action="/action_page.php">
+                              <div class="form-group">
+                                <label for="email">Email address:</label>
+                                <input type="email" class="form-control" id="email" />
+                              </div>
+                              <div class="form-group">
+                                <label for="pwd">Password:</label>
+                                <input type="password" class="form-control" id="pwd"/>
+                              </div>
+                              <div class="form-group">
+                                <label for="pwd">Confirm Password:</label>
+                                <input type="password" class="form-control" id="pwd"/>
+                              </div>
+                              <div class="form-group form-check">
+                                <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" /> Remember me
+                              </label>
+                              </div>
+                              <button type="submit" class="btn btn-custom-1 btn-block">Sign Up</button>
+                              <p className="text-center mt-3">Already have an account? <a href="#" data-toggle="modal" data-target="#signUpPanel">Login</a></p>
+                            </form>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-danger" data-dismiss="modal">Close</button>
+                            </div>
+                            
+                        </div>
                     </div>
                 </div>
             </div>
