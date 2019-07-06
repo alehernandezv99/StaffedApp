@@ -5,12 +5,17 @@ import Navbar from "../../navbar";
 import LoadingSpinner from "../../loading/loadingSpinner";
 import firebase from "../../../firebaseSetUp";
 
+import { Button, Position, Toast, Toaster, Classes} from "@blueprintjs/core";
+
 export default class LandingPage extends React.Component {
     constructor(props){
         super(props);
         this.changeState = this.changeState.bind(this);
         this.handleAuth = this.handleAuth.bind(this);
         this.toggleLoading = this.toggleLoading.bind(this);
+        this.setData = this.setData.bind(this);
+        this.verifyData= this.verifyData.bind(this);
+        this.deleteCurrentUser = this.deleteCurrentUser.bind(this);
 
         this.state = {
             loginData:{
@@ -25,11 +30,59 @@ export default class LandingPage extends React.Component {
                 remember:false
             },
             isLoading:false,
+            toasts: [ /* IToastProps[] */ ]
+
+        }
+
+        this.toaster = {};
+        this.refHandlers = {
+            toaster:(ref) => {this.toaster = ref},
+        }
+    }
+
+    addToast = (message) => {
+        console.log("Test");
+        this.toaster.show({ message: message});
+    }
+
+    setData(collection, id, data, cb1, cb2){
+        firebase.firestore().collection(collection).doc(id).set(data)
+        .then(() => {
+            cb1();
+            window.location.href = "/home";
+        })
+        .catch(e => {
+            this.addToast(e.message);
+            cb2();
+        })
+    }
+
+    verifyData(collection, id, data, cb1 , cb2){
+        firebase.firestore().collection(collection).doc(id).get()
+        .then(doc => {
+            if(!doc.exists){
+                this.setData(collection, id, data, cb1, cb2)
+            }else {
+                cb1();
+                window.location.href = "/home";
+            }
+        })
+    }
+
+    deleteCurrentUser(){
+        if(firebase.auth().currentUser !== null){
+            firebase.auth().currentUser.delete()
+            .then(() => {
+                this.toggleLoading();
+            })
+            .catch(e => {
+                this.deleteCurrentUser();
+            })
         }
     }
 
     componentDidMount(){
-        firebase.auth().onAuthStateChanged(function(user) {
+        firebase.auth().onAuthStateChanged((user) => {
             if (user) {
               // User is signed in.
               var displayName = user.displayName;
@@ -39,8 +92,18 @@ export default class LandingPage extends React.Component {
               var isAnonymous = user.isAnonymous;
               var uid = user.uid;
               var providerData = user.providerData;
+
+              let data = {
+                  displayName:displayName,
+                  email: email,
+                  emailVerified: emailVerified,
+                  photoURL: photoURL,
+                  isAnonymous: isAnonymous,
+                  uid: uid,
+              }
+
+              this.verifyData("users", user.uid, data, this.toggleLoading, this.deleteCurrentUser);
               
-              window.location.href = "/home";
               // ...
             } else {
               // User is signed out.
@@ -62,23 +125,22 @@ export default class LandingPage extends React.Component {
         if(type === "login"){
             firebase.auth().signInWithEmailAndPassword(email, password)
             .then(result => {
-                this.toggleLoading()
+                
             })
             .catch(e => {
                 this.toggleLoading()
-                alert("An error has occurred")
+                this.addToast(e.message);
                 console.log(e);
             })
         }else if(type === "signUp"){
             if(password === cPassword){
             firebase.auth().createUserWithEmailAndPassword(email, password)
             .then(result => {
-                this.toggleLoading();
-                window.location.href = "/welcome";
+
             })
             .catch(e => {
                 this.toggleLoading()
-                alert("An Error has ocurred")
+                this.addToast(e.message);
                 console.log(e);
             })
         }else {
@@ -97,30 +159,40 @@ export default class LandingPage extends React.Component {
         return(
             <div>
                 {this.state.isLoading === true? <LoadingSpinner />:null}
+                <div className="toast">
+                <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
+                    {/* "Toasted!" will appear here after clicking button. */}
+                    {this.state.toasts.map(toast => <Toast {...toast} />)}
+                </Toaster>
+                </div>
                 <Navbar leftElements={
                     [
                         {
                             type:"link",
                             text:"About",
                             href:"#about",
+                            onClick:() => {},
                             key:1
                         },
                         {
                             type:"link",
                             text:"Product Info",
                             href:"#productInfo",
+                            onClick:() => {},
                             key:2
                         },
                         {
                             type:"link",
                             text:"How To Use",
                             href:"#howToUse",
+                            onClick:() => {},
                             key:3
                         },
                         {
                             type:"link",
                             text:"Contact",
                             href:"#contact",
+                            onClick:() => {},
                             key:4
                         }
                     ]
@@ -132,6 +204,7 @@ export default class LandingPage extends React.Component {
                             text:"Login",
                             dataToggle:"modal",
                             dataTarget:"#loginPanel",
+                            onClick:() => {},
                             key:5
                         },
                         {
@@ -139,6 +212,7 @@ export default class LandingPage extends React.Component {
                             text:"Sign Up",
                             dataToggle:"modal",
                             dataTarget:"#signUpPanel",
+                            onClick:() => {},
                             key:6
                         }
                     ]

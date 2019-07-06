@@ -18,3 +18,17 @@ background: linear-gradient(90deg, rgba(58,123,213,1) 0%, rgba(58,96,115,1) 100%
 .bg-color-white {
     background-color:white;
 }
+
+.toast {
+    z-index:999999 !important;
+}
+
+
+
+.modal-dialog {
+    z-index:9 !important;
+}
+
+.modal-content {
+    z-index: 9 !important;
+}

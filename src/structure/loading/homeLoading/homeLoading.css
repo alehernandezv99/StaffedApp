@@ -1,0 +1,11 @@
+.animate-bg {
+    animation-name:bgAlternate;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes bgAlternate {
+    0%{background:lightgrey}
+    50%{background: darkgray}
+    100%{background: lightgrey}
+}

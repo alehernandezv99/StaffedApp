@@ -17,3 +17,6 @@
     color:black !important;
 }
 
+.navbar {
+    z-index:10 !important;
+}

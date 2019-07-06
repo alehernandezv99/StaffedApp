@@ -16,7 +16,7 @@ export default class JobModule extends React.Component {
                 <div className="mt-2 row">
                 <div className="col-sm-8 text-left">
                 {this.props.skills.map(element => {
-                    return (<button type="button" className="btn btn-custom-2 btn-sm mr-2 mt-2">{element.text}</button>)
+                    return (<button type="button" key={element.key} className="btn btn-custom-2 btn-sm mr-2 mt-2">{element.text}</button>)
                 })}
                 </div>
                 <div className="col text-right">
@@ -27,7 +27,7 @@ export default class JobModule extends React.Component {
                 </div>
                 <div className="mt-2 text-left">
                 {this.props.specs.map(element => {
-                    return (<button type="button" className="btn btn-custom-1 btn-sm mr-3 mt-2"><i className="material-icons align-middle" > {element.icon}</i> <span className="ml-2 align-middle">{element.text}</span></button>)
+                    return (<button type="button" key={element.key} className="btn btn-custom-1 btn-sm mr-3 mt-2"><i className="material-icons align-middle" > {element.icon}</i> <span className="ml-2 align-middle">{element.text}</span></button>)
                 })}
                 </div>
             </div>
