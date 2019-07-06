@@ -12,7 +12,7 @@ export default class Navbar extends React.Component {
         return(
             <nav className="navbar navbar-expand-md shadow-sm bg-white sticky-top">
 
-  <a className="navbar-brand" href="#">
+  <a className="navbar-brand" href="/">
       <img src={logo}  style={{width:'40px'}}/>
       </a>
 
@@ -25,13 +25,13 @@ export default class Navbar extends React.Component {
   <div className="collapse navbar-collapse" id="collapsibleNavbar">
   <ul className="navbar-nav mr-auto">
         {this.props.leftElements.map(element => {
-          return <NavItem type={element.type} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} />
+          return <NavItem type={element.type} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} dropdownItems={element.dropdownItems} />
         })}
     </ul>
 
     <ul className="navbar-nav">
       {this.props.rightElements.map(element => {
-        return <NavItem type={element.type} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} />
+        return <NavItem type={element.type} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} dropdownItems={element.dropdownItems}/>
       })}
     </ul>
   </div> 

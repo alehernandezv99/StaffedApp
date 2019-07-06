@@ -3,6 +3,7 @@ import './App.css';
 import Navbar from './structure/navbar';
 import LandingPage from "./structure/body/landingPage";
 import Footer from "./structure/footer";
+import Home from "./structure/body/home";
 import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
 import firebase from "./firebaseSetUp";
 
@@ -58,7 +59,7 @@ class App extends React.Component {
         <Router>
          <Switch> 
           <Route path="/" exact render={() => { return <LandingPage />}} />
-          <Route path="/welcome" render={() => {return <Welcome />}}/>
+          <Route path="/home" render={() => {return <Home />}}/>
         </Switch>
       </Router>
       <Footer/>

@@ -40,7 +40,7 @@ export default class LandingPage extends React.Component {
               var uid = user.uid;
               var providerData = user.providerData;
               
-              window.location.href = "/welcome";
+              window.location.href = "/home";
               // ...
             } else {
               // User is signed out.
@@ -63,7 +63,6 @@ export default class LandingPage extends React.Component {
             firebase.auth().signInWithEmailAndPassword(email, password)
             .then(result => {
                 this.toggleLoading()
-                alert("Successfull Sign In");
             })
             .catch(e => {
                 this.toggleLoading()
@@ -74,8 +73,7 @@ export default class LandingPage extends React.Component {
             if(password === cPassword){
             firebase.auth().createUserWithEmailAndPassword(email, password)
             .then(result => {
-                this.toggleLoading()
-                alert("Successfull Sign Up")
+                this.toggleLoading();
                 window.location.href = "/welcome";
             })
             .catch(e => {
