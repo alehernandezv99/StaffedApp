@@ -3,6 +3,10 @@ import Navbar from "../../navbar";
 import JobModule from "./jobModule";
 import firebase from "../../../firebaseSetUp";
 import HomeLoading from "../../loading/homeLoading";
+import logo from "../../../logo.svg";
+import { Button, Position, Toast, Toaster, Classes} from "@blueprintjs/core";
+import CreateProject from "../createProject";
+
 import "./home.css";
 
 export default class Home extends React.Component {
@@ -12,13 +16,26 @@ export default class Home extends React.Component {
 
         this.state = {
             user:null,
+            toasts: [ /* IToastProps[] */ ]
         }
+
+        this.toaster = {};
+        this.refHandlers = {
+            toaster:(ref) => {this.toaster = ref},
+        }
+    }
+
+    addToast = (message) => {
+        this.toaster.show({ message: message});
     }
 
     componentDidMount(){
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
               // User is signed in.
+              if(user.emailVerified === false){
+                  this.addToast("Please Verify Your Email")
+              }
               this.updateUser(user.uid)
               // ...
             } else {
@@ -43,13 +60,18 @@ export default class Home extends React.Component {
     render(){
         return(
             <div>
-                <Navbar 
+                <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
+                    {/* "Toasted!" will appear here after clicking button. */}
+                    {this.state.toasts.map(toast => <Toast {...toast} />)}
+                </Toaster>
+                <Navbar logo={logo}
                 leftElements={
                     [
                         {
                             type:"link",
                             text:"My Projects",
                             href:"/myprojects",
+                            icon:"work_outline",
                             onClick:() => {window.location.href = "/myprojects"},
                             key:1
                         },
@@ -58,19 +80,24 @@ export default class Home extends React.Component {
                             text:"Search Staff",
                             href:"",
                             onClick:() => {},
+                            icon:"search",
                             key:2
                         },
                         {
                             type:"link",
-                            text:"Search Project",
+                            text:"Search Projects",
                             href:"",
+                            state:"active",
                             onClick:() => {},
+                            icon:"public",
                             key:3
                         },
+                        
                         {
                             type:"dropdown",
                             text:"Payments",
                             href:"",
+                            icon:"payment",
                             onClick:() => {},
                             dropdownItems:[
                                 {
@@ -88,15 +115,27 @@ export default class Home extends React.Component {
                 rightElements={
                     [
                         {
+                            type:"button",
+                            text:"Create Project",
+                            href:"",
+                            icon:"add",
+                            dataToggle:"modal",
+                            dataTarget:"#createProjectPanel",
+                            onClick:() => {},
+                            key:6
+                        },
+                        {
                             type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].email,
                             href:"",
                             key:5,
+                            onClick:() => {},
                             dropdownItems:this.state.user === null?[]:[
                                 {
                                     href:"",
                                     text:"Settings",
-                                    key:1
+                                    key:1,
+                                    onClick:() => {},
                                 },
                                 {
                                     href:"",
@@ -171,6 +210,7 @@ export default class Home extends React.Component {
                     </div>
                     }
                 </div>
+                <CreateProject id={"createProjectPanel"}/>
             </div>
         )
     }

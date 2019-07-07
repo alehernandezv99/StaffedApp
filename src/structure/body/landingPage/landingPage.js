@@ -159,13 +159,13 @@ export default class LandingPage extends React.Component {
         return(
             <div>
                 {this.state.isLoading === true? <LoadingSpinner />:null}
-                <div className="toast">
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
-                </div>
-                <Navbar leftElements={
+            
+                <Navbar logo={logo}
+                leftElements={
                     [
                         {
                             type:"link",

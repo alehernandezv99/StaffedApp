@@ -6,7 +6,7 @@
 
 .btn-custom-1:hover {
     background-color: transparent!important;
-    color:#3a7bd5!important;
+    color:#3a7bd5 !important;
 }
 
 .color-0A9FF2 {
@@ -19,4 +19,11 @@
 
 .navbar {
     z-index:10 !important;
+}
+
+
+.active {
+    background-color:#3a7bd5 !important;
+    color:white !important;
+    border-radius:4px;
 }

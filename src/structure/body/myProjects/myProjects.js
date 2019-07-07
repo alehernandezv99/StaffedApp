@@ -2,6 +2,7 @@ import React from "react";
 import "./myProjects.css";
 import Navbar from "../../navbar";
 import firebase from "../../../firebaseSetUp";
+import logo from "../../../logo.svg";
 
 export default class MyProjects extends React.Component {
     constructor(props){
@@ -42,14 +43,15 @@ export default class MyProjects extends React.Component {
     render(){
         return(
             <div>
-                <Navbar 
+                <Navbar logo={logo}
                 leftElements={
                     [
                         {
                             type:"link",
                             text:"My Projects",
                             href:"",
-                            state:true,
+                            state:"active",
+                            icon:"work_outline",
                             onClick:() => {},
                             key:1
                         },
@@ -57,25 +59,32 @@ export default class MyProjects extends React.Component {
                             type:"link",
                             text:"Search Staff",
                             href:"",
+                            state:"",
+                            icon:"search",
                             onClick:() => {},
                             key:2
                         },
                         {
                             type:"link",
-                            text:"Search Project",
+                            text:"Search Projects",
+                            icon:"public",
                             href:"",
-                            onClick:() => {},
+                            state:"",
+                            onClick:() => { window.location.href = "/home"},
                             key:3
                         },
                         {
                             type:"dropdown",
                             text:"Payments",
                             href:"",
+                            state:"",
+                            icon:"payment",
                             dropdownItems:[
                                 {
                                     href:"#",
                                     key:1,
-                                    text:"test"
+                                    text:"test",
+                                    state:"",
                                 }
                             ],
                             key:4
@@ -85,70 +94,65 @@ export default class MyProjects extends React.Component {
                 rightElements={
                     [
                         {
+                            type:"button",
+                            text:"Create Project",
+                            href:"",
+                            icon:"add",
+                            onClick:() => {},
+                            key:6
+                        },
+                        {
                             type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].email,
                             href:"",
+                            state:"",
+                            onClick:() => {},
                             key:5,
                             dropdownItems:this.state.user === null?[]:[
                                 {
                                     href:"",
                                     text:"Settings",
+                                    icon:"power_settings_new",
                                     onClick:() => {},
+                                    state:"",
                                     key:1
                                 },
                                 {
                                     href:"",
                                     text:"logout",
+                                    icon:"power_settings_new",
                                     onClick:()=> {firebase.auth().signOut()},
-                                    onClick:() => {},
-                                    key:2
+                                    key:2,
+                                    state:"",
                                 }
                             ]
                         }
                     ]
                 }
                 />
+                <div className="row text-center">
+                    <div className="col-sm-4 padding-3 border-right-custom-1">
+                    <div className="input-group mb-3 mt-3 mx-auto">
+                          <input type="text" className="form-control" placeholder="Search Projects" />
+                            <div className="input-group-append">
+                            <button className="btn btn-custom-1" type="button">Search</button> 
+                         </div>
+                        </div>
 
-                <Navbar
-                className={"navbar-custom-1"}
-                leftElements={
-                    [
-                        {
-                            type:"link",
-                            text:"Search Projects",
-                            href:"",
-                            state:true,
-                            onClick:() => {},
-                            key:1
-                        },
-                        {
-                            type:"link",
-                            text:"Edit Project",
-                            href:"",
-                            onClick:() => {},
-                            key:2
-                        },
-                        {
-                            type:"link",
-                            text:"Archive Project",
-                            href:"",
-                            onClick:() => {},
-                            key:3
-                        },
-                    ]
-                }
-                rightElements={
-                    [
-                        {
-                            type:"button",
-                            text:"Create Project",
-                            href:"",
-                            onClick:() => {alert("Creating Project")},
-                            key:5,
-                        }
-                    ]
-                }
-                />
+                        <select name="cars" className="custom-select-sm">
+                          <option defaultValue>All</option>
+                          <option value="volvo">Active Projects</option>
+                          <option value="fiat">Colaboration Projects</option>
+                          <option value="audi">Archived Projects</option>
+                        </select>
+                    </div>
+                    <div className="col">
+                        <h4 className="mt-3">My Projects</h4>
+                        <div className="container-fluid">
+
+                        </div>
+                    </div>
+                </div>
             </div>
         )
     }
