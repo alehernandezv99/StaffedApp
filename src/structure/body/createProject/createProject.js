@@ -2,6 +2,9 @@ import React from "react";
 import "./createProject.css";
 import $ from "jquery";
 import { Button, Position, Toast, Toaster, Classes} from "@blueprintjs/core";
+import firebase from "../../../firebaseSetUp";
+import LoadingSpinner from "../../loading/loadingSpinner";
+
 
 export default class CreateProject extends React.Component{
     constructor(props){
@@ -12,17 +15,24 @@ export default class CreateProject extends React.Component{
             title:"",
             description:"",
             skills:[],
-            type:"",
+            category:"",
+            subCategory:"",
             access:false,
           },
           formB:{
+            type:"",
             budget:0,
             country:"",
             level:"",
             access:false,
           },
-          toasts: [ /* IToastProps[] */ ]
+          categories:[],
+          subCategories:[],
+          skills:[],
+          toasts: [ /* IToastProps[] */ ],
+          isLoading:false,
         }
+        
 
         this.toaster = {};
         this.refHandlers = {
@@ -32,13 +42,36 @@ export default class CreateProject extends React.Component{
         this.gotToNextPage = this.gotToNextPage.bind(this);
         this.clearSkill = this.clearSkill.bind(this);
         this.setValue = this.setValue.bind(this);
+        this.findSubCategory = this.findSubCategory.bind(this);
+        this.createProject = this.createProject.bind(this);
+        this.toggleLoading = this.toggleLoading.bind(this);
+        this.autocomplete  = this.autocomplete.bind(this);
     }
 
     addToast = (message) => {
       this.toaster.show({ message: message});
   }
 
+  toggleLoading(){
+    this.setState(state => ({
+        isLoading:!state.isLoading
+    }))
+}
+
     componentDidMount(){
+      firebase.firestore().collection("skills").get()
+    .then(async snapshot => {
+      let skills = [];
+      snapshot.forEach(doc => {
+        skills.push(doc.data().name);
+        console.log(doc.data().name);
+      })
+
+      console.log(this.state.skills);
+      await this.setState({skills:skills})
+      this.autocomplete(document.getElementById("skills"), this.state.skills);
+    })
+
       $(".cp-section-2").hide();
 
       $('#skills').keypress((event) => {
@@ -61,21 +94,45 @@ export default class CreateProject extends React.Component{
       }
       }
       });
+
+      firebase.firestore().collection("categories").get()
+      .then(snapshot => {
+        let categories = [];
+        snapshot.forEach(doc => {
+          categories.push(doc.data().name);
+        })
+        this.setState({categories:categories})
+      })
+
+    
     }
 
-    gotToNextPage(from, to, check ,element){
+    findSubCategory(category){
+      firebase.firestore().collection("categories").where("name","==",category).get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          firebase.firestore().collection("categories").doc(doc.id).collection("subCategories").get()
+          .then(snapshot2 => {
+            let subCategories = [];
+            snapshot2.forEach(doc2 => {
+              subCategories.push(doc2.data().name);
+            })
+
+            this.setState({subCategories:subCategories});
+          })
+        })
+      })
+    }
+
+    gotToNextPage(from, to, check){
       let message = "";
       let pass = 0;
 
       if(check){
       if(this.state[check.obj][check.field] === check.value){
-      
-      element.style.display = "none";
-
     }else {
       message = "There are invalid fields";
-      element.textContent = message;
-      element.style.display ="block";
+      this.addToast(message)
       pass = 1;
     }
    }
@@ -104,15 +161,26 @@ export default class CreateProject extends React.Component{
       if(criteria.type === "text"){
         if(!(value.length >= criteria.minLength)){
           check = 1;
-          message += ` The ${field} is less than ${criteria.minLength} characters \n` 
+          message += ` The ${field} is less than ${criteria.minLength} characters <br>` 
         }
         if(!(value.length <= criteria.maxLength)){
-          message += ` The ${field} is greater than ${criteria.maxLength} characters \n`;
+          message += ` The ${field} is greater than ${criteria.maxLength} characters <br>`;
           check = 1;
         }
         if(criteria.pattern.test(value) === false){
           check = 1
-          message += ` the ${field} contain invalid characters`
+          message += ` The ${field} contain invalid characters <br>`
+        }
+      }
+
+      if(criteria.type === "number"){
+        if(!(Number(value) >= criteria.min)){
+          check = 1;
+          message += ` The ${field} is less than ${criteria.min} dollars <br>` 
+        }
+        if(!(Number(value) <= criteria.max)){
+          message += ` The ${field} is greater than ${criteria.max} dollars <br>`;
+          check = 1;
         }
       }
     }
@@ -125,12 +193,14 @@ export default class CreateProject extends React.Component{
       this.setState(state => {
         let refObj = state[obj];
         refObj[field] = value;
+        if(criteria){
         refObj.access = true;
+        }
         return {[obj]:refObj}
       })
     }else {
       if(criteria){
-      feedbackElement.textContent = message;
+      feedbackElement.innerHTML = message;
       feedbackElement.style.display = "block";
       element.classList.add("invalid-input-field");
       }
@@ -143,16 +213,144 @@ export default class CreateProject extends React.Component{
     }
     }
 
+    autocomplete(inp, arr) {
+      console.log("Hello there");
+      /*the autocomplete function takes two arguments,
+      the text field element and an array of possible autocompleted values:*/
+      var currentFocus;
+      /*execute a function when someone writes in the text field:*/
+      inp.addEventListener("input", function(e) {
+          var a, b, i, val = this.value;
+          /*close any already open lists of autocompleted values*/
+          closeAllLists();
+          if (!val) { return false;}
+          currentFocus = -1;
+          /*create a DIV element that will contain the items (values):*/
+          a = document.createElement("DIV");
+          a.setAttribute("id", this.id + "autocomplete-list");
+          a.setAttribute("class", "autocomplete-items");
+          /*append the DIV element as a child of the autocomplete container:*/
+          this.parentNode.appendChild(a);
+          /*for each item in the array...*/
+          for (i = 0; i < arr.length; i++) {
+            /*check if the item starts with the same letters as the text field value:*/
+            if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+              /*create a DIV element for each matching element:*/
+              b = document.createElement("DIV");
+              /*make the matching letters bold:*/
+              b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+              b.innerHTML += arr[i].substr(val.length);
+              /*insert a input field that will hold the current array item's value:*/
+              b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+              /*execute a function when someone clicks on the item value (DIV element):*/
+              b.addEventListener("click", function(e) {
+                  /*insert the value for the autocomplete text field:*/
+                  inp.value = this.getElementsByTagName("input")[0].value;
+                  /*close the list of autocompleted values,
+                  (or any other open lists of autocompleted values:*/
+                  closeAllLists();
+              });
+              a.appendChild(b);
+            }
+          }
+      });
+      /*execute a function presses a key on the keyboard:*/
+      inp.addEventListener("keydown", function(e) {
+          var x = document.getElementById(this.id + "autocomplete-list");
+          if (x) x = x.getElementsByTagName("div");
+          if (e.keyCode == 40) {
+            /*If the arrow DOWN key is pressed,
+            increase the currentFocus variable:*/
+            currentFocus++;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 38) { //up
+            /*If the arrow UP key is pressed,
+            decrease the currentFocus variable:*/
+            currentFocus--;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 13) {
+            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+            e.preventDefault();
+            if (currentFocus > -1) {
+              /*and simulate a click on the "active" item:*/
+              if (x) x[currentFocus].click();
+            }
+          }
+      });
+      function addActive(x) {
+        /*a function to classify an item as "active":*/
+        if (!x) return false;
+        /*start by removing the "active" class on all items:*/
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        /*add class "autocomplete-active":*/
+        x[currentFocus].classList.add("autocomplete-active");
+      }
+      function removeActive(x) {
+        /*a function to remove the "active" class from all autocomplete items:*/
+        for (var i = 0; i < x.length; i++) {
+          x[i].classList.remove("autocomplete-active");
+        }
+      }
+      function closeAllLists(elmnt) {
+        /*close all autocomplete lists in the document,
+        except the one passed as an argument:*/
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+          if (elmnt != x[i] && elmnt != inp) {
+            x[i].parentNode.removeChild(x[i]);
+          }
+        }
+      }
+      /*execute a function when someone clicks in the document:*/
+      document.addEventListener("click", function (e) {
+          closeAllLists(e.target);
+      });
+    }
+
+    createProject(){
+      this.toggleLoading();
+      let formA = this.state.formA;
+      let formB = this.state.formB;
+      let data = {
+        title:formA.title,
+        description:formA.description,
+        skills:formA.skills,
+        category:formA.category,
+        subCategory:formA.subCategory,
+        type:formB.type,
+        budget:formB.budget,
+        country:formB.country,
+        level:formB.level,
+        created:new Date()
+      }
+
+      firebase.firestore().collection("projects").add(data)
+      .then(() => {
+        this.toggleLoading();
+        this.addToast("Project Successfully Created");
+      })
+      .catch(e => {
+        this.toggleLoading();
+        this.addToast(e.message);
+      })
+    }
+
     render(){
     return(
         <div className="modal fade" id={this.props.id}>
+          {this.state.isLoading === true? <LoadingSpinner />:null}
+          <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
+           {/* "Toasted!" will appear here after clicking button. */}
+            {this.state.toasts.map(toast => <Toast {...toast} />)}
+         </Toaster>
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
-                            <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
-                                  {/* "Toasted!" will appear here after clicking button. */}
-                                  {this.state.toasts.map(toast => <Toast {...toast} />)}
-                            </Toaster>
+                            
                                 <h4 className="modal-title text-center">Create Project</h4>
                                 <button type="button" className="close" data-dismiss="modal">&times;</button>
                             </div>
@@ -167,11 +365,40 @@ export default class CreateProject extends React.Component{
                               </div>
                               <div className="form-group">
                                  <label>Description</label>
-                                <textarea className="form-control" onChange={(e) => {
+                                <textarea className="form-control"  onChange={(e) => {
                                   this.setValue("formA","description",e.target.value,{type:"text",minLength:3, maxLength:200, pattern:/^[a-zA-Z0-9\s]+$/,},e.target.parentNode.childNodes[2], e.target)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                                 <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
                               </div>
+                              <div className="form-group">
+                                <label>Category</label>
+                                <div>
+                                  {this.state.categories.length > 0 ?
+                                <select onChange={(e) => {this.setValue("formA","category",e.target.options[e.target.selectedIndex].value); this.findSubCategory(e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
+                                  {this.state.categories.map((category ,i) => {
+                                    return (<option key={i}>{category}</option>)
+                                  })}
+                                </select>
+                                :<div className="spinner-border"></div>
+                                  }
+                                </div>
+                              </div>
+
+                              <div className="form-group">
+                                <label>Sub Category</label>
+                                <div>
+                                  {this.state.subCategories.length > 0 ?
+                                <select onChange={(e) => {this.setValue("formA","subCategory",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
+                                  <option>Select Category </option>
+                                  {this.state.subCategories.map((category,i) => {
+                                    return (<option key={i}>{category}</option>)
+                                  })}
+                                </select>
+                                :<div>Select a Category First</div>
+                                  }
+                                </div>
+                              </div>
+
                               <div className="form-group" ref={el => this.skills = el} id="skills">
                                 <label >Skills Required</label>
                                 <div>
@@ -179,32 +406,37 @@ export default class CreateProject extends React.Component{
                                   return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
                                 })}
                                 </div>
-                                <input ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" className="form-control" required/>
+                                <div className="autocomplete">
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills" className="form-control" required/>
+                                </div>
                               </div>
-                              <div className="from-group">
-                                  <label>Type</label>
-                                  <div>
-                                  <select onChange={(e) => {this.setValue("formA","type",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm">
-                                    <option defaultValue>Fixed Price</option>
-                                    <option>Per Hour</option>
-                                 </select>
-                                 </div>
-                              </div>
+                              
                               <div>
-                              <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.gotToNextPage(".cp-section-1", ".cp-section-2",{obj:"formA",field:"access",value:true}, e.currentTarget.parentElement.childNodes[1])}}>Next</button>
+                              <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.gotToNextPage(".cp-section-1", ".cp-section-2",{obj:"formA",field:"access",value:true});}}>Next</button>
                               <div className="invalid-feedback"></div>
                               </div>
                             </form>
 
                             <form className="cp-section-2">
+                            <div className="from-group">
+                                  <label>Type of Contract</label>
+                                  <div>
+                                  <select onChange={(e) => {this.setValue("formB","type",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
+                                    <option defaultValue>Fixed Price</option>
+                                    <option>Per Hour</option>
+                                 </select>
+                                 </div>
+                              </div>
                               <div className="form-group">
                                   <label>Budget</label>
-                                  <input type="number" className="form-control" required/>
+                                  <input type="number" className="form-control" onChange={(e) => {this.setValue("formB","budget", e.target.value, {type:"number", min:10, max:50000},e.target.parentNode.childNodes[2], e.target)}} required/>
+                                  <div className="invalid-feedback">Valid.</div>
+                                <div className="valid-feedback">Please fill out this field.</div>
                               </div>
                               <div className="form-group">
                                 <label>Country</label>
                                 <div>
-                                <select id="country" name="country" className="custom-select-sm">
+                                <select id="country" name="country" onChange={(e) => {this.setValue("formB","country",e.target.options[e.target.selectedIndex].value)}}  className="custom-select-sm">
                 <option value="Afghanistan">Afghanistan</option>
                 <option value="Åland Islands">Åland Islands</option>
                 <option value="Albania">Albania</option>
@@ -455,14 +687,14 @@ export default class CreateProject extends React.Component{
                               <div className="form-group">
                                 <label>Project Level</label>
                                 <div>
-                                  <select className="custom-select-sm">
+                                  <select className="custom-select-sm" onChange={(e) => {this.setValue("formB","level", e.target.options[e.target.selectedIndex].value)}}>
                                     <option>Basic</option>
-                                    <option>Intermediate</option>
+                                    <option defaultValue>Intermediate</option>
                                     <option>Advanced</option>
                                   </select>
                                 </div>
                               </div>
-                              <button type="button" className="btn btn-custom-1 btn-block mt-3">Create Project</button>
+                              <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.createProject()}}>Create Project</button>
                             </form>
 
                             </div>
