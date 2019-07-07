@@ -46,10 +46,30 @@ export default class CreateProject extends React.Component{
         this.createProject = this.createProject.bind(this);
         this.toggleLoading = this.toggleLoading.bind(this);
         this.autocomplete  = this.autocomplete.bind(this);
+        this.addSkill = this.addSkill.bind(this);
     }
 
     addToast = (message) => {
       this.toaster.show({ message: message});
+  }
+
+  addSkill(skill){
+    if(!(this.state.formA.skills.includes(skill))){
+
+      if(this.state.form.skills.length < 5){
+    this.setState(state => {
+      let formA = state.formA;
+      let skills = formA.skills;
+      skills.push(skill);
+      formA.skills = skills;
+      return({formA:formA});
+    })
+  }else {
+    this.addToast("You can't select more than 5 skills");
+  }
+  }else {
+    this.addToast("You cannot select two repeated skills")
+  }
   }
 
   toggleLoading(){
@@ -59,34 +79,35 @@ export default class CreateProject extends React.Component{
 }
 
     componentDidMount(){
-      firebase.firestore().collection("skills").get()
-    .then(async snapshot => {
-      let skills = [];
-      snapshot.forEach(doc => {
-        skills.push(doc.data().name);
-        console.log(doc.data().name);
-      })
-
-      console.log(this.state.skills);
-      await this.setState({skills:skills})
-      this.autocomplete(document.getElementById("skills"), this.state.skills);
-    })
 
       $(".cp-section-2").hide();
 
-      $('#skills').keypress((event) => {
+      $('#skills-input').keypress((event) => {
         if(event.keyCode == 13){
-         
           if(event.target.value !== ""){
           this.setState(state => {
             let formA = state.formA;
             let skills = formA.skills;
             if((skills.includes(event.target.value) === false) && (skills.length < 5)){
-            skills.push(event.target.value);
-            formA.skills = skills;
-            this.skillInput.value = "";
-            return({formA:formA})
+
+            firebase.firestore().collection("skills").get()
+            .then(snapshot => {
+              let skillsArr = [];
+              snapshot.forEach(doc => {
+                skillsArr.push(doc.data().name);
+              })
+              if(skillsArr.includes(event.target.value)){
+                skills.push(event.target.value);
+                formA.skills = skills;
+                this.skillInput.value = "";
+                return({formA:formA})
+              }else {
+                this.addToast(`The skill "${event.target.value}" doesn't exist in the database`);
+              }
+            })
+            
             }else {
+              this.addToast("You cannot select two repeated skills")
               return {}
             }
           })
@@ -94,6 +115,19 @@ export default class CreateProject extends React.Component{
       }
       }
       });
+
+      firebase.firestore().collection("skills").get()
+    .then(async snapshot => {
+      let skills = [];
+      snapshot.forEach(doc => {
+        skills.push(doc.data().name);
+      })
+
+      
+      this.autocomplete(document.getElementById("skills-input"), skills);
+    })
+
+      
 
       firebase.firestore().collection("categories").get()
       .then(snapshot => {
@@ -193,9 +227,6 @@ export default class CreateProject extends React.Component{
       this.setState(state => {
         let refObj = state[obj];
         refObj[field] = value;
-        if(criteria){
-        refObj.access = true;
-        }
         return {[obj]:refObj}
       })
     }else {
@@ -214,6 +245,8 @@ export default class CreateProject extends React.Component{
     }
 
     autocomplete(inp, arr) {
+      const addSkill = this.addSkill;
+      console.log(inp);
       console.log("Hello there");
       /*the autocomplete function takes two arguments,
       the text field element and an array of possible autocompleted values:*/
@@ -249,6 +282,8 @@ export default class CreateProject extends React.Component{
                   /*close the list of autocompleted values,
                   (or any other open lists of autocompleted values:*/
                   closeAllLists();
+                  addSkill(inp.value);
+                  inp.value = "";
               });
               a.appendChild(b);
             }
@@ -272,7 +307,7 @@ export default class CreateProject extends React.Component{
             addActive(x);
           } else if (e.keyCode == 13) {
             /*If the ENTER key is pressed, prevent the form from being submitted,*/
-            e.preventDefault();
+            //e.preventDefault();
             if (currentFocus > -1) {
               /*and simulate a click on the "active" item:*/
               if (x) x[currentFocus].click();
@@ -322,7 +357,7 @@ export default class CreateProject extends React.Component{
         category:formA.category,
         subCategory:formA.subCategory,
         type:formB.type,
-        budget:formB.budget,
+        budget:Number(formB.budget),
         country:formB.country,
         level:formB.level,
         created:new Date()
@@ -375,6 +410,7 @@ export default class CreateProject extends React.Component{
                                 <div>
                                   {this.state.categories.length > 0 ?
                                 <select onChange={(e) => {this.setValue("formA","category",e.target.options[e.target.selectedIndex].value); this.findSubCategory(e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
+                                  <option>Select Category</option>
                                   {this.state.categories.map((category ,i) => {
                                     return (<option key={i}>{category}</option>)
                                   })}
@@ -407,7 +443,7 @@ export default class CreateProject extends React.Component{
                                 })}
                                 </div>
                                 <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills" className="form-control" required/>
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-input" className="form-control" required/>
                                 </div>
                               </div>
                               
