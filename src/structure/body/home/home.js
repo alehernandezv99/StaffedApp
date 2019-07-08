@@ -4,7 +4,7 @@ import JobModule from "./jobModule";
 import firebase from "../../../firebaseSetUp";
 import HomeLoading from "../../loading/homeLoading";
 import logo from "../../../logo.svg";
-import { Button, Position, Toast, Toaster, Classes} from "@blueprintjs/core";
+import { Button, Position, Toast, Toaster, Classes, Slider} from "@blueprintjs/core";
 import CreateProject from "../createProject";
 
 import "./home.css";
@@ -16,7 +16,13 @@ export default class Home extends React.Component {
 
         this.state = {
             user:null,
-            toasts: [ /* IToastProps[] */ ]
+            toasts: [ /* IToastProps[] */ ],
+            projects:[],
+            pageSize:{
+                min:3,
+                max:12,
+                value:4
+            }
         }
 
         this.toaster = {};
@@ -44,6 +50,20 @@ export default class Home extends React.Component {
               // ...
             }
           });
+        
+        firebase.firestore().collection("projects").get()
+        .then(snapshot => {
+            let projects = [];
+
+            snapshot.forEach(doc => {
+                projects.push(doc.data());
+                
+            })
+
+            this.setState({
+                projects:projects
+            })
+        })
     }
 
    async updateUser(id){
@@ -53,7 +73,6 @@ export default class Home extends React.Component {
             this.setState({
                 user:[doc.data()],
             })
-            console.log(this.state.user);
         })
     }
 
@@ -154,11 +173,21 @@ export default class Home extends React.Component {
                     {this.state.user === null? <HomeLoading />:
                     <div className="row text-center">
                         <div className="col ">
-                        <div className="header-custom-1 mb-2">Recently Searches</div>
-                            <div className="list-group">
+                            <div className="form-group">
+                               <label>Recently Searches</label>
+                               <div className="list-group">
                                 {this.state.user[0].recentSearches.map(element => {
                                    return ( <a href='#' key={element} className="list-group-item list-group-item-action">{element}</a>)
                                 })}
+                            </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Page Size</label>
+                                <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
+                                    let pageSize = state.pageSize;
+                                    pageSize.value = e;
+                                    return ({pageSize:pageSize});
+                                })}}  />
                             </div>
                         </div>
                         <div className="col-sm-6">
@@ -168,39 +197,56 @@ export default class Home extends React.Component {
                             <button className="btn btn-custom-1" type="submit">Search</button> 
                          </div>
                         </div>
-                        <JobModule title={"Andoid developer for platform"} description={`
-                        lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsmu
-                        lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-                        `}  skills={
-                            [
+                        {this.state.projects.length > 0?this.state.projects.map(project => {
+                            let title = project.title;
+                            let description = project.description;
+                            let skills = project.skills;
+                            let skillsObj = [];
+
+                            for(let i = 0; i < skills.length; i++){
+                                skillsObj.push({
+                                    text:skills[i],
+                                    key:i
+                                });
+                            }
+
+                            console.log(skills);
+                            let specs = [
                                 {
-                                    text:"PHP",
+                                    text:project.type,
+                                    icon:"gps_fixed",
                                     key:1
                                 },
                                 {
-                                    text:"JavaScript",
+                                    text:project.budget,
+                                    icon:"payment",
                                     key:2
                                 },
                                 {
-                                    text:"NodeJs",
+                                    text:20,
+                                    icon:"people",
                                     key:3
-                                }
-                            ]
-                        }
-                        specs={
-                            [
+                                },
                                 {
-                                    text:"test",
-                                    icon:"link",
-                                    key:1
+                                    text:"Payment Verified",
+                                    icon:"check_circle",
+                                    key:4
+                                },
+                                {
+                                    text:project.country,
+                                    icon:"place",
+                                    key:5
                                 }
                             ]
-                        }/>
+
+                            return <JobModule title={title} description={description} skills={skillsObj} specs={specs} />
+                        }):<div className="spinner-border"></div>}
                         </div>
                         <div className="col">
                             <div className="card">
                                 <div className="card-body text-center">
-                                    <img src="https://www.w3schools.com/bootstrap4/img_avatar1.png" style={{width:"50%"}} className="rounded-circle" />
+                                    <img src="https://www.w3schools.com/bootstrap4/img_avatar1.png" style={{width:"150px"}} className="rounded-circle" />
+                                    <div className="text-center mt-2">{firebase.auth().currentUser?firebase.auth().currentUser.displayName?firebase.auth().currentUser.displayName:firebase.auth().currentUser.email:<div className="spinner-loading"></div>}</div>
                                     <div className="mt-2 text-left"><i className="material-icons">style</i> {this.state.user[0].cards} Cards</div>
                                     <div className="mt-2 text-left"><i className="material-icons">event_note</i> {this.state.user[0].proposals.length} Proposals</div>
                                     <div className="mt-2 text-left"><i className="material-icons">work</i> {this.state.user[0].activeCandidancies.length} Active Candidancies</div>

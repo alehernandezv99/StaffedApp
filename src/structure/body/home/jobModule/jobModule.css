@@ -22,3 +22,12 @@
     background-color:transparent;
 
 }
+
+.jobModule-label {
+    padding:2px !important;
+    cursor: pointer;
+}
+
+.jobModule-icons {
+    font-size:16px;
+}
