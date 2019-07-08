@@ -6,6 +6,9 @@ import MainGraphic from ".././../../res/Graphics/landing_page_icon.svg"
 import Navbar from "../../navbar";
 import LoadingSpinner from "../../loading/loadingSpinner";
 import firebase from "../../../firebaseSetUp";
+import $ from "jquery";
+import autocomplete from "../../../utils/autocomplete";
+import checkCriteria from "../../../utils/checkCriteria";
 
 import { Button, Position, Toast, Toaster, Classes} from "@blueprintjs/core";
 
@@ -18,6 +21,9 @@ export default class LandingPage extends React.Component {
         this.setData = this.setData.bind(this);
         this.verifyData= this.verifyData.bind(this);
         this.deleteCurrentUser = this.deleteCurrentUser.bind(this);
+        this.addSkill = this.addSkill.bind(this);
+        this.checkCriteria = checkCriteria;
+        this.clearSkill = this.clearSkill.bind(this);
 
         this.state = {
             loginData:{
@@ -32,7 +38,11 @@ export default class LandingPage extends React.Component {
                 remember:false
             },
             isLoading:false,
-            toasts: [ /* IToastProps[] */ ]
+            toasts: [ /* IToastProps[] */ ],
+            skills:{
+                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
+                skillsFetched:[],
+            }
 
         }
 
@@ -59,6 +69,38 @@ export default class LandingPage extends React.Component {
         })
     }
 
+    clearSkill(index){
+        this.setState(state => {
+          let skills = state.skills.skillsSelected.value;
+          skills.splice(index,1)
+          let base = state.skills;
+          let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+          base.skills = skillsObj;
+          return({skills:base});
+        })
+      }
+
+    addSkill(skill){
+        if(!(this.state.skills.skillsSelected["value"].includes(skill))){
+          let skills = this.state.skills.skillsSelected["value"].slice();
+    
+          let criteria = this.state.skills.skillsSelected["criteria"];
+        this.setState(state => {
+          let base = state.skills;
+          skills.push(skill);
+          if(this.checkCriteria(skills, criteria).check){
+          base.skillsSelected.value = skills;
+          return({skills:base});
+          }else {
+            this.addToast(this.checkCriteria(skills, criteria, "skills").message);
+            return ({});
+          }
+        })
+      }else {
+        this.addToast("You cannot select two repeated skills")
+      }
+      }
+
     verifyData(collection, id, data, cb1 , cb2){
         firebase.firestore().collection(collection).doc(id).get()
         .then(doc => {
@@ -84,6 +126,59 @@ export default class LandingPage extends React.Component {
     }
 
     componentDidMount(){
+
+        $('#skills-input').keypress((event) => {
+            if(event.keyCode == 13){
+              if(event.target.value !== ""){
+             
+    
+                firebase.firestore().collection("skills").get()
+                .then(snapshot => {
+                  let skillsArr = [];
+                  snapshot.forEach(doc => {
+                    skillsArr.push(doc.data().name);
+                  })
+                   this.setState(state => {
+                let base = state.skills;
+                let skills = base.skillsSelected["value"];
+      
+                if((skills.includes(event.target.value) === false)){
+                  if(skillsArr.includes(event.target.value)){
+                    skills.push(event.target.value);
+                    let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+                     base.skillsSelected = skillsObj;
+
+                    this.skillInput.value = "";
+                    return({skills:base})
+                    
+                  }else {
+                    this.addToast(`The skill "${event.target.value}" is not registered`);
+                  }
+    
+                }else {
+                  this.addToast("You cannot select two repeated skills")
+                  return {}
+                }
+                })
+                
+               
+              })
+            
+          }
+          }
+          });
+
+          firebase.firestore().collection("skills").get()
+          .then(async snapshot => {
+            let skills = [];
+            snapshot.forEach(doc => {
+              skills.push(doc.data().name);
+            })
+      
+            
+            autocomplete(document.getElementById("skills-input"), skills, this.addSkill);
+          })
+
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
               // User is signed in.
@@ -102,6 +197,7 @@ export default class LandingPage extends React.Component {
                   photoURL: photoURL,
                   isAnonymous: isAnonymous,
                   uid: uid,
+                  skills:[]
               }
 
               this.verifyData("users", user.uid, data, this.toggleLoading, this.deleteCurrentUser);
@@ -336,6 +432,21 @@ export default class LandingPage extends React.Component {
                                 <input className="form-check-input" type="checkbox" onChange={(e) => {this.changeState("signUpData","remember",e.target.checked)}}/> Remember me
                               </label>
                               </div>
+                              <div className="form-group">
+                                  <label>Your Skills</label>
+                                <div>
+                                {this.state.skills.skillsSelected.value.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
+                                })}
+                                <div>
+                                <div className="autocomplete">
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-input" className="form-control" required/>
+                                </div>
+                                </div>
+
+                                </div>
+                              </div>
+
                               <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.handleAuth("signUp",this.state.signUpData.email, this.state.signUpData.password, this.state.signUpData.confirmPassword)}}>Sign Up</button>
                               <p className="text-center mt-3">Already have an account? <a href="#" data-toggle="modal" data-target="#signUpPanel">Login</a></p>
                             </form>

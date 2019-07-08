@@ -19,6 +19,7 @@
 .autocomplete {
     position: relative;
     display: inline-block;
+    width:100%;
   }
 
 .autocomplete-items {
