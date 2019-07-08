@@ -24,6 +24,7 @@ export default class Home extends React.Component {
             user:null,
             toasts: [ /* IToastProps[] */ ],
             projects:[],
+            projectsId:[],
             size:0,
             pageSize:{
                 min:3,
@@ -46,33 +47,38 @@ export default class Home extends React.Component {
         this.toaster.show({ message: message});
     }
 
-    clearSkill(index){
-        this.setState(state => {
+   async clearSkill(index){
+       await this.setState(state => {
           let skills = state.skills.skillsSelected.value;
           skills.splice(index,1)
           let base = state.skills;
           let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
           base.skills = skillsObj;
-          return({skills:base});
+          return({skills:base, projects:[], projectsId:[]});
         })
+
+        this.reloadProjects(this.state.pageSize.value, this.state.skills.skillsSelected.value);
+
       }
 
-    addSkill(skill){
+   async addSkill(skill){
         if(!(this.state.skills.skillsSelected["value"].includes(skill))){
           let skills = this.state.skills.skillsSelected["value"].slice();
     
           let criteria = this.state.skills.skillsSelected["criteria"];
-        this.setState(state => {
+        await this.setState(state => {
           let base = state.skills;
           skills.push(skill);
           if(this.checkCriteria(skills, criteria).check){
           base.skillsSelected.value = skills;
-          return({skills:base});
+          return({skills:base, projects:[], projectsId:[]});
           }else {
             this.addToast(this.checkCriteria(skills, criteria, "skills").message);
             return ({});
           }
         })
+
+        this.reloadProjects(this.state.pageSize.value, this.state.skills.skillsSelected.value);
       }else {
         this.addToast("You cannot select two repeated skills")
       }
@@ -143,26 +149,34 @@ export default class Home extends React.Component {
        
     }
 
-    reloadProjects(limit, arrayElements){
-       let ref = firebase.firestore().collection("projects")
-        for(let i = 0; i< arrayElements.length; i++){
-            ref = ref.where("skills","array-contains",arrayElements[i]).limit(limit)
-        }
-        ref.get()
+    reloadProjects(limit, arr){
+    for(let i = 0; i< arr.length; i++){
+      firebase.firestore().collection("projects")
+       .where(`skills`,"array-contains",arr[i])
+       .limit(limit).get()
         .then(snapshot => {
             this.setState(state => {
-                let projects = []
+                let projects = state.projects
+                let ids = state.projectsId;
+                let counter = 0
                 snapshot.forEach(project => {
+                    if(!(ids.includes(project.id))){
+                        ids.push(project.id);
                     projects.push(project.data());
+                    counter++
+                    }
                 })
+                let size = projects.length + counter;
 
                 return({
                     projects:projects,
-                    size:snapshot.size,
+                    projectsId:ids,
+                    size:size,
                 })
             })
             
         })
+    }
     }
 
    async updateUser(id){
@@ -172,6 +186,7 @@ export default class Home extends React.Component {
                 let skills = state.skills;
                 let skillsUser = doc.data().skills;
                 skills.skillsSelected.value = skillsUser;
+                let objOfSkills = {};
                 this.reloadProjects(this.state.pageSize.value, skillsUser); 
                 return {
                 user:[doc.data()],
@@ -336,12 +351,13 @@ export default class Home extends React.Component {
                             let skills = project.skills;
                             let skillsObj = [];
 
-                            for(let i = 0; i < skills.length; i++){
+                            Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:skills[i],
+                                    text:skills[key],
                                     key:i
                                 });
-                            }
+                            })
+
 
                             let specs = [
                                 {
