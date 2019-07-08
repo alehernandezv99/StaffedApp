@@ -12,19 +12,17 @@ export default class CreateProject extends React.Component{
 
         this.state = {
           formA:{
-            title:"",
-            description:"",
-            skills:[],
-            category:"",
-            subCategory:"",
-            access:false,
+            title:{value:"", criteria:{type:"text",minLength:3, maxLength:50, pattern:/^[a-zA-Z0-9\s]+$/}},
+            description:{value:"", criteria:{type:"text",minLength:3, maxLength:500, pattern:/^[a-zA-Z0-9\s]+$/,}},
+            skills:{value:[], criteria:{type:"array", min:1, max:5}},
+            category:{value:"", criteria:{type:"text", minLength:2}},
+            subCategory:{value:"", criteria:{type:"text", minLength:2}},
           },
           formB:{
-            type:"",
-            budget:0,
-            country:"",
-            level:"",
-            access:false,
+            type:{value:"", criteria:null},
+            budget:{value:0, criteria:{type:"number", min:10, max:50000}},
+            country:{value:"", criteria:null},
+            level:{value:"", criteria:null},
           },
           categories:[],
           subCategories:[],
@@ -47,26 +45,32 @@ export default class CreateProject extends React.Component{
         this.toggleLoading = this.toggleLoading.bind(this);
         this.autocomplete  = this.autocomplete.bind(this);
         this.addSkill = this.addSkill.bind(this);
+        this.checkCriteria = this.checkCriteria.bind(this);
     }
 
     addToast = (message) => {
       this.toaster.show({ message: message});
   }
 
-  addSkill(skill){
-    if(!(this.state.formA.skills.includes(skill))){
+  
 
-      if(this.state.form.skills.length < 5){
+  addSkill(skill){
+    if(!(this.state.formA.skills["value"].includes(skill))){
+      let skills = this.state.formA.skills["value"].slice();
+
+      let criteria = this.state.formA.skills["criteria"];
     this.setState(state => {
       let formA = state.formA;
-      let skills = formA.skills;
+      console.log(skills);
       skills.push(skill);
-      formA.skills = skills;
+      if(this.checkCriteria(skills, criteria).check){
+      formA.skills.value = skills;
       return({formA:formA});
+      }else {
+        this.addToast(this.checkCriteria(skills, criteria).message);
+        return ({});
+      }
     })
-  }else {
-    this.addToast("You can't select more than 5 skills");
-  }
   }else {
     this.addToast("You cannot select two repeated skills")
   }
@@ -88,7 +92,7 @@ export default class CreateProject extends React.Component{
           this.setState(state => {
             let formA = state.formA;
             let skills = formA.skills;
-            if((skills.includes(event.target.value) === false) && (skills.length < 5)){
+            if((skills["value"].includes(event.target.value) === false) && this.checkCriteria(skills["value"], this.state.formA.skills.criteria).check){
 
             firebase.firestore().collection("skills").get()
             .then(snapshot => {
@@ -99,8 +103,12 @@ export default class CreateProject extends React.Component{
               if(skillsArr.includes(event.target.value)){
                 skills.push(event.target.value);
                 formA.skills = skills;
+                if(this.checkCriteria(skills, this.state.formA.skills.criteria).check){
                 this.skillInput.value = "";
                 return({formA:formA})
+                }else {
+                  this.addToast(this.checkCriteria(skills, this.state.formA.skills.criteria).message)
+                }
               }else {
                 this.addToast(`The skill "${event.target.value}" doesn't exist in the database`);
               }
@@ -158,22 +166,39 @@ export default class CreateProject extends React.Component{
       })
     }
 
-    gotToNextPage(from, to, check){
+    gotToNextPage(from, to, checkObj){
+      console.log(checkObj);
       let message = "";
       let pass = 0;
+      let messages = [];
+      if(checkObj){
+      
 
-      if(check){
-      if(this.state[check.obj][check.field] === check.value){
-    }else {
-      message = "There are invalid fields";
-      this.addToast(message)
-      pass = 1;
+      Object.keys(checkObj).forEach(key => {
+        if(this.checkCriteria(checkObj[key]["value"], checkObj[key]["criteria"]).check === false){
+          messages.push(this.checkCriteria(checkObj[key]["value"], checkObj[key]["criteria"], key).message);
+          pass = 1;
+        }
+      })
+
     }
-   }
 
     if(pass === 0){
       $(from).slideUp();
       $(to).slideDown();
+      return {
+        status:true,
+        messages:messages
+      }
+    }else {
+      for(let i = 0; i< messages.length; i++){
+        this.addToast(messages[i]);
+        console.log(message[i]);
+      }
+      return {
+        status:false,
+        messages:messages
+      }
     }
     }
 
@@ -187,61 +212,111 @@ export default class CreateProject extends React.Component{
       })
     }
 
-    async setValue(obj, field, value, criteria, feedbackElement, element){
+    checkCriteria(value, criteria, subject){
       let check = 0;
       let message = "";
 
       if(criteria){
       if(criteria.type === "text"){
+
+        if(criteria.minLength){
         if(!(value.length >= criteria.minLength)){
           check = 1;
-          message += ` The ${field} is less than ${criteria.minLength} characters <br>` 
-        }
-        if(!(value.length <= criteria.maxLength)){
-          message += ` The ${field} is greater than ${criteria.maxLength} characters <br>`;
-          check = 1;
-        }
-        if(criteria.pattern.test(value) === false){
-          check = 1
-          message += ` The ${field} contain invalid characters <br>`
+          message += ` The ${subject} is less than ${criteria.minLength} characters` 
         }
       }
 
-      if(criteria.type === "number"){
-        if(!(Number(value) >= criteria.min)){
-          check = 1;
-          message += ` The ${field} is less than ${criteria.min} dollars <br>` 
-        }
-        if(!(Number(value) <= criteria.max)){
-          message += ` The ${field} is greater than ${criteria.max} dollars <br>`;
+      if(criteria.maxLength){
+        if(!(value.length <= criteria.maxLength)){
+          message += ` The ${subject} is greater than ${criteria.maxLength} characters`;
           check = 1;
         }
       }
+
+      if(criteria.pattern){
+        if(criteria.pattern.test(value) === false){
+          check = 1
+          message += ` The ${subject} contain invalid characters`
+        }
+      }
     }
-      if(check === 0){
-        if(criteria){
+
+      
+
+      if(criteria.type === "number"){
+        if(criteria.min){
+        if(!(Number(value) >= criteria.min)){
+          check = 1;
+          message += ` The ${subject} is less than ${criteria.min} dollars` 
+        }
+      }
+      if(criteria.max){
+        if(!(Number(value) <= criteria.max)){
+          message += ` The ${subject} is greater than ${criteria.max} dollars`;
+          check = 1;
+        }
+      }
+      }
+
+      if(criteria.type === "array"){
+        if(criteria.min){
+        if(!(value.length >= criteria.min)){
+          check = 1;
+          message += ` There are less than ${criteria.min} ${subject}`
+        }
+
+        if(criteria.max){
+        if(!(value.length <= criteria.max)){
+          check =1;
+          message += ` There are more than ${criteria.max} ${subject}`;
+        }
+      }
+      }
+    }
+
+    if(check === 0){
+      return {
+        check:true,
+        message:message,
+      };
+    }else {
+      return {
+        check:false,
+        message:message,
+      }
+    }
+    
+  }
+}
+
+    async setValue(obj, field, value, feedbackElement, element){
+      
+      if(this.state[obj][field]["criteria"]){
+      if(this.checkCriteria(value, this.state[obj][field]["criteria"],field).check){
+        if(feedbackElement && element){
         feedbackElement.style.display = "none";
         element.classList.remove("invalid-input-field");
         }
+      }else {
+
+        if(feedbackElement && element){
+        feedbackElement.innerHTML = this.checkCriteria(value, this.state[obj][field]["criteria"], field).message;
+        feedbackElement.style.display = "block";
+        element.classList.add("invalid-input-field");
+        }
+
+        }
+      }else {
+      
+      }
 
       this.setState(state => {
         let refObj = state[obj];
-        refObj[field] = value;
+        refObj[field]["value"] = value;
         return {[obj]:refObj}
       })
-    }else {
-      if(criteria){
-      feedbackElement.innerHTML = message;
-      feedbackElement.style.display = "block";
-      element.classList.add("invalid-input-field");
-      }
-      this.setState(state => {
-        let formA = state.formA;
-        formA.access = false;
-
-        return ({formA:formA});
-      })
-    }
+     
+   
     }
 
     autocomplete(inp, arr) {
@@ -348,6 +423,9 @@ export default class CreateProject extends React.Component{
 
     createProject(){
       this.toggleLoading();
+      let check = this.gotToNextPage("","", this.state.formB);
+      let messages = check.messages;
+      if(check.status){
       let formA = this.state.formA;
       let formB = this.state.formB;
       let data = {
@@ -372,6 +450,11 @@ export default class CreateProject extends React.Component{
         this.toggleLoading();
         this.addToast(e.message);
       })
+    }else {
+      for(let i = 0; i < messages.length; i++){
+        this.addToast(messages[i]);
+      }
+    }
     }
 
     render(){
@@ -394,14 +477,14 @@ export default class CreateProject extends React.Component{
                               <div className="form-group">
                                 <label>Title</label>
                                 <input type="text" placeholder="Title of the project" onChange={(e) => {
-                                  this.setValue("formA","title",e.target.value,{type:"text",minLength:3, maxLength:50, pattern:/^[a-zA-Z0-9\s]+$/},e.target.parentNode.childNodes[2], e.target)}} className="form-control"  required/>
+                                  this.setValue("formA","title",e.target.value,e.target.parentNode.childNodes[2], e.target)}} className="form-control"  required/>
                                   <div className="invalid-feedback">Valid.</div>
                                   <div className="valid-feedback">Please fill out this field.</div>
                               </div>
                               <div className="form-group">
                                  <label>Description</label>
                                 <textarea className="form-control"  onChange={(e) => {
-                                  this.setValue("formA","description",e.target.value,{type:"text",minLength:3, maxLength:200, pattern:/^[a-zA-Z0-9\s]+$/,},e.target.parentNode.childNodes[2], e.target)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
+                                  this.setValue("formA","description",e.target.value,e.target.parentNode.childNodes[2], e.target)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                                 <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
                               </div>
@@ -438,7 +521,7 @@ export default class CreateProject extends React.Component{
                               <div className="form-group" ref={el => this.skills = el} id="skills">
                                 <label >Skills Required</label>
                                 <div>
-                                {this.state.formA.skills.map((skill, index) => {
+                                {this.state.formA.skills.value.map((skill, index) => {
                                   return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
                                 })}
                                 </div>
@@ -448,7 +531,7 @@ export default class CreateProject extends React.Component{
                               </div>
                               
                               <div>
-                              <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.gotToNextPage(".cp-section-1", ".cp-section-2",{obj:"formA",field:"access",value:true});}}>Next</button>
+                              <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.gotToNextPage(".cp-section-1", ".cp-section-2", this.state.formA);}}>Next</button>
                               <div className="invalid-feedback"></div>
                               </div>
                             </form>
@@ -465,7 +548,7 @@ export default class CreateProject extends React.Component{
                               </div>
                               <div className="form-group">
                                   <label>Budget</label>
-                                  <input type="number" className="form-control" onChange={(e) => {this.setValue("formB","budget", e.target.value, {type:"number", min:10, max:50000},e.target.parentNode.childNodes[2], e.target)}} required/>
+                                  <input type="number" className="form-control" onChange={(e) => {this.setValue("formB","budget", e.target.value,e.target.parentNode.childNodes[2], e.target)}} required/>
                                   <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
                               </div>

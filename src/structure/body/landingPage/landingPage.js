@@ -1,6 +1,8 @@
 import React from 'react';
 import "./landingPage.css";
 import logo from "../../../logo.svg";
+import icon from "../../../res/Graphics/pionnering_icon.png";
+import MainGraphic from ".././../../res/Graphics/landing_page_icon.svg"
 import Navbar from "../../navbar";
 import LoadingSpinner from "../../loading/loadingSpinner";
 import firebase from "../../../firebaseSetUp";
@@ -164,7 +166,7 @@ export default class LandingPage extends React.Component {
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
             
-                <Navbar logo={logo}
+                <Navbar logo={icon}
                 leftElements={
                     [
                         {
@@ -219,9 +221,10 @@ export default class LandingPage extends React.Component {
                 }
                 />
             <div className="container-fluid  text-center padding-1"  id="about">
-                <h1>Welcome to the Freelancer's Page</h1>
-                <h5 style={{fontWeight:"normal"}} className="m-3">The freelancer's pages is lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem 
-                    ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
+            <img src={MainGraphic} width="450px"/>
+                <h1>Welcome to Pioneering</h1>            
+                <h5 style={{fontWeight:"normal"}} className="m-3">The moderm and Simplest solution for working from 
+                home. Enhace your business and your life
                 </h5>
                 <button type="button" data-toggle="modal" data-target="#signUpPanel" className="btn btn-custom-1 btn-lg m-3">Join Today</button>
             </div>
