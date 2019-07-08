@@ -19,10 +19,10 @@ export default class CreateProject extends React.Component{
             subCategory:{value:"", criteria:{type:"text", minLength:2}},
           },
           formB:{
-            type:{value:"", criteria:null},
+            type:{value:"", criteria:{type:"text", minLength:2}},
             budget:{value:0, criteria:{type:"number", min:10, max:50000}},
-            country:{value:"", criteria:null},
-            level:{value:"", criteria:null},
+            country:{value:"", criteria:{type:"text", minLength:2}},
+            level:{value:"", criteria:{type:"text", minLength:2}},
           },
           categories:[],
           subCategories:[],
@@ -61,7 +61,6 @@ export default class CreateProject extends React.Component{
       let criteria = this.state.formA.skills["criteria"];
     this.setState(state => {
       let formA = state.formA;
-      console.log(skills);
       skills.push(skill);
       if(this.checkCriteria(skills, criteria).check){
       formA.skills.value = skills;
@@ -167,7 +166,6 @@ export default class CreateProject extends React.Component{
     }
 
     gotToNextPage(from, to, checkObj){
-      console.log(checkObj);
       let message = "";
       let pass = 0;
       let messages = [];
@@ -193,7 +191,6 @@ export default class CreateProject extends React.Component{
     }else {
       for(let i = 0; i< messages.length; i++){
         this.addToast(messages[i]);
-        console.log(message[i]);
       }
       return {
         status:false,
@@ -274,6 +271,8 @@ export default class CreateProject extends React.Component{
       }
     }
 
+  }
+
     if(check === 0){
       return {
         check:true,
@@ -286,7 +285,7 @@ export default class CreateProject extends React.Component{
       }
     }
     
-  }
+  
 }
 
     async setValue(obj, field, value, feedbackElement, element){
@@ -321,8 +320,7 @@ export default class CreateProject extends React.Component{
 
     autocomplete(inp, arr) {
       const addSkill = this.addSkill;
-      console.log(inp);
-      console.log("Hello there");
+
       /*the autocomplete function takes two arguments,
       the text field element and an array of possible autocompleted values:*/
       var currentFocus;
@@ -425,19 +423,20 @@ export default class CreateProject extends React.Component{
       this.toggleLoading();
       let check = this.gotToNextPage("","", this.state.formB);
       let messages = check.messages;
+
       if(check.status){
       let formA = this.state.formA;
       let formB = this.state.formB;
       let data = {
-        title:formA.title,
-        description:formA.description,
-        skills:formA.skills,
-        category:formA.category,
-        subCategory:formA.subCategory,
-        type:formB.type,
-        budget:Number(formB.budget),
-        country:formB.country,
-        level:formB.level,
+        title:formA.title["value"],
+        description:formA.description["value"],
+        skills:formA.skills["value"],
+        category:formA.category["value"],
+        subCategory:formA.subCategory["value"],
+        type:formB.type["value"],
+        budget:Number(formB.budget["value"]),
+        country:formB.country["value"],
+        level:formB.level["value"],
         created:new Date()
       }
 
@@ -451,9 +450,8 @@ export default class CreateProject extends React.Component{
         this.addToast(e.message);
       })
     }else {
-      for(let i = 0; i < messages.length; i++){
-        this.addToast(messages[i]);
-      }
+      
+      this.toggleLoading();
     }
     }
 
@@ -541,7 +539,8 @@ export default class CreateProject extends React.Component{
                                   <label>Type of Contract</label>
                                   <div>
                                   <select onChange={(e) => {this.setValue("formB","type",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
-                                    <option defaultValue>Fixed Price</option>
+                                    <option defaultValue>Select Type</option>
+                                    <option >Fixed Price</option>
                                     <option>Per Hour</option>
                                  </select>
                                  </div>
@@ -556,6 +555,7 @@ export default class CreateProject extends React.Component{
                                 <label>Country</label>
                                 <div>
                                 <select id="country" name="country" onChange={(e) => {this.setValue("formB","country",e.target.options[e.target.selectedIndex].value)}}  className="custom-select-sm">
+                                  <option>Select Country</option>
                 <option value="Afghanistan">Afghanistan</option>
                 <option value="Åland Islands">Åland Islands</option>
                 <option value="Albania">Albania</option>
@@ -807,8 +807,9 @@ export default class CreateProject extends React.Component{
                                 <label>Project Level</label>
                                 <div>
                                   <select className="custom-select-sm" onChange={(e) => {this.setValue("formB","level", e.target.options[e.target.selectedIndex].value)}}>
+                                    <option>Select Level</option>
                                     <option>Basic</option>
-                                    <option defaultValue>Intermediate</option>
+                                    <option>Intermediate</option>
                                     <option>Advanced</option>
                                   </select>
                                 </div>
