@@ -3,17 +3,77 @@ import "./myProjects.css";
 import Navbar from "../../navbar";
 import firebase from "../../../firebaseSetUp";
 import logo from "../../../logo.svg";
+import autocomplete from "../../../utils/autocomplete";
+import { Button, Position, Toast, Toaster, Classes, Slider} from "@blueprintjs/core";
+import MyProjectLoading from "../../loading/myProjectLoading";
+import checkCriteria from "../../../utils/checkCriteria";
+import CreateProject from "../createProject";
 
 export default class MyProjects extends React.Component {
     constructor(props){
         super(props);
         this.updateUser = this.updateUser.bind(this);
+        this.addSkill = this.addSkill.bind(this);
+        this.clearSkill = this.clearSkill.bind(this);
+        this.checkCriteria = checkCriteria;
 
         this.state = {
             isLoading:false,
-            user:null
+            user:null,
+            toasts: [ /* IToastProps[] */ ],
+            pageSize:{
+                min:6,
+                max:12,
+                value:6
+            },
+            skills:{
+                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
+                skillsFetched:[],
+            }
+        }
+
+        this.toaster = {};
+        this.refHandlers = {
+            toaster:(ref) => {this.toaster = ref},
         }
     }
+
+    async clearSkill(index){
+        await this.setState(state => {
+           let skills = state.skills.skillsSelected.value;
+           skills.splice(index,1)
+           let base = state.skills;
+           let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+           base.skills = skillsObj;
+           return({skills:base, projects:[], projectsId:[]});
+         })
+ 
+        // this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+ 
+       }
+ 
+    async addSkill(skill){
+         if(!(this.state.skills.skillsSelected["value"].includes(skill))){
+           let skills = this.state.skills.skillsSelected["value"].slice();
+     
+           let criteria = this.state.skills.skillsSelected["criteria"];
+         await this.setState(state => {
+           let base = state.skills;
+           skills.push(skill);
+           if(this.checkCriteria(skills, criteria).check){
+           base.skillsSelected.value = skills;
+           return({skills:base, projects:[], projectsId:[]});
+           }else {
+             this.addToast(this.checkCriteria(skills, criteria, "skills").message);
+             return ({});
+           }
+         })
+ 
+        // this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+       }else {
+         this.addToast("You cannot select two repeated skills")
+       }
+       }
 
     componentDidMount(){
         firebase.auth().onAuthStateChanged((user) => {
@@ -40,9 +100,17 @@ export default class MyProjects extends React.Component {
         })
     }
 
+    addToast = (message) => {
+        this.toaster.show({ message: message});
+    }
+
     render(){
         return(
             <div>
+                <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
+                    {/* "Toasted!" will appear here after clicking button. */}
+                    {this.state.toasts.map(toast => <Toast {...toast} />)}
+                </Toaster>
                 <Navbar logo={logo}
                 leftElements={
                     [
@@ -98,6 +166,8 @@ export default class MyProjects extends React.Component {
                             text:"Create Project",
                             href:"",
                             icon:"add",
+                            dataToggle:"modal",
+                            dataTarget:"#createProjectPanel",
                             onClick:() => {},
                             key:6
                         },
@@ -130,7 +200,9 @@ export default class MyProjects extends React.Component {
                     ]
                 }
                 />
-                <div className="row text-center">
+                
+                {this.state.user === null?<MyProjectLoading />:
+                 <div className="row text-center">
                     <div className="col-sm-4 padding-3 border-right-custom-1">
                     <div className="input-group mb-3 mt-3 mx-auto">
                           <input type="text" className="form-control" placeholder="Search Projects" />
@@ -139,12 +211,59 @@ export default class MyProjects extends React.Component {
                          </div>
                         </div>
 
+                        <div className="form-group">
                         <select name="cars" className="custom-select-sm">
                           <option defaultValue>All</option>
                           <option value="volvo">Active Projects</option>
                           <option value="fiat">Colaboration Projects</option>
                           <option value="audi">Archived Projects</option>
                         </select>
+                        </div>
+
+                        <div className="form-group">
+                               <label>Recently Searches</label>
+                               <div className="list-group">
+                                {this.state.user[0].recentSearches.map(element => {
+                                   return ( <a href='#' key={element} className="list-group-item list-group-item-action">{element}</a>)
+                                })}
+                            </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Page Size</label>
+                                <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
+                                    let pageSize = state.pageSize;
+                                    pageSize.value = e;
+                                    return ({pageSize:pageSize});
+                                })}}  />
+                            </div>
+                            <div className="form-group">
+                                  <label>Filter By Skills</label>
+                                <div>
+                                {this.state.skills.skillsSelected.value.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
+                                })}
+                                <div>
+                                <div className="autocomplete">
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-filter" className="form-control" required/>
+                                {
+                                    (() => {
+                                        firebase.firestore().collection("skills").get()
+                                            .then(async snapshot => {
+                                              let skills = [];
+                                              snapshot.forEach(doc => {
+                                              skills.push(doc.data().name);
+                                      })
+
+                                     autocomplete(document.getElementById("skills-filter"), skills, this.addSkill);
+                                    })
+                                    })()
+                                }
+                                </div>
+                                </div>
+
+                                </div>
+                              
+                           </div>
                     </div>
                     <div className="col">
                         <h4 className="mt-3">My Projects</h4>
@@ -152,7 +271,8 @@ export default class MyProjects extends React.Component {
 
                         </div>
                     </div>
-                </div>
+                </div>}
+                <CreateProject id={"createProjectPanel"}/>
             </div>
         )
     }

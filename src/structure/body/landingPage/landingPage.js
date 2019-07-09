@@ -2,6 +2,9 @@ import React from 'react';
 import "./landingPage.css";
 import logo from "../../../logo.svg";
 import icon from "../../../res/Graphics/pionnering_icon.png";
+import imgFeature1 from "../../../res/Graphics/professional_freelancers_icon.svg";
+import imgFeature2 from "../../../res/Graphics/payment_protection_icon.svg";
+import imgFeature3 from "../../../res/Graphics/technical_support_icon.svg";
 import MainGraphic from ".././../../res/Graphics/landing_page_icon.svg"
 import Navbar from "../../navbar";
 import LoadingSpinner from "../../loading/loadingSpinner";
@@ -328,19 +331,19 @@ export default class LandingPage extends React.Component {
                 <h2 className="m-b-3" style={{color:"white"}}>Product Info</h2>
                 <div className="row text-center">
                     <div className="col bg-color-white rounded m-3 p-3">
-                        <h4><i className="material-icons mr-sm-2 align-middle">link</i> Feature one</h4>
-                        <p>description about the description provides, very simplify</p>
-                        <img src={logo} style={{width:"70%"}} alt="feature one"/>
+                        <h4><i className="material-icons mr-sm-2 align-middle special-icon">trending_up</i> Professional Freelancers</h4>
+                        <h6>Turn On Your Business And Start Making Profit With The Best Freelancers</h6>
+                        <img src={imgFeature1} style={{width:"200px"}} alt="feature one"/>
                     </div>
                     <div className="col bg-color-white rounded m-3 p-3">
-                        <h4><i className="material-icons mr-sm-2 align-middle">link</i> Feature Two</h4>
-                        <p>description about the description provides, very simplify, it sometimes can a bit longer than others</p>
-                        <img src={logo} style={{width:"70%"}} alt="feature two"/>
+                        <h4><i className="material-icons mr-sm-2 align-middle special-icon">security</i> Secure Payment</h4>
+                        <h6>Payments Between Clients And Freelancers Made Secure With Scrow System</h6>
+                        <img src={imgFeature2} style={{width:"200px"}} alt="feature two"/>
                     </div>
                     <div className="col bg-color-white rounded m-3 p-3">
-                        <h4><i className="material-icons mr-sm-2 align-middle">link</i> Feature Three</h4>
-                        <p>description about the description provides, very simplify, sometimes not</p>
-                        <img src={logo} style={{width:"70%"}} alt="feature three"/>
+                        <h4><i className="material-icons mr-sm-2 align-middle special-icon">contact_support</i> Support</h4>
+                        <h6>Support For Clients And Freelancers</h6>
+                        <img src={imgFeature3} style={{width:"200px"}} alt="feature three"/>
                     </div>
                 </div>
             </div>

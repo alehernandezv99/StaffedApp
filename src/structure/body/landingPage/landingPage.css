@@ -23,6 +23,10 @@ background: linear-gradient(90deg, rgba(58,123,213,1) 0%, rgba(58,96,115,1) 100%
     z-index:999999 !important;
 }
 
+.special-icon {
+    font-size:30px;
+}
+
 
 
 .modal-dialog {

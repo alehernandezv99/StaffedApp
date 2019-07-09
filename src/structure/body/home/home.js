@@ -4,11 +4,12 @@ import JobModule from "./jobModule";
 import firebase from "../../../firebaseSetUp";
 import HomeLoading from "../../loading/homeLoading";
 import logo from "../../../logo.svg";
-import { Button, Position, Toast, Toaster, Classes, Slider} from "@blueprintjs/core";
+import { Button, Position, Toast, Toaster, Classes, Slider, Drawer} from "@blueprintjs/core";
 import CreateProject from "../createProject";
 import $ from "jquery";
 import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
+import DrawerJob from "../drawerJob";
 import "./home.css";
 
 export default class Home extends React.Component {
@@ -27,14 +28,15 @@ export default class Home extends React.Component {
             projectsId:[],
             size:0,
             pageSize:{
-                min:3,
+                min:6,
                 max:12,
-                value:4
+                value:6
             },
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
-            }
+            },
+            pagination:[]
         }
 
         this.toaster = {};
@@ -57,7 +59,7 @@ export default class Home extends React.Component {
           return({skills:base, projects:[], projectsId:[]});
         })
 
-        this.reloadProjects(this.state.pageSize.value, this.state.skills.skillsSelected.value);
+        this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
 
       }
 
@@ -78,7 +80,7 @@ export default class Home extends React.Component {
           }
         })
 
-        this.reloadProjects(this.state.pageSize.value, this.state.skills.skillsSelected.value);
+        this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
       }else {
         this.addToast("You cannot select two repeated skills")
       }
@@ -149,34 +151,50 @@ export default class Home extends React.Component {
        
     }
 
-    reloadProjects(limit, arr){
-    for(let i = 0; i< arr.length; i++){
-      firebase.firestore().collection("projects")
-       .where(`skills`,"array-contains",arr[i])
-       .limit(limit).get()
-        .then(snapshot => {
-            this.setState(state => {
-                let projects = state.projects
-                let ids = state.projectsId;
-                let counter = 0
-                snapshot.forEach(project => {
-                    if(!(ids.includes(project.id))){
-                        ids.push(project.id);
-                    projects.push(project.data());
-                    counter++
-                    }
-                })
-                let size = projects.length + counter;
+   reloadProjects(limit,field, arr, page){
+        let ref = firebase.firestore().collection("projects")
+        
+        for(let i= 0; i < arr.length; i ++){
+            if(arr.length > 0){
+            ref = ref.where(`${field}.${arr[i]}`,"==",true)
+            }
+        }
 
-                return({
-                    projects:projects,
-                    projectsId:ids,
-                    size:size,
-                })
+        ref.get()
+        .then(snapshot => {
+            let lastSeem = snapshot.docs[(this.state.pageSize.value)*(page) -1]
+            let ref2 = firebase.firestore().collection("projects")
+            //ref2 = ref2.orderBy("created","desc")
+            for(let i= 0; i < arr.length; i ++){
+                if(arr.length > 0){
+                ref2 = ref2.where(`${field}.${arr[i]}`,"==",true)
+                }
+            }
+            if(page){
+            ref2 = ref2.startAfter(lastSeem).limit(limit).get()
+            }else{
+                ref2 = ref2.limit(limit).get()
+            }
+            ref2.then(snapshot2 => {
+             
+            let projects = [];
+            snapshot2.forEach(doc => {
+                projects.push(doc.data())
             })
-            
+
+            projects.sort(function(a, b) {
+                var dateA = new Date(a.created.toDate()), dateB = new Date(b.created.toDate());
+                return dateA - dateB;
+            });
+            projects.reverse();
+            this.setState({
+                projects:projects,
+                size:snapshot.size,
+            })
+            })
+
         })
-    }
+
     }
 
    async updateUser(id){
@@ -187,7 +205,7 @@ export default class Home extends React.Component {
                 let skillsUser = doc.data().skills;
                 skills.skillsSelected.value = skillsUser;
                 let objOfSkills = {};
-                this.reloadProjects(this.state.pageSize.value, skillsUser); 
+                this.reloadProjects(this.state.pageSize.value,"skills", skillsUser); 
                 return {
                 user:[doc.data()],
                 skills:skills
@@ -292,8 +310,10 @@ export default class Home extends React.Component {
 
                 <div className="container-fluid padding-2">
                     {this.state.user === null? <HomeLoading />:
+                    
                     <div className="row text-center">
-                        <div className="col ">
+                <DrawerJob id={"uyrXcJZnlqPMMcoM8zsL"} toastHandler={(message) => {this.addToast(message)}}/>
+                        <div className="col">
                             <div className="form-group">
                                <label>Recently Searches</label>
                                <div className="list-group">
@@ -353,7 +373,7 @@ export default class Home extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:skills[key],
+                                    text:key,
                                     key:i
                                 });
                             })
@@ -392,9 +412,16 @@ export default class Home extends React.Component {
 
                            <ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             <li className="page-item"><a className="page-link" href="#">1</a></li>
-                             <li className="page-item"><a className="page-link" href="#">2</a></li>
-                             <li className="page-item"><a className="page-link" href="#">3</a></li>
+                             {
+                                 (() => {
+                                     let pages = [];
+                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                         pages.push("element")
+                                     }
+                                     return pages
+                                 })().map((data, i) => {
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
+                                 })                                                                  }
                              <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
                            </ul>
                         </div>

@@ -13,7 +13,7 @@
 }
 
 .bp3-overlay {
-    z-index: 99999999 !important;
+    z-index: 99999999999 !important;
 }
 
 .autocomplete {

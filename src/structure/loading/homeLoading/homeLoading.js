@@ -3,7 +3,8 @@ import "./homeLoading.css";
 
 export default function HomeLoading(){
     return(
-        <div className="row ">
+        
+        <div className="row">
             <div className="col">
                 <div className="jumbotron animate-bg"></div>
             </div>
@@ -15,5 +16,6 @@ export default function HomeLoading(){
                 <div className="jumbotron animate-bg"></div>
             </div>
         </div>
+      
     )
 }

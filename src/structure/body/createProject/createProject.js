@@ -21,10 +21,10 @@ export default class CreateProject extends React.Component{
             subCategory:{value:"", criteria:{type:"text", minLength:2}},
           },
           formB:{
-            type:{value:"", criteria:{type:"text", minLength:2}},
+            type:{value:"Fixed Price", criteria:{type:"text", minLength:2}},
             budget:{value:0, criteria:{type:"number", min:10, max:50000}},
             country:{value:"", criteria:{type:"text", minLength:2}},
-            level:{value:"", criteria:{type:"text", minLength:2}},
+            level:{value:"Im", criteria:{type:"text", minLength:2}},
           },
           categories:[],
           subCategories:[],
@@ -254,16 +254,25 @@ export default class CreateProject extends React.Component{
       if(check.status){
       let formA = this.state.formA;
       let formB = this.state.formB;
+
+      let skills = formA.skills["value"];
+      let skillsObj = {};
+
+      for(let i = 0; i< skills.length; i++){
+        skillsObj[skills[i]] = true;
+      }
       let data = {
         title:formA.title["value"],
         description:formA.description["value"],
-        skills:formA.skills["value"],
+        skills:skillsObj,
         category:formA.category["value"],
         subCategory:formA.subCategory["value"],
         type:formB.type["value"],
         budget:Number(formB.budget["value"]),
         country:formB.country["value"],
         level:formB.level["value"],
+        references:[],
+        proposals:[],
         created:new Date()
       }
 
@@ -366,9 +375,7 @@ export default class CreateProject extends React.Component{
                                   <label>Type of Contract</label>
                                   <div>
                                   <select onChange={(e) => {this.setValue("formB","type",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
-                                    <option defaultValue>Select Type</option>
                                     <option >Fixed Price</option>
-                                    <option>Per Hour</option>
                                  </select>
                                  </div>
                               </div>
@@ -634,9 +641,9 @@ export default class CreateProject extends React.Component{
                                 <label>Project Level</label>
                                 <div>
                                   <select className="custom-select-sm" onChange={(e) => {this.setValue("formB","level", e.target.options[e.target.selectedIndex].value)}}>
-                                    <option>Select Level</option>
+
                                     <option>Basic</option>
-                                    <option>Intermediate</option>
+                                    <option value="Intermediate">Intermediate</option>
                                     <option>Advanced</option>
                                   </select>
                                 </div>
