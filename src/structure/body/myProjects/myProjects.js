@@ -220,14 +220,6 @@ export default class MyProjects extends React.Component {
                         </select>
                         </div>
 
-                        <div className="form-group">
-                               <label>Recently Searches</label>
-                               <div className="list-group">
-                                {this.state.user[0].recentSearches.map(element => {
-                                   return ( <a href='#' key={element} className="list-group-item list-group-item-action">{element}</a>)
-                                })}
-                            </div>
-                            </div>
                             <div className="form-group">
                                 <label>Page Size</label>
                                 <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {

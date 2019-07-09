@@ -36,6 +36,7 @@ export default class Home extends React.Component {
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
             },
+            isOpenDrawerJob:false,
             pagination:[]
         }
 
@@ -47,6 +48,10 @@ export default class Home extends React.Component {
 
     addToast = (message) => {
         this.toaster.show({ message: message});
+    }
+
+    handleCloseDrawerJob = () => {
+        this.setState({isOpenDrawerJob:false})
     }
 
    async clearSkill(index){
@@ -312,16 +317,8 @@ export default class Home extends React.Component {
                     {this.state.user === null? <HomeLoading />:
                     
                     <div className="row text-center">
-                <DrawerJob id={"uyrXcJZnlqPMMcoM8zsL"} toastHandler={(message) => {this.addToast(message)}}/>
+                <DrawerJob id={"fzFsWq3jA8IS3B65XVFT"} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>
                         <div className="col">
-                            <div className="form-group">
-                               <label>Recently Searches</label>
-                               <div className="list-group">
-                                {this.state.user[0].recentSearches.map(element => {
-                                   return ( <a href='#' key={element} className="list-group-item list-group-item-action">{element}</a>)
-                                })}
-                            </div>
-                            </div>
                             <div className="form-group">
                                 <label>Page Size</label>
                                 <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
@@ -332,6 +329,7 @@ export default class Home extends React.Component {
                             </div>
                             <div className="form-group">
                                   <label>Filter By Skills</label>
+                                  <button type="button" onClick={() => {this.setState({isOpenDrawerJob:true})}}>Open</button>
                                 <div>
                                 {this.state.skills.skillsSelected.value.map((skill, index) => {
                                   return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
