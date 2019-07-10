@@ -84,12 +84,14 @@ export default class DrawerJob extends React.Component {
       
         Object.keys(this.state.proposalFetchedListener).forEach(key => {
          if(this.state.proposalFetchedListener[key]["value"] !== reference[key]["value"]){
-             
-                 element.classList.add("edited-input-field");
-             
+
+             element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px #d5d23a";
+             element.style.borderColor = "#d5d23a"
              this.setState({hasChanged:true})
          }else {
-             element.classList.remove("edited-input-field");
+  
+             element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6)";
+             element.style.borderColor = "rgba(82, 168, 236, 0.6)"
              this.setState({hasChanged:false})
          }
         })
@@ -160,7 +162,7 @@ export default class DrawerJob extends React.Component {
                        
                         Object.keys(proposals[i]).forEach(key => {
                       
-                            if(Number.isNaN(Number(proposals[i][key]))){
+                            if((Number.isNaN(Number(proposals[i][key]))) || proposals[i][key] === ""){
                                 obj.value = proposals[i][key];
                                 obj.criteria = {type:"text", minLength:4, maxLength:500}
                             }else {
@@ -207,9 +209,7 @@ export default class DrawerJob extends React.Component {
          await this.setState(state => {
             let valueCollected = value.value;
 
-            if(Number.isNaN(Number(valueCollected))){
-
-            }else {
+            if(!(Number.isNaN(Number(valueCollected))) && valueCollected !== ""){
                 valueCollected = Number(valueCollected)
             }
            
