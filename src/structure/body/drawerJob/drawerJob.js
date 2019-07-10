@@ -2,7 +2,7 @@ import React from "react";
 import "./drawerJob.css";
 import { Button, Position, Classes, Slider, Drawer, DateInput} from "@blueprintjs/core";
 import firebase from "../../../firebaseSetUp";
-import LoadingSpinner from "../../loading/loadingSpinner";
+import DrawerJobLoading from "../../loading/drawerJobLoading";
 import $ from "jquery";
 import checkCriteria from "../../../utils/checkCriteria";
 
@@ -205,89 +205,92 @@ export default class DrawerJob extends React.Component {
         
     }
 
-    componentDidMount(){
-        
-       firebase.firestore().collection("projects").doc(this.props.id).get()
-        .then(async snapshot => {
-            let project = [];
-                project.push(snapshot.data());
-
-                let quantity = 0;
-
-               let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
-
-               quantity =  result.size
-               project[0].quantity = quantity;
-
-                firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
-                .then(snapshot2 => {
-
-                let documentF = null;
-                snapshot2.forEach(document => {
-                   documentF = document;
-                })
-                let proposalFetched = {};
-                let references = snapshot.data().references;
-
-                if(documentF !== null){
-                    let proposals = documentF.data();
-                
-                
-                let obj = {value:"", criteria:{}}
-
-                  
-                    if(proposals.user === firebase.auth().currentUser.uid){
+    fetchProjectProps = () =>{
+            
+        firebase.firestore().collection("projects").doc(this.props.id).get()
+         .then(async snapshot => {
+             let project = [];
+                 project.push(snapshot.data());
+ 
+                 let quantity = 0;
+ 
+                let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
+ 
+                quantity =  result.size
+                project[0].quantity = quantity;
+ 
+                 firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
+                 .then(snapshot2 => {
+ 
+                 let documentF = null;
+                 snapshot2.forEach(document => {
+                    documentF = document;
+                 })
+                 let proposalFetched = {};
+                 let references = snapshot.data().references;
+ 
+                 if(documentF !== null){
+                     let proposals = documentF.data();
+                 
+                 
+                 let obj = {value:"", criteria:{}}
+ 
+                   
+                     if(proposals.user === firebase.auth().currentUser.uid){
+                        
+                         Object.keys(proposals).forEach(key => {
                        
-                        Object.keys(proposals).forEach(key => {
-                      
-                            if((Number.isNaN(Number(proposals[key]))) || proposals[key] === ""){
-                                obj.value = proposals[key];
-                                obj.criteria = {type:"text", minLength:4, maxLength:500}
-                            }else {
-                                obj.value = proposals[key];
-                                obj.criteria = {type:"number", min:10, max:50000}
-                            }
-                            proposalFetched[key] = Object.assign({},obj);
-                        })
-                        proposalFetched["received"] = {value:Math.round((proposalFetched["price"]["value"] - proposalFetched["price"]["value"]*0.15)*100)/100, criteria:{type:"number", min:10}}
-
-                        
-                        
-                     this.proposalFetchedListener = Object.assign({}, proposalFetched)
-                     Object.keys(this.proposalFetchedListener).forEach(key => {
-                         this.proposalFetchedListener[key] = Object.assign({}, this.proposalFetchedListener[key]);
-                     })
-                    }
-
-                }
+                             if((Number.isNaN(Number(proposals[key]))) || proposals[key] === ""){
+                                 obj.value = proposals[key];
+                                 obj.criteria = {type:"text", minLength:4, maxLength:500}
+                             }else {
+                                 obj.value = proposals[key];
+                                 obj.criteria = {type:"number", min:10, max:50000}
+                             }
+                             proposalFetched[key] = Object.assign({},obj);
+                         })
+                         proposalFetched["received"] = {value:Math.round((proposalFetched["price"]["value"] - proposalFetched["price"]["value"]*0.15)*100)/100, criteria:{type:"number", min:10}}
+ 
+                         
+                         
+                      this.proposalFetchedListener = Object.assign({}, proposalFetched)
+                      Object.keys(this.proposalFetchedListener).forEach(key => {
+                          this.proposalFetchedListener[key] = Object.assign({}, this.proposalFetchedListener[key]);
+                      })
+                     }
+ 
+                 }
+                 
+ 
+                 let isSaved = false;
+                 if(references.includes(firebase.auth().currentUser.email)){
+                     isSaved = true;
+                 }
+              
+ 
+                 firebase.firestore().collection("users").doc(project[0].author).get()
+                 .then( async doc => {
+                     project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
+                      this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener});
                 
+                 })
+                 .catch(e => {
+                    // this.addToast(e.message);
+                 })
+ 
+                 
+ 
+                 })
+                 
+         })
+         .catch(e => {
+            // this.addToast(e.message);
+         })
+ 
+     }
 
-                let isSaved = false;
-                if(references.includes(firebase.auth().currentUser.email)){
-                    isSaved = true;
-                }
-             
-
-                firebase.firestore().collection("users").doc(project[0].author).get()
-                .then( async doc => {
-                    project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
-                     this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener});
-               
-                })
-                .catch(e => {
-                   // this.addToast(e.message);
-                })
-
-                
-
-                })
-                
-        })
-        .catch(e => {
-           // this.addToast(e.message);
-        })
-
-        
+    componentDidMount(){
+       this.fetchProjectProps();
     }
 
      setValue = async (obj, prop, value,index,cb, objA, propA, coeficent)=> {
@@ -334,7 +337,7 @@ export default class DrawerJob extends React.Component {
                
                 
             <Drawer style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
-                {this.state.project.length ===0?<div className="spinner-border"></div>:
+                {this.state.project.length ===0?<DrawerJobLoading />:
                 <div className={Classes.DRAWER_BODY}>
                 <div id="dj-section-1">
                 <div className={`row ${Classes.DIALOG_BODY}`}>

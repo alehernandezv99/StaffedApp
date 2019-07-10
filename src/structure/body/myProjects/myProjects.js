@@ -172,6 +172,20 @@ export default class MyProjects extends React.Component {
                             key:6
                         },
                         {
+                                type:"dropdown",
+                                text:"Inbox",
+                                icon:"inbox",
+                                href:"",
+                                key:7,
+                                onClick:()=> {},
+                                dropdownItems:[{
+                                    href:"",
+                                    text:"Message Text",
+                                    key:2,
+                                    onClick:() => {}
+                                }]
+                        },
+                        {
                             type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].email,
                             href:"",
@@ -261,6 +275,36 @@ export default class MyProjects extends React.Component {
                         <h4 className="mt-3">My Projects</h4>
                         <div className="container-fluid">
 
+                        <ul class="nav nav-tabs ">
+                             <li className="nav-item ml-auto">
+                               <a className="nav-link" data-toggle="pill" href="#all">All</a>
+                            </li>
+                            <li class="nav-item">
+                               <a className="nav-link" data-toggle="pill" href="#inDevelop">In Development</a>
+                            </li>
+                            <li className="nav-item">
+                               <a className="nav-link" data-toggle="pill" href="#finished">Finished</a>
+                           </li>
+                           <li class="nav-item mr-auto">
+                               <a className="nav-link" data-toggle="pill" href="#saved">Saved</a>
+                          </li>
+                        </ul>
+
+
+                        <div class="tab-content">
+                               <div className="tab-pane container" id="all">
+                               Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua
+                               </div>
+                               <div className="tab-pane container fade" id="inDevelopment">
+                               Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua
+                               </div>
+                               <div className="tab-pane container fade" id="finished">
+                                   Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua
+                               </div>
+                               <div className="tab-pane container fade" id="saved">
+                                   Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua
+                               </div>
+                         </div>
                         </div>
                     </div>
                 </div>}

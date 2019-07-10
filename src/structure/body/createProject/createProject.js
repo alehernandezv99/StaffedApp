@@ -23,7 +23,7 @@ export default class CreateProject extends React.Component{
           formB:{
             type:{value:"Fixed Price", criteria:{type:"text", minLength:2}},
             budget:{value:0, criteria:{type:"number", min:10, max:50000}},
-            level:{value:"Im", criteria:{type:"text", minLength:2}},
+            level:{value:"Intermediate", criteria:{type:"text", minLength:2}},
           },
           categories:[],
           subCategories:[],
@@ -269,9 +269,11 @@ export default class CreateProject extends React.Component{
         type:formB.type["value"],
         budget:Number(formB.budget["value"]),
         level:formB.level["value"],
+        status:"hiring",
         references:[],
         proposals:[],
-        created:firebase.firestore.Timestamp.now()
+        created:firebase.firestore.Timestamp.now(),
+        id:firebase.firestore().collection("projects").doc().id
       }
 
       firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
@@ -282,7 +284,7 @@ export default class CreateProject extends React.Component{
         data.country = country;
         data.author = id;
 
-        firebase.firestore().collection("projects").add(data)
+        firebase.firestore().collection("projects").doc(data.id).set(data)
       .then(() => {
         this.toggleLoading();
         this.addToast("Project Successfully Created");

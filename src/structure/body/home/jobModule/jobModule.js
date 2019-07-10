@@ -1,15 +1,53 @@
 import React from "react";
 import "./jobModule.css";
+import firebase from "../../../../firebaseSetUp";
 
 export default class JobModule extends React.Component {
     constructor(props){
         super(props);
+        this.performTransaction = this.performTransaction.bind(this);
+    }
+
+    addToast = (message) => {
+        this.props.addToast(message);
+    }
+
+    performTransaction(collection, prop,id, value, type, messageSucess, messageFailure,cb){
+        cb();
+        firebase.firestore().collection(collection).doc(id).get()
+        .then(doc => {
+            let data = doc.data()[prop];
+            if(type === "array"){
+                if(!(data.includes(value))){
+                data.push(value);
+                }else {
+                    this.addToast("The value already exist in the list")
+                }
+            }
+            if(type === "string"){
+                data = value;
+            }
+            if(type === "number"){
+                data = value
+            }
+            firebase.firestore().collection(collection).doc(this.props.id).update({
+                [prop]:data
+            })
+            .then((result) => {
+                this.addToast(messageSucess);
+                cb()
+            })
+            .catch(e => {
+                this.addToast(messageFailure);
+                cb();
+            })
+        })
     }
 
     render(){
         return(
             <div className="job-module text-center mt-3">
-                    <h4>{this.props.title}</h4>
+                    <h4><a onClick={this.props.onClick}>{this.props.title}</a></h4>
                 <div className="job-module-block mt-3">
                     <p>{this.props.description}</p>
                 </div>
@@ -20,9 +58,9 @@ export default class JobModule extends React.Component {
                 })}
                 </div>
                 <div className="col text-right">
-                    <button className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">thumb_up_alt</i></button>
-                    <button className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">thumb_down_alt</i></button>
-                    <button className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">save_alt</i></button>
+                    {this.props.isSaved === true?null:
+                    <button className="btn btn-custom-1 mr-2 mt-2 btn-sm" title="Save Project" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Project Saved","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">save_alt</i></button>
+                    }
                 </div>
                 </div>
                 <div className="mt-2 text-left">

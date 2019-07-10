@@ -4,6 +4,7 @@ import JobModule from "./jobModule";
 import firebase from "../../../firebaseSetUp";
 import HomeLoading from "../../loading/homeLoading";
 import logo from "../../../logo.svg";
+import LoadingSpinner from "../../loading/loadingSpinner";
 import { Button, Position, Toast, Toaster, Classes, Slider, Drawer} from "@blueprintjs/core";
 import CreateProject from "../createProject";
 import $ from "jquery";
@@ -36,9 +37,10 @@ export default class Home extends React.Component {
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
             },
-            idProject:"",
+            idProject:"no-set",
             isOpenDrawerJob:false,
-            pagination:[]
+            pagination:[],
+            isLoading:false,
         }
 
         this.toaster = {};
@@ -47,12 +49,18 @@ export default class Home extends React.Component {
         }
     }
 
+    toggleLoading = () => {
+        this.setState(state => ({
+            isLoading:!state.isLoading
+        }))
+    }
+
     addToast = (message) => {
         this.toaster.show({ message: message});
     }
 
     handleCloseDrawerJob = () => {
-        this.setState({isOpenDrawerJob:false})
+        this.setState({isOpenDrawerJob:false,idProject:"no-set"})
     }
 
    async clearSkill(index){
@@ -224,6 +232,7 @@ export default class Home extends React.Component {
     render(){
         return(
             <div>
+                {this.state.isLoading === true? <LoadingSpinner />:null }
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
@@ -332,7 +341,8 @@ export default class Home extends React.Component {
                     {this.state.user === null? <HomeLoading />:
                     
                     <div className="row text-center">
-                <DrawerJob id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>
+               {this.state.idProject === "no-set"?null:
+                    <DrawerJob id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
                         <div className="col">
                             <div className="form-group">
                                 <label>Page Size</label>
@@ -344,7 +354,6 @@ export default class Home extends React.Component {
                             </div>
                             <div className="form-group">
                                   <label>Filter By Skills</label>
-                                  <button type="button" onClick={() => {this.setState({isOpenDrawerJob:true})}}>Open</button>
                                 <div>
                                 {this.state.skills.skillsSelected.value.map((skill, index) => {
                                   return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
@@ -384,6 +393,9 @@ export default class Home extends React.Component {
                             let skills = project.skills;
                             let skillsObj = [];
 
+                            let referencesCheck = project.references.includes(firebase.auth().currentUser.email);
+                            
+
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
                                     text:key,
@@ -400,7 +412,7 @@ export default class Home extends React.Component {
                                 },
                                 {
                                     text:project.budget,
-                                    icon:"payment",
+                                    icon:"attach_money",
                                     key:2
                                 },
                                 {
@@ -420,7 +432,7 @@ export default class Home extends React.Component {
                                 }
                             ]
 
-                            return <JobModule key={index} title={title} description={description} skills={skillsObj} specs={specs} />
+                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):<div className="spinner-border"></div>}
 
                            <ul className="pagination text-center mt-2">
