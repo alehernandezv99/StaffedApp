@@ -18,8 +18,9 @@ export default class DrawerJob extends React.Component {
             proposal:{
                 price:{value:"", criteria:{type:"number", min:10, max:50000}},
                 receive:{value:"", criteria:{type:"number", min:10}},
-                message:{value:"", criteria:{}}
-            }
+                message:{value:"", criteria:{type:"text", minLength:5, maxLength:500}}
+            },
+            proposalFetched:[],
         }
 
         this.performTransaction = this.performTransaction.bind(this);
@@ -91,15 +92,14 @@ export default class DrawerJob extends React.Component {
 
         let data = {
             price:this.state.proposal.price.value,
-            presentation:this.state.proposal.message.value
+            presentation:this.state.proposal.message.value,
+            user:firebase.auth().currentUser.uid,
         }
-
         firebase.firestore().collection("projects").doc(this.props.id).get()
-        .then(snapshot => {
+        .then((snapshot) => {
             let proposals = snapshot.data().proposals;
             proposals.push(data);
-            alert(JSON.stringify(proposals));
-            alert(snapshot.exists);
+
             firebase.firestore().collection("projects").doc(this.props.id).update({proposals:proposals})
             .then(() => {
                 this.addToast("Proposal Submitted");
@@ -108,9 +108,9 @@ export default class DrawerJob extends React.Component {
             .catch(e => {
                 this.addToast(e.message);
             })
-        })
+        })    
         .catch(e => {
-            this.addToast(e.message)
+            this.addToast(e.message);
         })
         }else {
             for(let i = 0; i < messages.length; i++){
@@ -123,32 +123,50 @@ export default class DrawerJob extends React.Component {
 
     componentDidMount(){
         
-        firebase.firestore().collection("projects").doc(this.props.id).get()
+       firebase.firestore().collection("projects").doc(this.props.id).get()
         .then(snapshot => {
             let project = [];
                 project.push(snapshot.data());
 
+     
+                let proposals = snapshot.data().proposals;
+                let proposalFetched = [];
+                for(let i =0; i < proposals.length; i++){
+                    if(proposals[i].user === firebase.auth().currentUser.uid){
+                        proposalFetched.push(proposals[i]);
+                    }
+                }
+
                 firebase.firestore().collection("users").doc(project[0].author).get()
-                .then(doc => {
+                .then( doc => {
                     project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
-                    this.setState({project:project});
+                     this.setState({project:project, proposalFetched:proposalFetched});
+               
                 })
                 .catch(e => {
-                    this.addToast(e.message);
+                   // this.addToast(e.message);
                 })
         })
         .catch(e => {
-            this.addToast(e.message);
+           // this.addToast(e.message);
         })
 
         
     }
 
-    setValue = (obj, prop, value, objA, propA, coeficent)=> {
+    setValue = (obj, prop, value,index, objA, propA, coeficent)=> {
         this.setState(state => {
+            let valueCollected = value.value;
+
+            if(Number.isNaN(Number(valueCollected))){
+
+            }else {
+                valueCollected = Number(valueCollected)
+            }
+           
             let objBase = state[obj];
             let propBase = objBase[prop];
-            propBase["value"] = value;
+            propBase["value"] = valueCollected;
             objBase[prop] = propBase;
 
             if(coeficent){
@@ -159,6 +177,13 @@ export default class DrawerJob extends React.Component {
             objBase[propA] = propBaseA;
             }
 
+            if(!(checkCriteria(value.value, propBase["criteria"], prop).check)){
+                value.parentNode.childNodes[index].style.display ="block";
+                let message =checkCriteria(value.value, propBase["criteria"], prop).message;
+                value.parentNode.childNodes[index].textContent = message;
+            }else {
+                value.parentNode.childNodes[index].style.display ="none";
+            }
 
             return (
                 {
@@ -231,7 +256,10 @@ export default class DrawerJob extends React.Component {
                     </div>
                     </div>
                     <div className="col-sm-4">
+                        {this.state.proposalFetched.length > 0?
+                        <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-3")}}><i className="material-icons align-middle">create</i> View Proposal</button>:
                         <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-2")}}><i className="material-icons align-middle">add</i> Proposal</button>
+                        }
                         <div className="action-btns text-center">
                     <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project")}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">save_alt</i> Save</button>
                         </div>
@@ -260,7 +288,9 @@ export default class DrawerJob extends React.Component {
                           <h4>Price</h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" value={this.state.proposal.price.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",Number(e.target.value),"proposal","receive",-0.15)}}/>
+                          <input type="number" value={this.state.proposal.price.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",e.target,1,"proposal","receive",-0.15)}}/>
+                          <div className="invalid-feedback">Valid.</div>
+                           
                         </div>
                           </div>
 
@@ -269,7 +299,7 @@ export default class DrawerJob extends React.Component {
                           <h4>Pioneering Service Cost</h4>
                         </div>
                         <div className="text-left">
-                          <div>-15%</div>
+                          <h6>-15% (-{ Math.round((this.state.proposal.price.value * 0.15)*100)/100} $)</h6>
                         </div>
                           </div>
 
@@ -278,15 +308,16 @@ export default class DrawerJob extends React.Component {
                           <h4>You Receive</h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",Number(e.target.value),"proposal","price",-(1-(1/(1-0.15))))}}/>
+                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1,"proposal","price",-(1-(1/(1-0.15))))}}/>
+                          <div className="invalid-feedback">Valid.</div>
                         </div>
                           </div>
                       </div>
                       <div className="form-group mt-5">
                       <h4>Cover Letter</h4>
-                        <textarea className="form-control mt-3" onChange={(e) => {this.setState("proposal","message",e.target.value)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
+                        <textarea className="form-control mt-3" onChange={(e) => {this.setValue("proposal","message",e.target,2)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                            <div className="invalid-feedback">Valid.</div>
-                           <div className="valid-feedback">Please fill out this field.</div>
+                          
                       </div>
                       </div>
 
@@ -296,6 +327,16 @@ export default class DrawerJob extends React.Component {
                   </div>
                   </div>
                 </div>
+                {this.state.proposalFetched.length === 0?null:
+                <div className="dj-section-3">
+                <div className={`${Classes.DIALOG_BODY}`}>
+                    <div className="form-group">
+                        <h4>Price</h4>
+                        <h6 className="mt-3">{this.state.proposalFetched[0].price}</h6>
+                    </div>
+                </div>
+                </div>
+                }
                 </div>
                 }
             </Drawer>
