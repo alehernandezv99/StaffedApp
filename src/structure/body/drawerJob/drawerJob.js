@@ -20,11 +20,14 @@ export default class DrawerJob extends React.Component {
                 receive:{value:"", criteria:{type:"number", min:10}},
                 message:{value:"", criteria:{type:"text", minLength:5, maxLength:500}}
             },
-            proposalFetched:[],
+            proposalFetched:null,
+            isSaved:false,
+            hasChanged:false,
         }
 
         this.performTransaction = this.performTransaction.bind(this);
         this.toggleLoading = this.toggleLoading.bind(this);
+        this.checkChange = this.checkChange.bind(this)
     }
 
     toggleLoading(){
@@ -33,7 +36,7 @@ export default class DrawerJob extends React.Component {
         }))
     }
 
-    performTransaction(collection, prop, value, type, messageSucess, messageFailure){
+    performTransaction(collection, prop, value, type, messageSucess, messageFailure,cb){
         this.toggleLoading();
         firebase.firestore().collection(collection).doc(`${this.props.id}`).get()
         .then(doc => {
@@ -57,10 +60,12 @@ export default class DrawerJob extends React.Component {
             .then((result) => {
                 this.addToast(messageSucess);
                 this.toggleLoading()
+                cb()
             })
             .catch(e => {
                 this.addToast(messageFailure);
                 this.toggleLoading();
+                cb();
             })
         })
     }
@@ -73,6 +78,22 @@ export default class DrawerJob extends React.Component {
     changePage = (from, to) => {
         $(from).slideUp();
         $(to).slideDown();
+    }
+
+    checkChange(element, reference){
+      
+        Object.keys(this.state.proposalFetchedListener).forEach(key => {
+         if(this.state.proposalFetchedListener[key]["value"] !== reference[key]["value"]){
+             
+                 element.classList.add("edited-input-field");
+             
+             this.setState({hasChanged:true})
+         }else {
+             element.classList.remove("edited-input-field");
+             this.setState({hasChanged:false})
+         }
+        })
+
     }
 
     submitProposal(){
@@ -130,17 +151,45 @@ export default class DrawerJob extends React.Component {
 
      
                 let proposals = snapshot.data().proposals;
-                let proposalFetched = [];
+                let proposalFetched = {};
+                let references = snapshot.data().references;
+                let obj = {value:"", criteria:{}}
+
                 for(let i =0; i < proposals.length; i++){
                     if(proposals[i].user === firebase.auth().currentUser.uid){
-                        proposalFetched.push(proposals[i]);
+                       
+                        Object.keys(proposals[i]).forEach(key => {
+                      
+                            if(Number.isNaN(Number(proposals[i][key]))){
+                                obj.value = proposals[i][key];
+                                obj.criteria = {type:"text", minLength:4, maxLength:500}
+                            }else {
+                                obj.value = proposals[i][key];
+                                obj.criteria = {type:"number", min:10, max:50000}
+                            }
+                            proposalFetched[key] = Object.assign({},obj);
+                        })
+                        proposalFetched["received"] = {value:Math.round((proposalFetched["price"]["value"] - proposalFetched["price"]["value"]*0.15)*100)/100, criteria:{type:"number", min:10}}
+
+                        
+                        
+                     this.proposalFetchedListener = Object.assign({}, proposalFetched)
+                     Object.keys(this.proposalFetchedListener).forEach(key => {
+                         this.proposalFetchedListener[key] = Object.assign({}, this.proposalFetchedListener[key]);
+                     })
                     }
                 }
 
+                let isSaved = false;
+                if(references.includes(firebase.auth().currentUser.email)){
+                    isSaved = true;
+                }
+             
+
                 firebase.firestore().collection("users").doc(project[0].author).get()
-                .then( doc => {
+                .then( async doc => {
                     project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
-                     this.setState({project:project, proposalFetched:proposalFetched});
+                     this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener});
                
                 })
                 .catch(e => {
@@ -154,8 +203,8 @@ export default class DrawerJob extends React.Component {
         
     }
 
-    setValue = (obj, prop, value,index, objA, propA, coeficent)=> {
-        this.setState(state => {
+     setValue = async (obj, prop, value,index,cb, objA, propA, coeficent)=> {
+         await this.setState(state => {
             let valueCollected = value.value;
 
             if(Number.isNaN(Number(valueCollected))){
@@ -191,6 +240,7 @@ export default class DrawerJob extends React.Component {
                 }
             )
         })
+        cb()
     }
 
     render(){
@@ -256,13 +306,16 @@ export default class DrawerJob extends React.Component {
                     </div>
                     </div>
                     <div className="col-sm-4">
-                        {this.state.proposalFetched.length > 0?
+                        {this.state.proposalFetched.price !== undefined?
                         <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-3")}}><i className="material-icons align-middle">create</i> View Proposal</button>:
                         <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-2")}}><i className="material-icons align-middle">add</i> Proposal</button>
                         }
+                        {
+                        this.state.isSaved === true?null:
                         <div className="action-btns text-center">
-                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project")}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">save_alt</i> Save</button>
+                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">save_alt</i> Save</button>
                         </div>
+                        }
                         <div className="container-fluid mt-4">
                         <h4>Client</h4>
                         <h6 className="mt-3">{this.state.project[0].author}</h6>
@@ -288,7 +341,7 @@ export default class DrawerJob extends React.Component {
                           <h4>Price</h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" value={this.state.proposal.price.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",e.target,1,"proposal","receive",-0.15)}}/>
+                          <input type="number" value={this.state.proposal.price.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",e.target,1, ()=> {},"proposal","receive",-0.15)}}/>
                           <div className="invalid-feedback">Valid.</div>
                            
                         </div>
@@ -308,14 +361,14 @@ export default class DrawerJob extends React.Component {
                           <h4>You Receive</h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1,"proposal","price",-(1-(1/(1-0.15))))}}/>
+                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1, ()=> {},"proposal","price",-(1-(1/(1-0.15)))); this.checkChange(e.target)}}/>
                           <div className="invalid-feedback">Valid.</div>
                         </div>
                           </div>
                       </div>
                       <div className="form-group mt-5">
                       <h4>Cover Letter</h4>
-                        <textarea className="form-control mt-3" onChange={(e) => {this.setValue("proposal","message",e.target,2)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
+                        <textarea className="form-control mt-3" onChange={(e) => {this.setValue("proposal","message",e.target,2,() => {})}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                            <div className="invalid-feedback">Valid.</div>
                           
                       </div>
@@ -327,14 +380,63 @@ export default class DrawerJob extends React.Component {
                   </div>
                   </div>
                 </div>
-                {this.state.proposalFetched.length === 0?null:
-                <div className="dj-section-3">
+                {this.state.proposalFetched.price === undefined?null:
+                <div id="dj-section-3" style={{display:"none"}}>
                 <div className={`${Classes.DIALOG_BODY}`}>
-                    <div className="form-group">
-                        <h4>Price</h4>
-                        <h6 className="mt-3">{this.state.proposalFetched[0].price}</h6>
-                    </div>
-                </div>
+                      <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-3","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
+                    <div className="card">
+                        <div className="card-header">
+                            <h3>Proposal</h3>
+                        </div>
+                    <div className="card-body">
+                      <div className="form-group">
+                          <div className="row mt-3">
+                        <div className="col-sm-5">
+                          <h4>Price</h4>
+                        </div>
+                        <div className="text-left">
+                          <input type="number" value={this.state.proposalFetched.price.value} className="form-control" onChange={(e) => {e.persist(); this.setValue("proposalFetched","price",e.target,1, () => {this.checkChange(e.target, this.state.proposalFetched)},"proposalFetched","received",-0.15); }}/>
+                          <div className="invalid-feedback">Valid.</div>
+                           
+                        </div>
+                          </div>
+
+                          <div className="row mt-3">
+                        <div className="col-sm-5">
+                          <h4>Pioneering Service Cost</h4>
+                        </div>
+                        <div className="text-left">
+                          <h6>-15% (-{ Math.round((this.state.proposalFetched.price.value * 0.15)*100)/100} $)</h6>
+                        </div>
+                          </div>
+
+                          <div className="row mt-3">
+                        <div className="col-sm-5">
+                          <h4>You Receive</h4>
+                        </div>
+                        <div className="text-left">
+                          <input type="number" className="form-control" value={this.state.proposalFetched.received.value} onChange={(e) => {e.persist(); this.setValue("proposalFetched","received",e.target,1, ()=> { this.checkChange(e.target,this.state.proposalFetched)},"proposalFetched","price",-(1-(1/(1-0.15)))); }}/>
+                          <div className="invalid-feedback">Valid.</div>
+                        </div>
+                          </div>
+                      </div>
+                      <div className="form-group mt-5">
+                      <h4>Cover Letter</h4>
+                        <textarea className="form-control mt-3" onChange={(e) => {e.persist(); this.setValue("proposalFetched","presentation",e.target,2,()=> { this.checkChange(e.target, this.state.proposalFetched)}); }} value={this.state.proposalFetched.presentation.value} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
+                           <div className="invalid-feedback">Valid.</div>
+                          
+                      </div>
+                      </div>
+
+                      <div className="card-footer text-center">
+                          {this.state.hasChanged === true?
+                          <button type="button" className="btn btn-custom-1" onClick={()=> {this.submitProposal()}}><i className="material-icons align-middle">send</i> Confirm Edit</button>
+                          :null
+                          }
+                      </div>
+                  </div>
+                  </div>
+
                 </div>
                 }
                 </div>
