@@ -74,6 +74,53 @@ export default class DrawerJob extends React.Component {
         $(to).slideDown();
     }
 
+    submitProposal(){
+        let objectProposals = this.state.proposal;
+        let check = 0;
+        let messages = [];
+        
+        Object.keys(objectProposals).forEach(key => {
+            if(!(checkCriteria(objectProposals[key]["value"], objectProposals[key]["criteria"], key).check)){
+                check =1;
+            }else {
+                messages.push((checkCriteria(objectProposals[key]["value"], objectProposals[key]["criteria"], key).message))
+            }
+        })
+
+        if(check === 0){
+
+        let data = {
+            price:this.state.proposal.price.value,
+            presentation:this.state.proposal.message.value
+        }
+
+        firebase.firestore().collection("projects").doc(this.props.id).get()
+        .then(snapshot => {
+            let proposals = snapshot.data().proposals;
+            proposals.push(data);
+            alert(JSON.stringify(proposals));
+            alert(snapshot.exists);
+            firebase.firestore().collection("projects").doc(this.props.id).update({proposals:proposals})
+            .then(() => {
+                this.addToast("Proposal Submitted");
+                this.props.handleClose();
+            })
+            .catch(e => {
+                this.addToast(e.message);
+            })
+        })
+        .catch(e => {
+            this.addToast(e.message)
+        })
+        }else {
+            for(let i = 0; i < messages.length; i++){
+                this.addToast(messages[i]);
+            }
+        }
+
+        
+    }
+
     componentDidMount(){
         
         firebase.firestore().collection("projects").doc(this.props.id).get()
@@ -104,10 +151,14 @@ export default class DrawerJob extends React.Component {
             propBase["value"] = value;
             objBase[prop] = propBase;
 
+            if(coeficent){
             let objBaseA = state[objA];
             let propBaseA = objBaseA[propA];
             propBaseA["value"] = propBase["value"] + (propBase["value"]*coeficent);
+            propBaseA["value"] = Math.round((Number(propBaseA["value"]) * 100))/100
             objBase[propA] = propBaseA;
+            }
+
 
             return (
                 {
@@ -121,7 +172,7 @@ export default class DrawerJob extends React.Component {
         return(
             <div>
                
-                {this.state.isLoading === true?<LoadingSpinner />:null}
+                
             <Drawer style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
                 {this.state.project.length ===0?<div className="spinner-border"></div>:
                 <div className={Classes.DRAWER_BODY}>
@@ -197,7 +248,7 @@ export default class DrawerJob extends React.Component {
                 </div>
                 <div id="dj-section-2" style={{display:"none"}}>
                   <div className={`${Classes.DIALOG_BODY}`}>
-                      <button type="button" value={this.state.proposal.price.value} className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-2","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
+                      <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-2","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                     <div className="card">
                         <div className="card-header">
                             <h3>Proposal</h3>
@@ -209,7 +260,7 @@ export default class DrawerJob extends React.Component {
                           <h4>Price</h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" value={this.state.proposal.receive.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",Number(e.target.value),"proposal","receive",-0.15)}}/>
+                          <input type="number" value={this.state.proposal.price.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",Number(e.target.value),"proposal","receive",-0.15)}}/>
                         </div>
                           </div>
 
@@ -227,20 +278,20 @@ export default class DrawerJob extends React.Component {
                           <h4>You Receive</h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" className="form-control" onChange={(e) => {this.setValue("proposal","receive",Number(e.target.value),"proposal","price",0.15)}}/>
+                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",Number(e.target.value),"proposal","price",-(1-(1/(1-0.15))))}}/>
                         </div>
                           </div>
                       </div>
                       <div className="form-group mt-5">
                       <h4>Cover Letter</h4>
-                        <textarea className="form-control mt-3" placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
+                        <textarea className="form-control mt-3" onChange={(e) => {this.setState("proposal","message",e.target.value)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                            <div className="invalid-feedback">Valid.</div>
                            <div className="valid-feedback">Please fill out this field.</div>
                       </div>
                       </div>
 
                       <div className="card-footer text-center">
-                          <button type="button" className="btn btn-custom-1"><i className="material-icons align-middle">send</i> Submit</button>
+                          <button type="button" className="btn btn-custom-1" onClick={()=> {this.submitProposal()}}><i className="material-icons align-middle">send</i> Submit</button>
                       </div>
                   </div>
                   </div>
