@@ -17,6 +17,11 @@
     border-color:#d5d23a !important;
 }
 
+.other {
+  border-color: rgba(82, 168, 236, 0.6);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6);
+}
+
 .bp3-overlay {
     z-index: 99999999999 !important;
 }

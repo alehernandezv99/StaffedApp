@@ -36,6 +36,7 @@ export default class Home extends React.Component {
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
             },
+            idProject:"",
             isOpenDrawerJob:false,
             pagination:[]
         }
@@ -289,6 +290,20 @@ export default class Home extends React.Component {
                         },
                         {
                             type:"dropdown",
+                            text:"Inbox",
+                            icon:"inbox",
+                            href:"",
+                            key:7,
+                            onClick:()=> {},
+                            dropdownItems:[{
+                                href:"",
+                                text:"Message Text",
+                                key:2,
+                                onClick:() => {}
+                            }]
+                        },
+                        {
+                            type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].email,
                             href:"",
                             key:5,
@@ -317,7 +332,7 @@ export default class Home extends React.Component {
                     {this.state.user === null? <HomeLoading />:
                     
                     <div className="row text-center">
-                <DrawerJob id={"fzFsWq3jA8IS3B65XVFT"} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>
+                <DrawerJob id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>
                         <div className="col">
                             <div className="form-group">
                                 <label>Page Size</label>

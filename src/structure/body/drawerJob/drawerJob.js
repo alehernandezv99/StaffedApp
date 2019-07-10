@@ -80,21 +80,78 @@ export default class DrawerJob extends React.Component {
         $(to).slideDown();
     }
 
+    updateProposal = () => {
+
+       
+        let objectProposal = this.state.proposalFetched;
+        
+        let check = 0;
+        let messages = [];
+
+        Object.keys(objectProposal).forEach(key => {
+            if(key !== "user" && key !== "created"){
+            if(!(checkCriteria(objectProposal[key]["value"], objectProposal[key]["criteria"], key).check)){
+                check =1;
+                messages.push((checkCriteria(objectProposal[key]["value"], objectProposal[key]["criteria"], key).message))
+            }else {
+                
+            }
+        }
+        })
+
+        if(check === 0){
+            
+            let data = {
+                price:this.state.proposalFetched.price.value,
+                presentation:this.state.proposalFetched.presentation.value,
+                updated:firebase.firestore.Timestamp.now(),
+            }
+            firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
+            .then(snapshot => {
+                if(!(snapshot.empty)){
+                    let id = "";
+                    snapshot.forEach(doc => {
+                        id = doc.id;
+                    })
+
+                    firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(id).update(data)
+                    .then(() => {
+                        this.addToast("Proposal Updated");
+                        this.props.handleClose();
+                    })
+                    .catch(e => {
+                        this.addToast(e.message);
+
+                    })
+                }
+            })
+            }else {
+                for(let i = 0; i < messages.length; i++){
+                    this.addToast(messages[i]);
+                }
+            }
+    }
+
     checkChange(element, reference){
-      
+      let check = 0 ;
         Object.keys(this.state.proposalFetchedListener).forEach(key => {
          if(this.state.proposalFetchedListener[key]["value"] !== reference[key]["value"]){
 
-             element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px #d5d23a";
-             element.style.borderColor = "#d5d23a"
-             this.setState({hasChanged:true})
+             check = 1
          }else {
-  
-             element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6)";
-             element.style.borderColor = "rgba(82, 168, 236, 0.6)"
-             this.setState({hasChanged:false})
+
          }
         })
+
+        if(check === 1){
+        element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px #d5d23a";
+        element.style.borderColor = "#d5d23a"
+        this.setState({hasChanged:true})
+        }else {
+        element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6)";
+             element.style.borderColor = "rgba(82, 168, 236, 0.6)"
+             this.setState({hasChanged:false})
+        }
 
     }
 
@@ -104,11 +161,13 @@ export default class DrawerJob extends React.Component {
         let messages = [];
         
         Object.keys(objectProposals).forEach(key => {
+            if(key !== "quantity"){
             if(!(checkCriteria(objectProposals[key]["value"], objectProposals[key]["criteria"], key).check)){
                 check =1;
             }else {
                 messages.push((checkCriteria(objectProposals[key]["value"], objectProposals[key]["criteria"], key).message))
             }
+        }
         })
 
         if(check === 0){
@@ -117,24 +176,26 @@ export default class DrawerJob extends React.Component {
             price:this.state.proposal.price.value,
             presentation:this.state.proposal.message.value,
             user:firebase.auth().currentUser.uid,
+            created:firebase.firestore.Timestamp.now()
         }
-        firebase.firestore().collection("projects").doc(this.props.id).get()
-        .then((snapshot) => {
-            let proposals = snapshot.data().proposals;
-            proposals.push(data);
 
-            firebase.firestore().collection("projects").doc(this.props.id).update({proposals:proposals})
-            .then(() => {
-                this.addToast("Proposal Submitted");
-                this.props.handleClose();
-            })
-            .catch(e => {
-                this.addToast(e.message);
-            })
-        })    
-        .catch(e => {
-            this.addToast(e.message);
+        firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
+        .then(snapshot => {
+            if(snapshot.empty){
+                firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").add(data)
+                .then(() => {
+                    this.addToast("Proposal Submitted");
+                    this.props.handleClose();
+                })
+                .catch(e => {
+                    this.addToast(e.message);
+                })
+            }
         })
+        .catch(e => {
+            this.addToast(e.message)
+        })
+        
         }else {
             for(let i = 0; i < messages.length; i++){
                 this.addToast(messages[i]);
@@ -147,26 +208,43 @@ export default class DrawerJob extends React.Component {
     componentDidMount(){
         
        firebase.firestore().collection("projects").doc(this.props.id).get()
-        .then(snapshot => {
+        .then(async snapshot => {
             let project = [];
                 project.push(snapshot.data());
 
-     
-                let proposals = snapshot.data().proposals;
+                let quantity = 0;
+
+               let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
+
+               quantity =  result.size
+               project[0].quantity = quantity;
+
+                firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
+                .then(snapshot2 => {
+
+                let documentF = null;
+                snapshot2.forEach(document => {
+                   documentF = document;
+                })
                 let proposalFetched = {};
                 let references = snapshot.data().references;
+
+                if(documentF !== null){
+                    let proposals = documentF.data();
+                
+                
                 let obj = {value:"", criteria:{}}
 
-                for(let i =0; i < proposals.length; i++){
-                    if(proposals[i].user === firebase.auth().currentUser.uid){
+                  
+                    if(proposals.user === firebase.auth().currentUser.uid){
                        
-                        Object.keys(proposals[i]).forEach(key => {
+                        Object.keys(proposals).forEach(key => {
                       
-                            if((Number.isNaN(Number(proposals[i][key]))) || proposals[i][key] === ""){
-                                obj.value = proposals[i][key];
+                            if((Number.isNaN(Number(proposals[key]))) || proposals[key] === ""){
+                                obj.value = proposals[key];
                                 obj.criteria = {type:"text", minLength:4, maxLength:500}
                             }else {
-                                obj.value = proposals[i][key];
+                                obj.value = proposals[key];
                                 obj.criteria = {type:"number", min:10, max:50000}
                             }
                             proposalFetched[key] = Object.assign({},obj);
@@ -180,7 +258,9 @@ export default class DrawerJob extends React.Component {
                          this.proposalFetchedListener[key] = Object.assign({}, this.proposalFetchedListener[key]);
                      })
                     }
+
                 }
+                
 
                 let isSaved = false;
                 if(references.includes(firebase.auth().currentUser.email)){
@@ -197,6 +277,11 @@ export default class DrawerJob extends React.Component {
                 .catch(e => {
                    // this.addToast(e.message);
                 })
+
+                
+
+                })
+                
         })
         .catch(e => {
            // this.addToast(e.message);
@@ -297,7 +382,7 @@ export default class DrawerJob extends React.Component {
                                 </div>
                                 <div className="col-sm-4">
                                     <div><h5><i className="material-icons align-middle">library_books</i> Proposals</h5></div>
-                                    <div><h6 className="ml-5">{this.state.project[0].proposals.length}</h6></div>
+                                    <div><h6 className="ml-5">{this.state.project[0].quantity}</h6></div>
                                 </div>
                             </div>
                         </div>
@@ -430,7 +515,7 @@ export default class DrawerJob extends React.Component {
 
                       <div className="card-footer text-center">
                           {this.state.hasChanged === true?
-                          <button type="button" className="btn btn-custom-1" onClick={()=> {this.submitProposal()}}><i className="material-icons align-middle">send</i> Confirm Edit</button>
+                          <button type="button" className="btn btn-custom-1" onClick={()=> {this.updateProposal()}}><i className="material-icons align-middle">send</i> Confirm Edit</button>
                           :null
                           }
                       </div>

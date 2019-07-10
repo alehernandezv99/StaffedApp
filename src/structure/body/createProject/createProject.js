@@ -271,7 +271,7 @@ export default class CreateProject extends React.Component{
         level:formB.level["value"],
         references:[],
         proposals:[],
-        created:new Date()
+        created:firebase.firestore.Timestamp.now()
       }
 
       firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
