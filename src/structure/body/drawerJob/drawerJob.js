@@ -6,6 +6,8 @@ import DrawerJobLoading from "../../loading/drawerJobLoading";
 import $ from "jquery";
 import checkCriteria from "../../../utils/checkCriteria";
 import ProposalModule from "./proposalModule";
+import ContractModule from "./contractModule";
+import AbsoluteLoading from "../../loading/absoluteLoading";
 
 export default class DrawerJob extends React.Component {
     constructor(props){
@@ -23,6 +25,7 @@ export default class DrawerJob extends React.Component {
                 message:{value:"", criteria:{type:"text", minLength:5, maxLength:500}}
             },
             proposalFetched:null,
+            contract:"",
             proposals:[],
             isSaved:false,
             hasChanged:false,
@@ -83,6 +86,8 @@ export default class DrawerJob extends React.Component {
         $(to).slideDown();
     }
 
+    
+
     updateProposal = () => {
 
        
@@ -135,6 +140,31 @@ export default class DrawerJob extends React.Component {
             }
     }
 
+    acceptProposal = (idProject, idProposal) => {
+        this.toggleLoading();
+        firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
+        .then(doc => {
+            if(doc.exists){
+                firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).update({status:"accepted"})
+                .then(() => {
+                    this.addToast("Proposal Accepted");
+                    this.toggleLoading();
+                })
+                .catch(e => {
+                    this.addToast(e.message);
+                    this.toggleLoading()
+                })
+            }else {
+                this.addToast("Proposal does not exist");
+                this.toggleLoading();
+            }
+        })
+        .catch(e => {
+            this.addToast(e.message);
+            this.toggleLoading();
+        })
+    }
+
     checkChange(element, reference){
       let check = 0 ;
         Object.keys(this.state.proposalFetchedListener).forEach(key => {
@@ -180,13 +210,14 @@ export default class DrawerJob extends React.Component {
             presentation:this.state.proposal.message.value,
             user:firebase.auth().currentUser.uid,
             status:"pending",
-            created:firebase.firestore.Timestamp.now()
+            created:firebase.firestore.Timestamp.now(),
+            id:firebase.firestore().collection("projects").doc().collection("proposals").id
         }
 
         firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
         .then(snapshot => {
             if(snapshot.empty){
-                firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").add(data)
+                firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(data.id).set(data)
                 .then(() => {
                     this.addToast("Proposal Submitted");
                     this.props.handleClose();
@@ -215,22 +246,31 @@ export default class DrawerJob extends React.Component {
          .then(async snapshot => {
              let project = [];
                  project.push(snapshot.data());
- 
                  let quantity = 0;
+                 let idAuthorProject = project[0].author
+                 let author = await firebase.firestore().collection("users").doc(project[0].author).get();
+                 author = author.data().displayName?author.data().displayName:author.data().email;
 
+                 project[0].author = author;
                  let references = snapshot.data().references;
                 let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
  
                 quantity =  result.size
                 project[0].quantity = quantity;
 
-                if(!(project[0].author === firebase.auth().currentUser.uid)){
+                if(!(idAuthorProject === firebase.auth().currentUser.uid)){
                  firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
                  .then(snapshot2 => {
- 
+                    
                  let documentF = null;
+                 let isOwner = false;
+                 let contract = "";
                  snapshot2.forEach(document => {
                     documentF = document;
+                    if(document.data().status =="accepted"){
+                        isOwner = true;
+                        contract = document.data();
+                    }
                  })
                  let proposalFetched = {};
                  
@@ -240,10 +280,9 @@ export default class DrawerJob extends React.Component {
                  
                  
                  let obj = {value:"", criteria:{}}
- 
-                   
+
                      if(proposals.user === firebase.auth().currentUser.uid){
-                        
+                       
                          Object.keys(proposals).forEach(key => {
                        
                              if((Number.isNaN(Number(proposals[key]))) || proposals[key] === ""){
@@ -274,10 +313,10 @@ export default class DrawerJob extends React.Component {
                  }
               
  
-                 firebase.firestore().collection("users").doc(project[0].author).get()
+                 firebase.firestore().collection("users").doc(idAuthorProject).get()
                  .then( async doc => {
                      project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
-                      this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener});
+                      this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener, isOwner:isOwner, contract:contract});
                 
                  })
                  .catch(e => {
@@ -290,6 +329,7 @@ export default class DrawerJob extends React.Component {
                 
 
                 }else {
+        
                     let isSaved = false;
                  if(references.includes(firebase.auth().currentUser.email)){
                      isSaved = true;
@@ -297,12 +337,19 @@ export default class DrawerJob extends React.Component {
 
                  let proposals = [];
 
-                 firebase.firestore().collection("projects").doc(project[0].id).collection("proposals").get()
+                 firebase.firestore().collection("projects").doc(project[0].id).collection("proposals").orderBy("created","desc").get()
                  .then(s => {
+                     
+                     let contract = "";
+                     let index = 0
                     s.forEach(proposal => {
                         proposals.push(proposal.data());
+                        if(proposals[index].status === "accepted"){
+                            contract = proposals[index];
+                        }
+                        index++
                     })
-                    this.setState({project:project, isSaved:isSaved, isOwner:true, proposals:proposals})
+                    this.setState({project:project, isSaved:isSaved, isOwner:true, proposals:proposals ,contract:contract})
                     
                  })
 
@@ -360,9 +407,8 @@ export default class DrawerJob extends React.Component {
 
     render(){
         return(
-            <div>
-               
-                
+            <div style={{position:"relative"}}>
+                {this.state.isLoading === true?<AbsoluteLoading />:null} 
             <Drawer style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
                 {this.state.project.length ===0?<DrawerJobLoading />:
                 <div className={Classes.DRAWER_BODY}>
@@ -422,7 +468,11 @@ export default class DrawerJob extends React.Component {
                     </div>
                     <div className="col-sm-4">
                         
-                        {this.state.isOwner === true?<button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-4")}}><i className="material-icons align-middle">view_agenda</i> View Proposals</button>:
+                        {this.state.isOwner === true?
+                        this.state.contract === ""?
+                        <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-4")}}><i className="material-icons align-middle">view_agenda</i> View Proposals</button>:
+                        <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-4")}}><i className="material-icons align-middle">subject</i>Contract</button>
+                        :
                             this.state.proposalFetched.price !== undefined?
                         <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-3")}}><i className="material-icons align-middle">create</i> View Proposal</button>:
                         <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-2")}}><i className="material-icons align-middle">add</i> Proposal</button>
@@ -498,7 +548,7 @@ export default class DrawerJob extends React.Component {
                   </div>
                   </div>
                 </div>
-                {this.state.proposalFetched !== null?
+                {this.state.proposalFetched !== null && this.state.contract == ""?
                 this.state.proposalFetched.price === undefined?null:
                 <div id="dj-section-3" style={{display:"none"}}>
                 <div className={`${Classes.DIALOG_BODY}`}>
@@ -561,15 +611,19 @@ export default class DrawerJob extends React.Component {
                 }
                 {
                     this.state.isOwner === false?null:
+                  
                     <div id="dj-section-4" style={{display:"none"}}>
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
+                      {this.state.contract !== ""?
+                     <ContractModule user={this.state.contract.user} price={this.state.contract.price} presentation={this.state.contract.presentation} />:
                     <div className="container-fluid">
                         {this.state.proposals.map((proposal,i) => {
-                        return <ProposalModule key={i} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
+                        return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
                     })
                     }
                     </div>
+                      }
                   </div>
 
                 </div>

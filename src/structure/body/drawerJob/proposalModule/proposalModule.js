@@ -1,9 +1,14 @@
 import React from "react";
 import "./proposalModule.css";
+import firebase from "../../../../firebaseSetUp";
 
 export default class ProposalModule extends React.Component {
     constructor(props){
         super(props);
+
+        this.state = {
+            user:"",
+        }
     }
 
      myFunction = (dots, moreText, btnText) =>{
@@ -20,40 +25,50 @@ export default class ProposalModule extends React.Component {
           btnText.innerHTML = "Read less"; 
           moreText.style.display = "inline";
         }
-        "Jelos".split("").splice(129,)
+        
       }
 
      
 
-      componentWillReceiveProps(){
-          let check  = 0;
+      componentDidMount(){
 
-          if(!(this.state.dots)){
+        
+          firebase.firestore().collection("users").doc(this.props.user).get()
+          .then(doc => {
+              
+            let check  = 0;
+
+          if(this.dots === undefined){
               check =1 
           }
-          if(!(this.state.more)){
+          if(this.more === undefined){
               check  =1;
           }
-          if(!(this.state.myBtn)){
+          if(this.myBtn === undefined){
               check = 1;
           }
         if(check ==0){
-        this.myFunction(this.state.dots, this.state.more, this.state.myBtn)
-        this.myFunction(this.state.dots, this.state.more, this.state.myBtn)
+        this.myFunction(this.dots, this.more, this.myBtn)
+        this.myFunction(this.dots, this.more, this.myBtn)
+        this.setState({user:doc.data().displayName?doc.data().displayName:doc.data().email})
         }else {
-            alert("Is Not Mounted")
+           
         }
+        
+          })
+          
       }
 
 
     render(){
         return(
-            <div className="container">
+            <div className="container mt-2">
                 <div className="card">
                 <div className="card-body">
                 <div className="form-group">
-
-                    <h6>{this.props.user}</h6>
+                    {this.state.user === ""?<div className="spinner-border"></div>:
+                    <h6>{this.state.user}</h6>
+                    }
                 </div>
                 <div className="form-group">
                     <h6>{this.props.price}$</h6>
@@ -62,14 +77,17 @@ export default class ProposalModule extends React.Component {
                     {this.props.presentation.length > 130?
                     <div>
                     <p>{this.props.presentation.split("").splice(0,101).join("")}
-                    <span ref={ref => this.setState({dots:ref})}>...</span><span ref={ref => this.setState({more:ref})}>{this.props.presentation.split("").splice(100,this.props.presentation.length - 101).join("")}</span></p>
-                   <button onClick={() => {this.myFunction(this.state.dots, this.state.more, this.state.myBtn)}} ref={ref => this.setState({myBtn:ref})}>Read more</button>
-                   
+                    <span ref={ref => this.dots = ref}>...</span><span ref={ref => this.more = ref}>{this.props.presentation.split("").splice(100,this.props.presentation.length - 101).join("")}</span></p>
+                    
+                   <button onClick={() => {
+                        this.myFunction(this.dots, this.more, this.myBtn)
+                       }} ref={ref =>this.myBtn = ref}>Read More</button>
+                    
                    </div>
                    
                    :<div><p>{this.props.presentation}</p></div>
                     }
-                    
+                    <button type="buton" className="btn btn-custom-1 btn-sm mt-3" onClick={this.props.acceptProposal}>Accept</button>
                 </div>
                 </div>
                 </div>
