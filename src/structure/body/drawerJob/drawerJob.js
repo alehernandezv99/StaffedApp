@@ -5,6 +5,7 @@ import firebase from "../../../firebaseSetUp";
 import DrawerJobLoading from "../../loading/drawerJobLoading";
 import $ from "jquery";
 import checkCriteria from "../../../utils/checkCriteria";
+import ProposalModule from "./proposalModule";
 
 export default class DrawerJob extends React.Component {
     constructor(props){
@@ -12,6 +13,7 @@ export default class DrawerJob extends React.Component {
 
         this.state = {
             project:[],
+            isOwner:false,
             id:"",
             isOpen:true,
             isLoading:false,
@@ -21,6 +23,7 @@ export default class DrawerJob extends React.Component {
                 message:{value:"", criteria:{type:"text", minLength:5, maxLength:500}}
             },
             proposalFetched:null,
+            proposals:[],
             isSaved:false,
             hasChanged:false,
         }
@@ -176,6 +179,7 @@ export default class DrawerJob extends React.Component {
             price:this.state.proposal.price.value,
             presentation:this.state.proposal.message.value,
             user:firebase.auth().currentUser.uid,
+            status:"pending",
             created:firebase.firestore.Timestamp.now()
         }
 
@@ -213,12 +217,14 @@ export default class DrawerJob extends React.Component {
                  project.push(snapshot.data());
  
                  let quantity = 0;
- 
+
+                 let references = snapshot.data().references;
                 let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
  
                 quantity =  result.size
                 project[0].quantity = quantity;
- 
+
+                if(!(project[0].author === firebase.auth().currentUser.uid)){
                  firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
                  .then(snapshot2 => {
  
@@ -227,7 +233,7 @@ export default class DrawerJob extends React.Component {
                     documentF = document;
                  })
                  let proposalFetched = {};
-                 let references = snapshot.data().references;
+                 
  
                  if(documentF !== null){
                      let proposals = documentF.data();
@@ -281,6 +287,27 @@ export default class DrawerJob extends React.Component {
                  
  
                  })
+                
+
+                }else {
+                    let isSaved = false;
+                 if(references.includes(firebase.auth().currentUser.email)){
+                     isSaved = true;
+                 }
+
+                 let proposals = [];
+
+                 firebase.firestore().collection("projects").doc(project[0].id).collection("proposals").get()
+                 .then(s => {
+                    s.forEach(proposal => {
+                        proposals.push(proposal.data());
+                    })
+                    this.setState({project:project, isSaved:isSaved, isOwner:true, proposals:proposals})
+                    
+                 })
+
+                 
+                }
                  
          })
          .catch(e => {
@@ -394,10 +421,13 @@ export default class DrawerJob extends React.Component {
                     </div>
                     </div>
                     <div className="col-sm-4">
-                        {this.state.proposalFetched.price !== undefined?
+                        
+                        {this.state.isOwner === true?<button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-4")}}><i className="material-icons align-middle">view_agenda</i> View Proposals</button>:
+                            this.state.proposalFetched.price !== undefined?
                         <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-3")}}><i className="material-icons align-middle">create</i> View Proposal</button>:
                         <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-2")}}><i className="material-icons align-middle">add</i> Proposal</button>
                         }
+                    
                         {
                         this.state.isSaved === true?null:
                         <div className="action-btns text-center">
@@ -468,7 +498,8 @@ export default class DrawerJob extends React.Component {
                   </div>
                   </div>
                 </div>
-                {this.state.proposalFetched.price === undefined?null:
+                {this.state.proposalFetched !== null?
+                this.state.proposalFetched.price === undefined?null:
                 <div id="dj-section-3" style={{display:"none"}}>
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-3","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
@@ -523,6 +554,22 @@ export default class DrawerJob extends React.Component {
                           }
                       </div>
                   </div>
+                  </div>
+
+                </div>
+                :null
+                }
+                {
+                    this.state.isOwner === false?null:
+                    <div id="dj-section-4" style={{display:"none"}}>
+                <div className={`${Classes.DIALOG_BODY}`}>
+                      <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
+                    <div className="container-fluid">
+                        {this.state.proposals.map((proposal,i) => {
+                        return <ProposalModule key={i} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
+                    })
+                    }
+                    </div>
                   </div>
 
                 </div>
