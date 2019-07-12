@@ -271,7 +271,7 @@ export default class CreateProject extends React.Component{
         level:formB.level["value"],
         status:"hiring",
         references:[],
-        proposals:[],
+        applicants:[],
         created:firebase.firestore.Timestamp.now(),
         cards:2,
         id:firebase.firestore().collection("projects").doc().id
@@ -284,6 +284,7 @@ export default class CreateProject extends React.Component{
 
         data.country = country;
         data.author = id;
+        data.involved = [snapshot.data().email]
 
         firebase.firestore().collection("projects").doc(data.id).set(data)
       .then(() => {

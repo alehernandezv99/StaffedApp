@@ -30,8 +30,16 @@ export default class JobModule extends React.Component {
             if(type === "number"){
                 data = value
             }
+            let involved = [];
+            if(doc.data().involved !== undefined){
+                involved = doc.data().involved
+            }
+            if(involved.includes(firebase.auth().currentUser.email) === false){
+                involved.push(firebase.auth().currentUser.email);
+            }
             firebase.firestore().collection(collection).doc(this.props.id).update({
-                [prop]:data
+                [prop]:data,
+                involved:involved,
             })
             .then((result) => {
                 this.addToast(messageSucess);

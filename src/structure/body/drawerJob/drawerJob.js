@@ -8,6 +8,7 @@ import checkCriteria from "../../../utils/checkCriteria";
 import ProposalModule from "./proposalModule";
 import ContractModule from "./contractModule";
 import AbsoluteLoading from "../../loading/absoluteLoading";
+import { app } from "firebase";
 
 export default class DrawerJob extends React.Component {
     constructor(props){
@@ -63,8 +64,16 @@ export default class DrawerJob extends React.Component {
             if(type === "number"){
                 data = value
             }
+            let involved = [];
+            if(doc.data().involved !== undefined){
+                involved = doc.data().involved
+            }
+            if(involved.includes(firebase.auth().currentUser.email) === false){
+                involved.push(firebase.auth().currentUser.email);
+            }
             firebase.firestore().collection(collection).doc(this.props.id).update({
-                [prop]:data
+                [prop]:data,
+                involved:involved
             })
             .then((result) => {
                 this.addToast(messageSucess);
@@ -167,6 +176,8 @@ export default class DrawerJob extends React.Component {
 
     acceptProposal = (idProject, idProposal) => {
         this.toggleLoading();
+
+        
         firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
         .then(doc => {
             if(doc.exists){
@@ -267,18 +278,44 @@ export default class DrawerJob extends React.Component {
             id:firebase.firestore().collection("projects").doc().collection("proposals").doc().id
         }
 
+        
+
         firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
         .then((user) => {
         if(user.data().cards >= this.state.project[0].cards){
          let newCards = Number(user.data().cards - this.state.project[0].cards);
-
-         firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).update({cards:newCards})
-         .then(() => {  
+         let previewPorposals = user.data().proposals !== undefined? user.data().proposals:[];
+         previewPorposals.push({projectId:this.props.id ,proposalId:data.id});
+         let batch = firebase.firestore().batch();
+         batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid), {proposals:previewPorposals})
+         batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid),{cards:newCards} )
+          
         firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
         .then(snapshot => {
             if(snapshot.empty){
-                firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(data.id).set(data)
-                .then(async () => {
+               batch.set(firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(data.id), data)
+
+               firebase.firestore().collection("projects").doc(this.props.id).get()
+               .then(async project => {
+                   let applicants =[];
+                   let involved = [];
+                   if(project.data().applicants !== undefined){
+                       applicants = project.data().applicants
+                   }
+                   if(project.data().involved !== undefined){
+                       involved = project.data().involved;
+                   }
+                   if(applicants.includes(firebase.auth().currentUser.email) === false){
+                       applicants.push(firebase.auth().currentUser.email);
+                   }
+
+                   if(involved.includes(firebase.auth().currentUser.email) === false){
+                       involved.push(firebase.auth().currentUser.email)
+                   }
+
+                   batch.update(firebase.firestore().collection("projects").doc(this.props.id), {applicants:applicants, involved:involved})
+
+                   batch.commit().then(async () => {
                     this.addToast("Proposal Submitted");
                     let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
@@ -286,22 +323,20 @@ export default class DrawerJob extends React.Component {
                     })
                     
                     this.props.handleClose();
-                })
-                .catch(e => {
-                    this.addToast(e.message);
-                })
+
+                   })
+
+               })
             }
         })
         .catch(e => {
             this.addToast(e.message)
         })
-    })
-    .catch(e => {
-        this.addToast(e.message);
-    }) 
+   
 
     }else {
         this.addToast("You don't have enough cards");
+        this.props.handleClose();
     }
         })
         .catch(e => {

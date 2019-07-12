@@ -38,6 +38,7 @@ export default class LandingPage extends React.Component {
                 email:"",
                 password:"",
                 confirmPassword:"",
+                country:"",
                 remember:false
             },
             isLoading:false,
@@ -200,7 +201,11 @@ export default class LandingPage extends React.Component {
                   photoURL: photoURL,
                   isAnonymous: isAnonymous,
                   uid: uid,
-                  skills:[]
+                  skills:[],
+                  proposals:[],
+                  activeCandidancies:[],
+                  cards:40,
+                  country:this.state.signUpData.confirmPassword
               }
 
               this.verifyData("users", user.uid, data, this.toggleLoading, this.deleteCurrentUser);
