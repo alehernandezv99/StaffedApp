@@ -17,6 +17,7 @@
     left:100%;
     transform: translate(-100%, -20%);
     text-align: center;
+    display:none;
 }
 
 .dropdown-menu {

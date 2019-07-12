@@ -52,7 +52,7 @@ export default class ProposalModule extends React.Component {
         this.myFunction(this.dots, this.more, this.myBtn)
         this.setState({user:doc.data().displayName?doc.data().displayName:doc.data().email})
         }else {
-           
+            this.setState({user:doc.data().displayName?doc.data().displayName:doc.data().email})
         }
         
           })

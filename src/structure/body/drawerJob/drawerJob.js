@@ -85,7 +85,6 @@ export default class DrawerJob extends React.Component {
     }
 
     sendMessage(message, userId, action){
-        alert("Trigger");
         let data = {
             message:message,
             action:action,
@@ -95,7 +94,6 @@ export default class DrawerJob extends React.Component {
         }
         firebase.firestore().collection("users").doc(userId).collection("inbox").doc(data.id).set(data)
         .then(() => {
-            alert("Success");
         })
         .catch(e => {
             this.addToast(e.message);
@@ -354,7 +352,9 @@ export default class DrawerJob extends React.Component {
                             description:project[0].description,
                             price:document.data().price,
                             deadline:document.data().deadline,
-                            start:document.data().updated
+                            start:document.data().updated,
+                            idProposal:document.data().id,
+                            idProject:project[0].id
                         }
                         
                     }
@@ -442,7 +442,9 @@ export default class DrawerJob extends React.Component {
                                 description:project[0].description,
                                 price:proposals[index].price,
                                 deadline:proposals[index].deadline,
-                                start:proposals[index].updated
+                                start:proposals[index].updated,
+                                idProposal:proposals[index].id,
+                                idProject:project[0].id
                             }
                         }
                         index++
@@ -655,7 +657,7 @@ export default class DrawerJob extends React.Component {
                       </div>
                       
                       <div className="form-group mt-5">
-                      <h4>Cover Letter</h4>
+                      <h4>Presentation</h4>
                         <textarea className="form-control mt-3" onChange={(e) => {this.setValue("proposal","message",e.target,2,() => {})}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                            <div className="invalid-feedback">Valid.</div>
                           
@@ -729,7 +731,7 @@ export default class DrawerJob extends React.Component {
                           </div>
                       </div>
                       <div className="form-group mt-5">
-                      <h4>Cover Letter</h4>
+                      <h4>Presentation</h4>
                         <textarea className="form-control mt-3" onChange={(e) => {e.persist(); this.setValue("proposalFetched","presentation",e.target,2,()=> { this.checkChange(e.target, this.state.proposalFetched)}); }} value={this.state.proposalFetched.presentation.value} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                            <div className="invalid-feedback">Valid.</div>
                           
@@ -755,7 +757,7 @@ export default class DrawerJob extends React.Component {
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                       {this.state.contract !== ""?
-                     <ContractModule freelancer={this.state.contract.freelancer} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} />:
+                     <ContractModule freelancer={this.state.contract.freelancer} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} />:
                     <div className="container-fluid">
                         {this.state.proposals.map((proposal,i) => {
                         return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />

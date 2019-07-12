@@ -70,7 +70,7 @@ export default class ProposalsViewer extends React.Component {
                                  </div>
                                  <div className="form-group">
                                      <h4>Budget</h4>
-                                     <h6>{this.state.project.budget}</h6>
+                                     <h6>{this.state.project.budget}$</h6>
                                 </div>
                                 <div className="form-group">
                                     <h4>Description</h4>
@@ -78,7 +78,7 @@ export default class ProposalsViewer extends React.Component {
                                 </div>
                             </div>
                             <div className="card-footer">
-                                <button type="button" className="btn btn-custom-1 mt-3">View Project Post</button>
+                                <button type="button" className="btn btn-custom-1 mt-3" onClick={() => {this.props.openProject(this.props.projectId)}}>View Project Post</button>
                             </div>
                         </div>
 
@@ -94,7 +94,7 @@ export default class ProposalsViewer extends React.Component {
                          </div>
                          <div className="form-group">
                              <h4>Price</h4>
-                             <h6>{this.state.proposal.price}</h6>
+                             <h6>{this.state.proposal.price}$</h6>
                         </div>
                         <div className="form-group">
                             <h4>Deadline</h4>

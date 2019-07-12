@@ -50,6 +50,9 @@ export default class ContractModule extends React.Component {
                             <h6>{this.props.deadline}</h6>
                         </div>
                     </div>
+                    <div className="card-footer">
+                        <button type="button" className="btn btn-custom-1 mt-3" onClick={this.props.openProposal}>View Proposal</button>
+                    </div>
                 </div>
             </div>
       </div>

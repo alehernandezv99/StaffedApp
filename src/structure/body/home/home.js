@@ -23,20 +23,21 @@ export default class Home extends React.Component {
         this.checkCriteria = checkCriteria;
         this.reloadProjects = this.reloadProjects.bind(this);
         this.handleInboxEvent = this.handleInboxEvent.bind(this);
+        this.markAsRead = this.markAsRead.bind(this);
 
         this.state = {
             user:null,
             toasts: [ /* IToastProps[] */ ],
             projects:[],
             projectsId:[],
-            size:0,
+            size:null,
             pageSize:{
                 min:6,
                 max:12,
                 value:6
             },
             inbox:{
-                count:0,
+                count:null,
                 elements:null
             },
             skills:{
@@ -59,6 +60,29 @@ export default class Home extends React.Component {
         this.refHandlers = {
             toaster:(ref) => {this.toaster = ref},
         }
+    }
+
+    async markAsRead(){
+
+        try {
+        let refs = []
+        let call = await firebase.firestore().collection("users").doc(this.state.user[0].uid).collection("inbox").get()
+        call.forEach(ref => {
+          refs.push(firebase.firestore().collection("users").doc(this.state.user[0].uid).collection("inbox").doc(ref.id))
+        })
+
+        let batch = firebase.firestore().batch();
+
+        for(let i = 0; i< refs.length; i++){
+            batch.update(refs[i], {state:"read"})
+        }
+        await batch.commit();
+
+    }catch(e){
+        this.addToast(e.message);
+    }
+    
+
     }
 
     handleInboxEvent(action){
@@ -136,7 +160,7 @@ export default class Home extends React.Component {
       }
 
     componentDidMount(){
-        if(this.state.inbox.count == 0){
+        if(this.state.inbox.count == null){
             $(".inbox").hide();
         }else {
             $(".inbox").show();
@@ -241,6 +265,11 @@ export default class Home extends React.Component {
             ref2.then(snapshot2 => {
              
             let projects = [];
+            let size = snapshot.size;
+            if(!(size > 0)){
+                size = null
+            }
+            
             snapshot2.forEach(doc => {
                 projects.push(doc.data())
             })
@@ -252,9 +281,10 @@ export default class Home extends React.Component {
             projects.reverse();
             this.setState({
                 projects:projects,
-                size:snapshot.size,
+                size:size,
             })
             })
+        
 
         })
 
@@ -263,17 +293,25 @@ export default class Home extends React.Component {
    async updateUser(id){
         firebase.firestore().collection("users").doc(id).get()
         .then(async doc => {
-           let inbox = await firebase.firestore().collection("users").doc(id).collection("inbox").get()
-           let count = inbox.size;
-           let inboxContent = (() => {
-               let arr = [];
-               inbox.forEach(element => {
-                   arr.push(element.data());
-               })
-
-               return arr
-           })()
-            await this.setState(state => {
+           firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
+               
+            let count = 0
+            let elements = [];
+            messages.forEach(message => {
+                if(elements.length < 5){
+                elements.push(message.data());
+                }
+                if(message.data().state =="unread"){
+                    count++
+                }
+            })
+            this.setState({inbox:{
+                count:count,
+                elements:elements
+            }})
+           })
+           
+             this.setState(state => {
                 let skills = state.skills;
                 let skillsUser = doc.data().skills;
                 skills.skillsSelected.value = skillsUser;
@@ -282,10 +320,6 @@ export default class Home extends React.Component {
                 return {
                 user:[doc.data()],
                 skills:skills,
-                inbox:{
-                    count:count,
-                    elements:inboxContent
-                }
                 }
             })
            
@@ -367,8 +401,12 @@ export default class Home extends React.Component {
                             count:this.state.inbox.count,
                             href:"",
                             key:7,
-                            onClick:()=> {},
-                            dropdownItems:this.state.inbox.count > 0?this.state.inbox.elements.map((element,i) => {
+                            onClick:()=> { 
+                                if(this.state.user !== null){
+                                this.markAsRead()
+                                }
+                            },
+                            dropdownItems:this.state.inbox.count !== null?this.state.inbox.elements.map((element,i) => {
                                return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{this.handleInboxEvent(element.action)}}
                                  }):[{
                                 href:"",
@@ -408,8 +446,8 @@ export default class Home extends React.Component {
                     
                     <div className="row text-center">
                {this.state.idProject === "no-set"?null:
-                    <DrawerJob action={this.state.action} id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
-                    {this.state.proposalsViewer.projectId ===""?null:<ProposalsViewer handleClose={this.handleCloseProposalViewer} projectId={this.state.proposalsViewer.projectId} proposalId={this.state.proposalsViewer.proposalId} isOpen={this.state.proposalsViewer.isOpen} />}
+                    <DrawerJob openProposal={(id,id2) => {this.setState({isOpenDrawerJob:false,idProject:"",proposalsViewer:{isOpen:true,projectId:id,proposalId:id2}})}} action={this.state.action} id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    {this.state.proposalsViewer.projectId ===""?null:<ProposalsViewer openProject={(id) => {this.setState({isOpenDrawerJob:true, idProject:id, proposalsViewer:{isOpen:false,proposalId:"",projectId:""}})}} handleClose={this.handleCloseProposalViewer} projectId={this.state.proposalsViewer.projectId} proposalId={this.state.proposalsViewer.proposalId} isOpen={this.state.proposalsViewer.isOpen} />}
                         <div className="col">
                             <div className="form-group">
                                 <label>Page Size</label>
@@ -500,9 +538,9 @@ export default class Home extends React.Component {
                             ]
 
                             return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
-                        }):<div className="spinner-border"></div>}
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
-                           <ul className="pagination text-center mt-2">
+                           {this.state.size === null?null:<ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
                              {
                                  (() => {
@@ -515,7 +553,7 @@ export default class Home extends React.Component {
                                      return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
                                  })                                                                  }
                              <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>
+                           </ul>}
                         </div>
                         <div className="col">
                             <div className="card">
