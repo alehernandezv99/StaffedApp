@@ -150,7 +150,7 @@ export default class DrawerJob extends React.Component {
                         this.addToast("Proposal Updated");
                         let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
-                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal", id:id})
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.proposalFetchedListener.id, id2:id})
                     })
                         this.props.handleClose();
                     })
@@ -284,7 +284,7 @@ export default class DrawerJob extends React.Component {
                     this.addToast("Proposal Submitted");
                     let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
-                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has made you a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:data.id})
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has made you a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.props.id, id2:data.id})
                     })
                     
                     this.props.handleClose();

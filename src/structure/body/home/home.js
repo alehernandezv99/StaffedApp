@@ -11,6 +11,7 @@ import $ from "jquery";
 import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
 import DrawerJob from "../drawerJob";
+import ProposalsViewer from "../proposalViewer";
 import "./home.css";
 
 export default class Home extends React.Component {
@@ -47,6 +48,11 @@ export default class Home extends React.Component {
             isOpenDrawerJob:false,
             pagination:[],
             isLoading:false,
+            proposalsViewer:{
+                isOpen:false,
+                projectId:"",
+                proposalId:"",
+            }
         }
 
         this.toaster = {};
@@ -58,6 +64,15 @@ export default class Home extends React.Component {
     handleInboxEvent(action){
         if(action.type === "view contract"){
             this.setState({action:action.type, idProject:action.id ,isOpenDrawerJob:true})
+        }else if(action.type === "view proposal"){
+            this.setState(state => {
+                let base = state.proposalsViewer;
+                base.isOpen = true;
+                base.projectId = action.id;
+                base.proposalId = action.id2;
+
+                return ({proposalsViewer:base});
+            })
         }
     }
 
@@ -112,8 +127,20 @@ export default class Home extends React.Component {
       }
       }
 
-    componentDidMount(){
+      componentDidUpdate(){
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+      }
 
+    componentDidMount(){
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
         $('#skills-filter').keypress((event) => {
             if(event.keyCode == 13){
               if(event.target.value !== ""){
@@ -175,6 +202,16 @@ export default class Home extends React.Component {
           });
         
        
+    }
+
+    handleCloseProposalViewer = () => {
+        this.setState(state => {
+            let base = state.proposalsViewer
+            base.isOpen = false;
+            base.projectId = "";
+            base.proposalId = "";
+            return {proposalsViewer:base}
+        })
     }
 
    reloadProjects(limit,field, arr, page){
@@ -372,6 +409,7 @@ export default class Home extends React.Component {
                     <div className="row text-center">
                {this.state.idProject === "no-set"?null:
                     <DrawerJob action={this.state.action} id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    {this.state.proposalsViewer.projectId ===""?null:<ProposalsViewer handleClose={this.handleCloseProposalViewer} projectId={this.state.proposalsViewer.projectId} proposalId={this.state.proposalsViewer.proposalId} isOpen={this.state.proposalsViewer.isOpen} />}
                         <div className="col">
                             <div className="form-group">
                                 <label>Page Size</label>
