@@ -63,7 +63,7 @@ export default class ProposalModule extends React.Component {
     render(){
         return(
             <div className="container mt-2">
-                <div className="card">
+                <div className="card" style={{position:"relative"}}>
                 <div className="card-body">
                 <div className="form-group">
                     {this.state.user === ""?<div className="spinner-border"></div>:
@@ -72,6 +72,9 @@ export default class ProposalModule extends React.Component {
                 </div>
                 <div className="form-group">
                     <h6>{this.props.price}$</h6>
+                </div>
+                <div className="form-group">
+                    <h6>{this.props.deadline}</h6>
                 </div>
                 <div className="form-group">
                     {this.props.presentation.length > 130?
@@ -90,6 +93,7 @@ export default class ProposalModule extends React.Component {
                     <button type="buton" className="btn btn-custom-1 btn-sm mt-3" onClick={this.props.acceptProposal}>Accept</button>
                 </div>
                 </div>
+                <div className="hour-posted">Posted On {this.props.date}</div>
                 </div>
             </div>
         )

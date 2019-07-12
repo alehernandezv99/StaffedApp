@@ -19,10 +19,12 @@ export default class DrawerJob extends React.Component {
             id:"",
             isOpen:true,
             isLoading:false,
+            action:"",
             proposal:{
                 price:{value:"", criteria:{type:"number", min:10, max:50000}},
                 receive:{value:"", criteria:{type:"number", min:10}},
-                message:{value:"", criteria:{type:"text", minLength:5, maxLength:500}}
+                message:{value:"", criteria:{type:"text", minLength:5, maxLength:500}},
+                deadline:{value:"One week", criteria:{type:"text", minLength:2}}
             },
             proposalFetched:null,
             contract:"",
@@ -34,6 +36,7 @@ export default class DrawerJob extends React.Component {
         this.performTransaction = this.performTransaction.bind(this);
         this.toggleLoading = this.toggleLoading.bind(this);
         this.checkChange = this.checkChange.bind(this)
+        this.sendMessage = this.sendMessage.bind(this);
     }
 
     toggleLoading(){
@@ -81,6 +84,25 @@ export default class DrawerJob extends React.Component {
         this.props.toastHandler(message)
     }
 
+    sendMessage(message, userId, action){
+        alert("Trigger");
+        let data = {
+            message:message,
+            action:action,
+            sent:firebase.firestore.Timestamp.now(),
+            state:"unread",
+            id:firebase.firestore().collection("users").doc(userId).collection("inbox").doc().id
+        }
+        firebase.firestore().collection("users").doc(userId).collection("inbox").doc(data.id).set(data)
+        .then(() => {
+            alert("Success");
+        })
+        .catch(e => {
+            this.addToast(e.message);
+            alert("Cannot Send The message")
+        })
+    }
+
     changePage = (from, to) => {
         $(from).slideUp();
         $(to).slideDown();
@@ -112,6 +134,7 @@ export default class DrawerJob extends React.Component {
             let data = {
                 price:this.state.proposalFetched.price.value,
                 presentation:this.state.proposalFetched.presentation.value,
+                deadline:this.state.proposalFetched.deadline.value,
                 updated:firebase.firestore.Timestamp.now(),
             }
             firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
@@ -123,8 +146,12 @@ export default class DrawerJob extends React.Component {
                     })
 
                     firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(id).update(data)
-                    .then(() => {
+                    .then(async () => {
                         this.addToast("Proposal Updated");
+                        let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
+                    authorId.forEach(user => {
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal", id:id})
+                    })
                         this.props.handleClose();
                     })
                     .catch(e => {
@@ -146,8 +173,13 @@ export default class DrawerJob extends React.Component {
         .then(doc => {
             if(doc.exists){
                 firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).update({status:"accepted"})
-                .then(() => {
+                .then(async () => {
                     this.addToast("Proposal Accepted");
+                    let userId = await firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
+                    
+                        this.sendMessage(`The owner of the project "${this.state.project[0].title}" accepted you the proposal `,userId.data().user,{type:"view contract" ,id:idProject})
+                        this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the proposal`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
+                    
                     this.toggleLoading();
                 })
                 .catch(e => {
@@ -167,25 +199,46 @@ export default class DrawerJob extends React.Component {
 
     checkChange(element, reference){
       let check = 0 ;
+  
         Object.keys(this.state.proposalFetchedListener).forEach(key => {
          if(this.state.proposalFetchedListener[key]["value"] !== reference[key]["value"]){
+             if(!(Number.isNaN(Number(this.state.proposalFetchedListener[key]["value"]))) && (this.state.proposalFetchedListener[key]["value"] !== "")){
+                check = 1
+             }else {
+                if(this.state.proposalFetchedListener[key]["value"].toLowerCase() !== reference[key]["value"].toLowerCase()){
 
-             check = 1
-         }else {
+                    check = 1
+                }
+             }
+             
 
          }
         })
 
         if(check === 1){
+
         element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px #d5d23a";
         element.style.borderColor = "#d5d23a"
         this.setState({hasChanged:true})
         }else {
+
         element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6)";
              element.style.borderColor = "rgba(82, 168, 236, 0.6)"
              this.setState({hasChanged:false})
         }
 
+    }
+
+    componentDidUpdate(){
+        (() => {
+            if(this.state.action !== ""){
+                if(this.state.action === "view contract"){
+                    this.changePage("#dj-section-1","#dj-section-4")
+                    this.setState({action:""});
+                }
+            }
+            return "";
+        })()
     }
 
     submitProposal(){
@@ -204,22 +257,36 @@ export default class DrawerJob extends React.Component {
         })
 
         if(check === 0){
-
+        
+        
         let data = {
             price:this.state.proposal.price.value,
             presentation:this.state.proposal.message.value,
             user:firebase.auth().currentUser.uid,
             status:"pending",
+            deadline:this.state.proposal.deadline.value,
             created:firebase.firestore.Timestamp.now(),
-            id:firebase.firestore().collection("projects").doc().collection("proposals").id
+            id:firebase.firestore().collection("projects").doc().collection("proposals").doc().id
         }
 
+        firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
+        .then((user) => {
+        if(user.data().cards >= this.state.project[0].cards){
+         let newCards = Number(user.data().cards - this.state.project[0].cards);
+
+         firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).update({cards:newCards})
+         .then(() => {  
         firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
         .then(snapshot => {
             if(snapshot.empty){
                 firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(data.id).set(data)
-                .then(() => {
+                .then(async () => {
                     this.addToast("Proposal Submitted");
+                    let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
+                    authorId.forEach(user => {
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has made you a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:data.id})
+                    })
+                    
                     this.props.handleClose();
                 })
                 .catch(e => {
@@ -229,6 +296,18 @@ export default class DrawerJob extends React.Component {
         })
         .catch(e => {
             this.addToast(e.message)
+        })
+    })
+    .catch(e => {
+        this.addToast(e.message);
+    }) 
+
+    }else {
+        this.addToast("You don't have enough cards");
+    }
+        })
+        .catch(e => {
+            this.addToast(e.message);
         })
         
         }else {
@@ -269,7 +348,15 @@ export default class DrawerJob extends React.Component {
                     documentF = document;
                     if(document.data().status =="accepted"){
                         isOwner = true;
-                        contract = document.data();
+                        contract = {
+                            client:project[0].author,
+                            freelancer:document.data().user,
+                            description:project[0].description,
+                            price:document.data().price,
+                            deadline:document.data().deadline,
+                            start:document.data().updated
+                        }
+                        
                     }
                  })
                  let proposalFetched = {};
@@ -315,8 +402,12 @@ export default class DrawerJob extends React.Component {
  
                  firebase.firestore().collection("users").doc(idAuthorProject).get()
                  .then( async doc => {
-                     project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
-                      this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener, isOwner:isOwner, contract:contract});
+                    project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
+
+              
+
+                      this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener, isOwner:isOwner, contract:contract, action:this.props.action});
+                     
                 
                  })
                  .catch(e => {
@@ -345,11 +436,18 @@ export default class DrawerJob extends React.Component {
                     s.forEach(proposal => {
                         proposals.push(proposal.data());
                         if(proposals[index].status === "accepted"){
-                            contract = proposals[index];
+                            contract = {
+                                client:project[0].author,
+                                freelancer:proposals[index].user,
+                                description:project[0].description,
+                                price:proposals[index].price,
+                                deadline:proposals[index].deadline,
+                                start:proposals[index].updated
+                            }
                         }
                         index++
                     })
-                    this.setState({project:project, isSaved:isSaved, isOwner:true, proposals:proposals ,contract:contract})
+                    this.setState({project:project, isSaved:isSaved, isOwner:true, proposals:proposals ,contract:contract, action:this.props.action})
                     
                  })
 
@@ -408,6 +506,7 @@ export default class DrawerJob extends React.Component {
     render(){
         return(
             <div style={{position:"relative"}}>
+                
                 {this.state.isLoading === true?<AbsoluteLoading />:null} 
             <Drawer style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
                 {this.state.project.length ===0?<DrawerJobLoading />:
@@ -529,11 +628,32 @@ export default class DrawerJob extends React.Component {
                           <h4>You Receive</h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1, ()=> {},"proposal","price",-(1-(1/(1-0.15)))); this.checkChange(e.target)}}/>
+                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1, ()=> {},"proposal","price",-(1-(1/(1-0.15)))); }}/>
+                          <div className="invalid-feedback">Valid.</div>
+                        </div>
+                          </div>
+
+                          <div className="row mt-3">
+                        <div className="col-sm-5">
+                          <h4>Deadline</h4>
+                        </div>
+                        <div className="text-left">
+                          <select type="number" className="form-control" value={this.state.proposal.deadline.value} onChange={(e) => {this.setValue("proposal","deadline",e.target,1, () => {}); }}>
+                              <option>Select a Deadline</option>
+                              <option>One Day</option>
+                              <option>Two Days</option>
+                              <option>One Week</option>
+                              <option>Two Weeks</option>
+                              <option>One Month</option>
+                              <option>Two Months</option>
+                              <option>More Than Two Months</option>
+                          </select>
+
                           <div className="invalid-feedback">Valid.</div>
                         </div>
                           </div>
                       </div>
+                      
                       <div className="form-group mt-5">
                       <h4>Cover Letter</h4>
                         <textarea className="form-control mt-3" onChange={(e) => {this.setValue("proposal","message",e.target,2,() => {})}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
@@ -588,6 +708,25 @@ export default class DrawerJob extends React.Component {
                           <div className="invalid-feedback">Valid.</div>
                         </div>
                           </div>
+
+                          <div className="row mt-3">
+                        <div className="col-sm-5">
+                          <h4>Deadline</h4>
+                        </div>
+                        <div className="text-left">
+                          <select className="custom-select-sm" defaultValue={this.state.proposalFetched.deadline.value} onChange={(e) => {e.persist(); this.setValue("proposalFetched","deadline",e.target,1, ()=> { this.checkChange(e.target,this.state.proposalFetched)}); }}>
+                              <option value="One Day">One Day</option>
+                              <option value="Two Days">Two Days</option>
+                              <option value="One Week">One Week</option>
+                              <option value="Two Weeks">Two Weeks</option>
+                              <option value="One Month">One Month</option>
+                              <option value="Two Months">Two Months</option>
+                              <option value="More Than Two Months">More Than Two Months</option>
+                          </select>
+
+                          <div className="invalid-feedback">Valid.</div>
+                        </div>
+                          </div>
                       </div>
                       <div className="form-group mt-5">
                       <h4>Cover Letter</h4>
@@ -616,10 +755,10 @@ export default class DrawerJob extends React.Component {
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                       {this.state.contract !== ""?
-                     <ContractModule user={this.state.contract.user} price={this.state.contract.price} presentation={this.state.contract.presentation} />:
+                     <ContractModule freelancer={this.state.contract.freelancer} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} />:
                     <div className="container-fluid">
                         {this.state.proposals.map((proposal,i) => {
-                        return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
+                        return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
                     })
                     }
                     </div>

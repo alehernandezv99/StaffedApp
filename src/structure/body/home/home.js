@@ -21,6 +21,7 @@ export default class Home extends React.Component {
         this.clearSkill = this.clearSkill.bind(this);
         this.checkCriteria = checkCriteria;
         this.reloadProjects = this.reloadProjects.bind(this);
+        this.handleInboxEvent = this.handleInboxEvent.bind(this);
 
         this.state = {
             user:null,
@@ -33,11 +34,16 @@ export default class Home extends React.Component {
                 max:12,
                 value:6
             },
+            inbox:{
+                count:0,
+                elements:null
+            },
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
             },
             idProject:"no-set",
+            action:"",
             isOpenDrawerJob:false,
             pagination:[],
             isLoading:false,
@@ -46,6 +52,12 @@ export default class Home extends React.Component {
         this.toaster = {};
         this.refHandlers = {
             toaster:(ref) => {this.toaster = ref},
+        }
+    }
+
+    handleInboxEvent(action){
+        if(action.type === "view contract"){
+            this.setState({action:action.type, idProject:action.id ,isOpenDrawerJob:true})
         }
     }
 
@@ -60,7 +72,7 @@ export default class Home extends React.Component {
     }
 
     handleCloseDrawerJob = () => {
-        this.setState({isOpenDrawerJob:false,idProject:"no-set"})
+        this.setState({isOpenDrawerJob:false,idProject:"no-set",action:""})
     }
 
    async clearSkill(index){
@@ -214,6 +226,16 @@ export default class Home extends React.Component {
    async updateUser(id){
         firebase.firestore().collection("users").doc(id).get()
         .then(async doc => {
+           let inbox = await firebase.firestore().collection("users").doc(id).collection("inbox").get()
+           let count = inbox.size;
+           let inboxContent = (() => {
+               let arr = [];
+               inbox.forEach(element => {
+                   arr.push(element.data());
+               })
+
+               return arr
+           })()
             await this.setState(state => {
                 let skills = state.skills;
                 let skillsUser = doc.data().skills;
@@ -222,7 +244,11 @@ export default class Home extends React.Component {
                 this.reloadProjects(this.state.pageSize.value,"skills", skillsUser); 
                 return {
                 user:[doc.data()],
-                skills:skills
+                skills:skills,
+                inbox:{
+                    count:count,
+                    elements:inboxContent
+                }
                 }
             })
            
@@ -298,15 +324,18 @@ export default class Home extends React.Component {
                             key:6
                         },
                         {
-                            type:"dropdown",
+                            type:"dropdown badge",
                             text:"Inbox",
                             icon:"inbox",
+                            count:this.state.inbox.count,
                             href:"",
                             key:7,
                             onClick:()=> {},
-                            dropdownItems:[{
+                            dropdownItems:this.state.inbox.count > 0?this.state.inbox.elements.map((element,i) => {
+                               return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{this.handleInboxEvent(element.action)}}
+                                 }):[{
                                 href:"",
-                                text:"Message Text",
+                                text:"No notifications",
                                 key:2,
                                 onClick:() => {}
                             }]
@@ -342,7 +371,7 @@ export default class Home extends React.Component {
                     
                     <div className="row text-center">
                {this.state.idProject === "no-set"?null:
-                    <DrawerJob id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob action={this.state.action} id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
                         <div className="col">
                             <div className="form-group">
                                 <label>Page Size</label>

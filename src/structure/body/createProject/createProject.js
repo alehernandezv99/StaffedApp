@@ -273,6 +273,7 @@ export default class CreateProject extends React.Component{
         references:[],
         proposals:[],
         created:firebase.firestore.Timestamp.now(),
+        cards:2,
         id:firebase.firestore().collection("projects").doc().id
       }
 

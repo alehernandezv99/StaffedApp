@@ -5,4 +5,30 @@
     padding:5px;
 }
 
+.inbox{
+    background-color:rgb(255, 217, 0);
+    padding:2px;
+    border-radius:50%;
+    width:20px;
+    height:20px;
+    color:black !important;
+    position: absolute;
+    top:100%;
+    left:100%;
+    transform: translate(-100%, -20%);
+    text-align: center;
+}
+
+.dropdown-menu {
+    max-width: 300px !important;
+    overflow-y: hidden !important;
+    overflow-x: visible !important;
+}
+
+.dropdown-item {
+    max-width: 300px !important;
+    font-size: 14px !important;
+    
+}
+
 
