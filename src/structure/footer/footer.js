@@ -3,7 +3,7 @@ import "./footer.css";
 
 export default function Footer(){
     return(
-        <footer className="bg-gradient-1 padding-2" id="contact">
+        <footer className="bg-gradient-1" id="contact" style={{paddingTop:"30px"}}>
             <div className="text-center">
                 <button type="button" className="btn btn-custom-instagram m-2 p-3" ><i className="fa fa-instagram align-middle"></i></button>
                 <button type="button" className="btn btn-custom-twitter m-2  p-3" ><i className="fa fa-twitter align-middle "></i></button>
@@ -79,7 +79,7 @@ export default function Footer(){
 
   </div>
   
-  <div class="footer-copyright text-center py-3">© 2019 Copyright:
+  <div class="footer-copyright text-center bg-special py-3">© 2019 Copyright:
     <a href="https://mdbootstrap.com/education/bootstrap/" className="links-white"> Alejandro Hernandez | Esteban Hernandez</a>
   </div>
 

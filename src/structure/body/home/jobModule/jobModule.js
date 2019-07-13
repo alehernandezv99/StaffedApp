@@ -56,7 +56,7 @@ export default class JobModule extends React.Component {
         return(
             <div className="job-module text-center mt-3">
                     <h4><a onClick={this.props.onClick}>{this.props.title}</a></h4>
-                <div className="job-module-block mt-3">
+                <div className="job-module-block text-left mt-3">
                     <p>{this.props.description}</p>
                 </div>
                 <div className="mt-2 row">

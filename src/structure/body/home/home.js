@@ -3,7 +3,6 @@ import Navbar from "../../navbar";
 import JobModule from "./jobModule";
 import firebase from "../../../firebaseSetUp";
 import HomeLoading from "../../loading/homeLoading";
-import logo from "../../../logo.svg";
 import LoadingSpinner from "../../loading/loadingSpinner";
 import { Button, Position, Toast, Toaster, Classes, Slider, Drawer} from "@blueprintjs/core";
 import CreateProject from "../createProject";
@@ -12,6 +11,7 @@ import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
 import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
+import logo from "../../../res/Graphics/main_logo.png";
 import "./home.css";
 
 export default class Home extends React.Component {
@@ -521,7 +521,7 @@ export default class Home extends React.Component {
                                     key:2
                                 },
                                 {
-                                    text:20,
+                                    text:project.applicants?project.applicants.length:0,
                                     icon:"people",
                                     key:3
                                 },

@@ -2,7 +2,7 @@ import React from "react";
 import "./myProjects.css";
 import Navbar from "../../navbar";
 import firebase from "../../../firebaseSetUp";
-import logo from "../../../logo.svg";
+import logo from "../../../res/Graphics/main_logo.png";
 import autocomplete from "../../../utils/autocomplete";
 import { Button, Position, Toast, Toaster, Classes, Slider} from "@blueprintjs/core";
 import MyProjectLoading from "../../loading/myProjectLoading";
@@ -29,9 +29,9 @@ export default class MyProjects extends React.Component {
             user:null,
             toasts: [ /* IToastProps[] */ ],
             pageSize:{
-                min:2,
+                min:4,
                 max:12,
-                value:2
+                value:4
             },
             inbox:{
                 count:null,
@@ -461,7 +461,7 @@ export default class MyProjects extends React.Component {
                                     key:2
                                 },
                                 {
-                                    text:20,
+                                    text:project.applicants?project.applicants.length:0,
                                     icon:"people",
                                     key:3
                                 },
@@ -527,7 +527,7 @@ export default class MyProjects extends React.Component {
                                     key:2
                                 },
                                 {
-                                    text:20,
+                                    text:project.applicants?project.applicants.length:0,
                                     icon:"people",
                                     key:3
                                 },
@@ -592,7 +592,7 @@ export default class MyProjects extends React.Component {
                                     key:2
                                 },
                                 {
-                                    text:20,
+                                    text:project.applicants?project.applicants.length:0,
                                     icon:"people",
                                     key:3
                                 },
@@ -658,7 +658,7 @@ export default class MyProjects extends React.Component {
                                     key:2
                                 },
                                 {
-                                    text:20,
+                                    text:project.applicants?project.applicants.length:0,
                                     icon:"people",
                                     key:3
                                 },
@@ -725,7 +725,7 @@ export default class MyProjects extends React.Component {
                                     key:2
                                 },
                                 {
-                                    text:20,
+                                    text:project.applicants?project.applicants.length:0,
                                     icon:"people",
                                     key:3
                                 },
@@ -791,7 +791,7 @@ export default class MyProjects extends React.Component {
                                     key:2
                                 },
                                 {
-                                    text:20,
+                                    text:project.applicants?project.applicants.length:0,
                                     icon:"people",
                                     key:3
                                 },
