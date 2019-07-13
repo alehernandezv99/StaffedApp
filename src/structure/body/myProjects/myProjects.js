@@ -10,6 +10,7 @@ import checkCriteria from "../../../utils/checkCriteria";
 import CreateProject from "../createProject";
 import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
+import LoadingSpinner from "../../loading/loadingSpinner"
 import JobModule from "../home/jobModule";
 
 export default class MyProjects extends React.Component {
@@ -28,9 +29,9 @@ export default class MyProjects extends React.Component {
             user:null,
             toasts: [ /* IToastProps[] */ ],
             pageSize:{
-                min:6,
+                min:2,
                 max:12,
-                value:6
+                value:2
             },
             inbox:{
                 count:null,
@@ -72,18 +73,55 @@ export default class MyProjects extends React.Component {
         }
     }
 
-    findMyProjects = (arr, field) => {
-        let ref = firebase.firestore().collection("projects").where("involved","array-contains",this.state.user[0].email)
+    findMyProjects = (arr,limit,page, field,element) => {
+        
+        let ref = firebase.firestore().collection("projects")
         if(arr){
-            ref.where(arr,"array-contains",this.state.user[0].email)
+           ref = ref.where(arr,"array-contains",firebase.auth().currentUser.email);
         }
         if(field){
-            ref.where(field,"==",this.state.user[0].uid)
+            ref =ref.where(field,"==",element)
         }
         ref.get()
         .then(snapshot => {
-            let projects = [];
-            let size = snapshot.size
+          
+            let ref2 = firebase.firestore().collection("projects");
+            let lastSeem = snapshot.docs[(this.state.pageSize.value)*(page) -1]
+
+            if(arr){
+                ref2 =ref2.where(arr,"array-contains",firebase.auth().currentUser.email)
+            }
+            if(field){
+                ref2 =ref2.where(field,"==",element)
+            }
+            if(page){
+                ref2 = ref2.startAfter(lastSeem).limit(limit).get()
+            }else{
+                    ref2 = ref2.limit(limit).get()
+            }
+
+            ref2.then(snapshot2 => {
+             
+                let projects = [];
+                let size = snapshot.size;
+                if(!(size > 0)){
+                    size = null
+                }
+                
+                snapshot2.forEach(doc => {
+                    projects.push(doc.data())
+                })
+    
+                projects.sort(function(a, b) {
+                    var dateA = new Date(a.created.toDate()), dateB = new Date(b.created.toDate());
+                    return dateA - dateB;
+                });
+                projects.reverse();
+                this.setState({
+                    projects:projects,
+                    size:size,
+                })
+                })
         })
     }
 
@@ -180,10 +218,14 @@ export default class MyProjects extends React.Component {
        }
 
     componentDidMount(){
-        firebase.auth().onAuthStateChanged((user) => {
+        firebase.auth().onAuthStateChanged(async(user) => {
             if (user) {
+                
               // User is signed in.
-              this.updateUser(user.uid)
+             
+             this.updateUser(user.uid)
+            this.findMyProjects("involved",this.state.pageSize.value)
+              
               // ...
             } else {
               // User is signed out.
@@ -191,6 +233,12 @@ export default class MyProjects extends React.Component {
               // ...
             }
           });
+    }
+
+    toggleLoading =() => {
+        this.setState(state => ({
+            isLoading:!state.isLoading
+        }))
     }
 
     handleCloseDrawerJob = () => {
@@ -215,6 +263,7 @@ export default class MyProjects extends React.Component {
     render(){
         return(
             <div>
+                {this.state.isLoading === true?<LoadingSpinner />:null}
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
@@ -360,22 +409,28 @@ export default class MyProjects extends React.Component {
                         
                         <ul className="nav nav-tabs mt-3">
                              <li className="nav-item ml-auto">
-                               <a className="nav-link" data-toggle="pill" href="#all">All</a>
+                               <a className="nav-link active" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value)}} href="#all">All</a>
                             </li>
                             <li clasName="nav-item">
-                               <a className="nav-link" data-toggle="pill" href="#inDevelop">In Development</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"author",firebase.auth().currentUser.uid)}} href="#createdByMe">Created By Me</a>
+                            </li>
+                            <li clasName="nav-item">
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"status","In Development")}} href="#inDevelopment">In Development</a>
+                            </li>
+                            <li clasName="nav-item">
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"status","Completed")}} href="#completed">Completed</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" href="#finished">Finished</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("applicants",this.state.pageSize.value)}} href="#applied">Applied</a>
                            </li>
                            <li className="nav-item mr-auto">
-                               <a className="nav-link" data-toggle="pill" href="#saved">Saved</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("references",this.state.pageSize.value)}} href="#saved">Saved</a>
                           </li>
                         </ul>
 
 
                         <div className="tab-content">
-                               <div className="tab-pane container" id="all">
+                               <div className="tab-pane container active" id="all">
 
                                {this.state.projects.length > 0?this.state.projects.map((project, index) => {
                             let title = project.title;
@@ -424,8 +479,88 @@ export default class MyProjects extends React.Component {
 
                             return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+
+                        {this.state.size === null?null:<ul className="pagination text-center mt-2">
+                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                                 (() => {
+                                     let pages = [];
+                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                         pages.push("element")
+                                     }
+                                     return pages
+                                 })().map((data, i) => {
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i)}} href="#">{i}</a></li>
+                                 })                                                                  }
+                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                           </ul>}
                                </div>
 
+                               <div className="tab-pane container fade" id="createdByMe">
+
+                               {this.state.projects.length > 0?this.state.projects.map((project, index) => {
+                            let title = project.title;
+                            let description = project.description;
+                            let skills = project.skills;
+                            let skillsObj = [];
+
+                            let referencesCheck = project.references.includes(firebase.auth().currentUser.email);
+                            
+
+                            Object.keys(skills).forEach((key, i) =>{
+                                skillsObj.push({
+                                    text:key,
+                                    key:i
+                                });
+                            })
+
+
+                            let specs = [
+                                {
+                                    text:project.type,
+                                    icon:"gps_fixed",
+                                    key:1
+                                },
+                                {
+                                    text:project.budget,
+                                    icon:"attach_money",
+                                    key:2
+                                },
+                                {
+                                    text:20,
+                                    icon:"people",
+                                    key:3
+                                },
+                                {
+                                    text:"Payment Verified",
+                                    icon:"check_circle",
+                                    key:4
+                                },
+                                {
+                                    text:project.country,
+                                    icon:"place",
+                                    key:5
+                                }
+                            ]
+
+                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+
+{this.state.size === null?null:<ul className="pagination text-center mt-2">
+                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                                 (() => {
+                                     let pages = [];
+                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                         pages.push("element")
+                                     }
+                                     return pages
+                                 })().map((data, i) => {
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i,"author",firebase.auth().currentUser.uid)}} href="#">{i}</a></li>
+                                 })                                                                  }
+                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                           </ul>}
+                               </div>
                                <div className="tab-pane container fade" id="inDevelopment">
 
                                {this.state.projects.length > 0?this.state.projects.map((project, index) => {
@@ -475,9 +610,24 @@ export default class MyProjects extends React.Component {
 
                             return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                            
 
+                            {this.state.size === null?null:<ul className="pagination text-center mt-2">
+                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                                 (() => {
+                                     let pages = [];
+                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                         pages.push("element")
+                                     }
+                                     return pages
+                                 })().map((data, i) => {
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i,"status","In Development")}} href="#">{i}</a></li>
+                                 })                                                                  }
+                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                           </ul>}
                                </div>
-                               <div className="tab-pane container fade" id="finished">
+                               <div className="tab-pane container fade" id="completed">
 
                                {this.state.projects.length > 0?this.state.projects.map((project, index) => {
                             let title = project.title;
@@ -527,8 +677,24 @@ export default class MyProjects extends React.Component {
                             return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
+{this.state.size === null?null:<ul className="pagination text-center mt-2">
+                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                                 (() => {
+                                     let pages = [];
+                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                         pages.push("element")
+                                     }
+                                     return pages
+                                 })().map((data, i) => {
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i,"status","Completed")}} href="#">{i}</a></li>
+                                 })                                                                  }
+                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                           </ul>}
                                </div>
-                               <div className="tab-pane container fade" id="saved">
+
+
+                               <div className="tab-pane container" id="applied">
 
                                {this.state.projects.length > 0?this.state.projects.map((project, index) => {
                             let title = project.title;
@@ -578,6 +744,86 @@ export default class MyProjects extends React.Component {
                             return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
+{this.state.size === null?null:<ul className="pagination text-center mt-2">
+                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                                 (() => {
+                                     let pages = [];
+                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                         pages.push("element")
+                                     }
+                                     return pages
+                                 })().map((data, i) => {
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("applicants",this.state.pageSize.value,i)}} href="#">{i}</a></li>
+                                 })                                                                  }
+                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                           </ul>}
+                               </div>
+
+                               <div className="tab-pane container" id="saved">
+
+                               {this.state.projects.length > 0?this.state.projects.map((project, index) => {
+                            let title = project.title;
+                            let description = project.description;
+                            let skills = project.skills;
+                            let skillsObj = [];
+
+                            let referencesCheck = project.references.includes(firebase.auth().currentUser.email);
+                            
+
+                            Object.keys(skills).forEach((key, i) =>{
+                                skillsObj.push({
+                                    text:key,
+                                    key:i
+                                });
+                            })
+
+
+                            let specs = [
+                                {
+                                    text:project.type,
+                                    icon:"gps_fixed",
+                                    key:1
+                                },
+                                {
+                                    text:project.budget,
+                                    icon:"attach_money",
+                                    key:2
+                                },
+                                {
+                                    text:20,
+                                    icon:"people",
+                                    key:3
+                                },
+                                {
+                                    text:"Payment Verified",
+                                    icon:"check_circle",
+                                    key:4
+                                },
+                                {
+                                    text:project.country,
+                                    icon:"place",
+                                    key:5
+                                }
+                            ]
+
+                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+
+{this.state.size === null?null:<ul className="pagination text-center mt-2">
+                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                                 (() => {
+                                     let pages = [];
+                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                         pages.push("element")
+                                     }
+                                     return pages
+                                 })().map((data, i) => {
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("references",this.state.pageSize.value, i)}} href="#">{i}</a></li>
+                                 })                                                                  }
+                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                           </ul>}
                                </div>
                          </div>
                         </div>

@@ -177,11 +177,18 @@ export default class DrawerJob extends React.Component {
     acceptProposal = (idProject, idProposal) => {
         this.toggleLoading();
 
+        let batch = firebase.firestore().batch();
         
         firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
         .then(doc => {
             if(doc.exists){
-                firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).update({status:"accepted"})
+                firebase.firestore().collection("projects").doc(idProject).get()
+                .then(project => {
+                if(project.data().status === "hiring"){
+                batch.update(firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal), {status:"accepted"})
+                batch.update(firebase.firestore().collection("projects").doc(idProject), {status:"In Development"})
+           
+                batch.commit()
                 .then(async () => {
                     this.addToast("Proposal Accepted");
                     let userId = await firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
@@ -195,10 +202,13 @@ export default class DrawerJob extends React.Component {
                     this.addToast(e.message);
                     this.toggleLoading()
                 })
+            }
+            })
             }else {
                 this.addToast("Proposal does not exist");
                 this.toggleLoading();
             }
+            
         })
         .catch(e => {
             this.addToast(e.message);

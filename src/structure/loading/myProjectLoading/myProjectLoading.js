@@ -8,8 +8,8 @@ export default function MyProjectLoading(){
         <div className="jumbotron animate-bg"></div>
     </div>
     <div className="col">
-        <div className="jumbotron"></div>
-        <div className="jumbotron"></div>
+        <div className="jumbotron animate-bg"></div>
+        <div className="jumbotron animate-bg"></div>
     </div>
     </div>)
 }

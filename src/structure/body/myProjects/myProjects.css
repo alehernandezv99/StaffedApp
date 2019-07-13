@@ -7,3 +7,7 @@
     border-right: 1px solid rgb(58,123,213);
 }
 
+.tab-pane {
+    background-color: transparent !important;
+    color:black !important;
+}

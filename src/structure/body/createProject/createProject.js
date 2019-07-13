@@ -14,8 +14,8 @@ export default class CreateProject extends React.Component{
 
         this.state = {
           formA:{
-            title:{value:"", criteria:{type:"text",minLength:3, maxLength:50, pattern:/^[a-zA-Z0-9\s]+$/}},
-            description:{value:"", criteria:{type:"text",minLength:3, maxLength:500, pattern:/^[a-zA-Z0-9\s]+$/,}},
+            title:{value:"", criteria:{type:"text",minLength:3, maxLength:50}},
+            description:{value:"", criteria:{type:"text",minLength:3, maxLength:1500}},
             skills:{value:[], criteria:{type:"array", min:1, max:5}},
             category:{value:"", criteria:{type:"text", minLength:2}},
             subCategory:{value:"", criteria:{type:"text", minLength:2}},

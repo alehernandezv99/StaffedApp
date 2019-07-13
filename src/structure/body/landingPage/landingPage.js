@@ -205,7 +205,7 @@ export default class LandingPage extends React.Component {
                   proposals:[],
                   activeCandidancies:[],
                   cards:40,
-                  country:this.state.signUpData.confirmPassword
+                  country:this.state.signUpData.country
               }
 
               this.verifyData("users", user.uid, data, this.toggleLoading, this.deleteCurrentUser);
@@ -326,9 +326,9 @@ export default class LandingPage extends React.Component {
                 />
             <div className="container-fluid  text-center padding-1"  id="about">
             <img src={MainGraphic} width="450px"/>
-                <h1>Welcome to Pioneering</h1>            
-                <h5 style={{fontWeight:"normal"}} className="m-3">The moderm and Simplest solution for working from 
-                home. Enhace your business and your life
+                <h1>Welcome to StaffedApp</h1>            
+                <h5 style={{fontWeight:"normal"}} className="m-3">The Moderm and Simplest Solution for Managing Your Projects
+                 And Hiring Professional Freelancers
                 </h5>
                 <button type="button" data-toggle="modal" data-target="#signUpPanel" className="btn btn-custom-1 btn-lg m-3">Join Today</button>
             </div>
