@@ -229,7 +229,7 @@ export default class MyProjects extends React.Component {
               // ...
             } else {
               // User is signed out.
-              window.location.href = "/";
+              this.props.handleStates(0);
               // ...
             }
           });
@@ -295,7 +295,7 @@ export default class MyProjects extends React.Component {
                             icon:"public",
                             href:"",
                             state:"",
-                            onClick:() => { window.location.href = "/home"},
+                            onClick:() => { this.props.handleStates(1)},
                             key:3
                         },
                         {

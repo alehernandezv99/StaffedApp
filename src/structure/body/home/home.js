@@ -220,7 +220,7 @@ export default class Home extends React.Component {
               // ...
             } else {
               // User is signed out.
-              window.location.href = "/";
+              this.props.handleStates(0)
               // ...
             }
           });
@@ -342,7 +342,7 @@ export default class Home extends React.Component {
                             text:"My Projects",
                             href:"/myprojects",
                             icon:"work_outline",
-                            onClick:() => {window.location.href = "/myprojects"},
+                            onClick:() => {this.props.handleStates(2)},
                             key:1
                         },
                         {

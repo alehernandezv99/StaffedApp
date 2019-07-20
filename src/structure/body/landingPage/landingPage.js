@@ -69,7 +69,9 @@ export default class LandingPage extends React.Component {
         firebase.firestore().collection(collection).doc(id).set(data)
         .then(() => {
             cb1();
-            window.location.href = "/home";
+            this.props.handleStates(1);
+            $(".modal-backdrop").hide();
+            window.document.body.style.overflowY = "visible";
         })
         .catch(e => {
             this.addToast(e.message);
@@ -116,7 +118,9 @@ export default class LandingPage extends React.Component {
                 this.setData(collection, id, data, cb1, cb2)
             }else {
                 cb1();
-                window.location.href = "/home";
+                this.props.handleStates(1);
+                $(".modal-backdrop").hide();
+                window.document.body.style.overflowY = "visible";
             }
         })
     }
