@@ -51,7 +51,7 @@ export default class ProposalsViewer extends React.Component {
         return(
             <div>
                 
-                 <Drawer style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+                 <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
                  <div className={Classes.DRAWER_BODY}>
                  <div className={`${Classes.DIALOG_BODY}`}>
                      {this.state.proposal === null?<ProposaslsViewerLoading />:

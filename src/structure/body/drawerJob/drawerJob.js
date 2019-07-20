@@ -555,7 +555,7 @@ export default class DrawerJob extends React.Component {
             <div style={{position:"relative"}}>
                 
                 {this.state.isLoading === true?<AbsoluteLoading />:null} 
-            <Drawer style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
                 {this.state.project.length ===0?<DrawerJobLoading />:
                 <div className={Classes.DRAWER_BODY}>
                 <div id="dj-section-1">
