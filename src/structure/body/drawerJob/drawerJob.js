@@ -596,15 +596,15 @@ export default class DrawerJob extends React.Component {
                             <div className="row mt-3">
                                 <div className="col-sm-4">
                                     <div><h5><i className="material-icons align-middle">attach_money</i> Budget</h5></div>
-                                    <div><h6 className="ml-5">{this.state.project[0].budget}</h6></div>
+                                    <div><h6 className="text-center">{this.state.project[0].budget}</h6></div>
                                 </div>
                                 <div className="col-sm-4">
                                 <div><h5><i className="material-icons align-middle">show_chart</i> Level</h5></div>
-                                <div><h6 className="ml-5">{this.state.project[0].level}</h6></div>
+                                <div><h6 className="text-center">{this.state.project[0].level}</h6></div>
                                 </div>
                                 <div className="col-sm-4">
                                     <div><h5><i className="material-icons align-middle">library_books</i> Proposals</h5></div>
-                                    <div><h6 className="ml-5">{this.state.project[0].quantity}</h6></div>
+                                    <div><h6 className="text-center">{this.state.project[0].quantity}</h6></div>
                                 </div>
                             </div>
                         </div>
@@ -631,11 +631,11 @@ export default class DrawerJob extends React.Component {
                         </div>
                         }
                         <div className="container-fluid mt-4">
-                        <h4>Client</h4>
+                        <h4><i className="material-icons">person</i> <span>Client</span></h4>
                         <h6 className="mt-3">{this.state.project[0].author}</h6>
                         </div>
                         <div className="container-fluid mt-4">
-                        <h4>Country</h4>
+                        <h4><i className="material-icons">assistant_photo</i> <span>Country</span></h4>
                         <h6 className="mt-3">{this.state.project[0].country}</h6>
                         </div>
                     </div>

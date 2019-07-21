@@ -32,9 +32,7 @@ export default class LandingPage extends React.Component {
         this.setData = this.setData.bind(this);
         this.verifyData= this.verifyData.bind(this);
         this.deleteCurrentUser = this.deleteCurrentUser.bind(this);
-        this.addSkill = this.addSkill.bind(this);
         this.checkCriteria = checkCriteria;
-        this.clearSkill = this.clearSkill.bind(this);
 
         this.state = {
             loginData:{
@@ -51,10 +49,7 @@ export default class LandingPage extends React.Component {
             },
             isLoading:false,
             toasts: [ /* IToastProps[] */ ],
-            skills:{
-                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
-                skillsFetched:[],
-            },
+            
             loginDrawer:{
                 isOpen:false,
                 handleClose:() => {this.setState(state => {
@@ -73,12 +68,12 @@ export default class LandingPage extends React.Component {
                 handleClose:() => {this.setState(state => {
                     let base = state.signUpDrawer;
                     base.isOpen = false
-                    return {loginDrawer:base}
+                    return {signUpDrawer:base}
                 })},
                 handleOpen:() => {this.setState(state => {
                     let base = state.signUpDrawer;
                     base.isOpen = true
-                    return {loginDrawer:base}
+                    return {signUpDrawer:base}
                 })} 
             }
 
@@ -109,37 +104,8 @@ export default class LandingPage extends React.Component {
         })
     }
 
-    clearSkill(index){
-        this.setState(state => {
-          let skills = state.skills.skillsSelected.value;
-          skills.splice(index,1)
-          let base = state.skills;
-          let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
-          base.skills = skillsObj;
-          return({skills:base});
-        })
-      }
-
-    addSkill(skill){
-        if(!(this.state.skills.skillsSelected["value"].includes(skill))){
-          let skills = this.state.skills.skillsSelected["value"].slice();
     
-          let criteria = this.state.skills.skillsSelected["criteria"];
-        this.setState(state => {
-          let base = state.skills;
-          skills.push(skill);
-          if(this.checkCriteria(skills, criteria).check){
-          base.skillsSelected.value = skills;
-          return({skills:base});
-          }else {
-            this.addToast(this.checkCriteria(skills, criteria, "skills").message);
-            return ({});
-          }
-        })
-      }else {
-        this.addToast("You cannot select two repeated skills")
-      }
-      }
+    
 
     verifyData(collection, id, data, cb1 , cb2){
         firebase.firestore().collection(collection).doc(id).get()
@@ -169,46 +135,7 @@ export default class LandingPage extends React.Component {
 
     componentDidMount(){
 
-        $('#skills-input').keypress((event) => {
-            if(event.keyCode == 13){
-              if(event.target.value !== ""){
-             
-    
-                firebase.firestore().collection("skills").get()
-                .then(snapshot => {
-                  let skillsArr = [];
-                  snapshot.forEach(doc => {
-                    skillsArr.push(doc.data().name);
-                  })
-                   this.setState(state => {
-                let base = state.skills;
-                let skills = base.skillsSelected["value"];
-      
-                if((skills.includes(event.target.value) === false)){
-                  if(skillsArr.includes(event.target.value)){
-                    skills.push(event.target.value);
-                    let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
-                     base.skillsSelected = skillsObj;
-
-                    this.skillInput.value = "";
-                    return({skills:base})
-                    
-                  }else {
-                    this.addToast(`The skill "${event.target.value}" is not registered`);
-                  }
-    
-                }else {
-                  this.addToast("You cannot select two repeated skills")
-                  return {}
-                }
-                })
-                
-               
-              })
-            
-          }
-          }
-          });
+        
 
 
           $(document).ready(function(){
@@ -235,17 +162,6 @@ export default class LandingPage extends React.Component {
               } // End if
             });
           });
-
-          firebase.firestore().collection("skills").get()
-          .then(async snapshot => {
-            let skills = [];
-            snapshot.forEach(doc => {
-              skills.push(doc.data().name);
-            })
-      
-            
-            autocomplete(document.getElementById("skills-input"), skills, this.addSkill);
-          })
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -303,6 +219,7 @@ export default class LandingPage extends React.Component {
                 console.log(e);
             })
         }else if(type === "signUp"){
+
             if(password === cPassword){
             firebase.auth().createUserWithEmailAndPassword(email, password)
             .then(result => {
@@ -315,6 +232,7 @@ export default class LandingPage extends React.Component {
             })
         }else {
             alert("Passwords are not equal");
+            this.toggleLoading();
         }
         }
     }
@@ -342,28 +260,27 @@ export default class LandingPage extends React.Component {
                             text:"About",
                             href:"#about",
                             onClick:() => {},
-                            key:1
                         },
                         {
                             type:"link",
                             text:"Product Info",
                             href:"#productInfo",
                             onClick:() => {},
-                            key:2
+                            key:2,
                         },
                         {
                             type:"link",
                             text:"How To Use",
                             href:"#howToUse",
                             onClick:() => {},
-                            key:3
+                            key:3,
                         },
                         {
                             type:"link",
                             text:"Contact",
                             href:"#contact",
                             onClick:() => {},
-                            key:4
+                            key:4,
                         }
                     ]
                 } 
@@ -375,7 +292,8 @@ export default class LandingPage extends React.Component {
                             dataToggle:"modal",
                             dataTarget:"#loginPanel",
                             onClick:this.state.loginDrawer.handleOpen,
-                            key:5
+                            key:5,
+                            icon:"forward"
                         },
                         {
                             type:"button",
@@ -383,7 +301,8 @@ export default class LandingPage extends React.Component {
                             dataToggle:"modal",
                             dataTarget:"#signUpPanel",
                             onClick:this.state.signUpDrawer.handleOpen,
-                            key:6
+                            key:6,
+                            icon:"exit_to_app",
                         }
                     ]
                 }
@@ -394,7 +313,7 @@ export default class LandingPage extends React.Component {
                 <h5 style={{fontWeight:"normal"}} className="m-3">The Moderm and Simplest Solution for Managing Your Projects
                  And Hiring Professional Freelancers
                 </h5>
-                <button type="button" data-toggle="modal" data-target="#signUpPanel" className="btn btn-custom-1 btn-lg m-3">Join Today</button>
+                <button type="button" onClick={this.state.signUpDrawer.handleOpen} className="btn btn-custom-1 btn-lg m-3">Join Today</button>
             </div>
             <div className="container-fluid text-center bg-gradient-1 padding-2" id="productInfo">
                 <h2 className="m-b-3" style={{color:"white"}}>Product Info</h2>
@@ -444,7 +363,7 @@ export default class LandingPage extends React.Component {
 
             <div className="container-fluid">
                 <LoginDrawer handleAuth={this.handleAuth} isOpen={this.state.loginDrawer.isOpen} handleClose={this.state.loginDrawer.handleClose} openPanel={() => {this.state.loginDrawer.handleClose(); this.state.signUpDrawer.handleOpen()}}/>
-                <SignUpDrawer handleAuth={this.handleAuth} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
+                <SignUpDrawer addToast={this.addToast} skills={this.state.skills} handleAuth={this.handleAuth} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
 
             </div>
             </div>

@@ -2,6 +2,9 @@ import React from "react";
 import "./signUpDrawer.css";
 import { Button, Position, Classes, Slider, Drawer, DateInput} from "@blueprintjs/core";
 import checkCriteria from "../../../../utils/checkCriteria";
+import firebase from "../../../../firebaseSetUp";
+import $ from "jquery";
+import autocomplete from "../../../../utils/autocomplete";
 
 export default class SignUpDrawer extends React.Component {
     constructor(props){
@@ -9,17 +12,124 @@ export default class SignUpDrawer extends React.Component {
 
         this.state = {
             email:{value:"", criteria:{type:"text", pattern:/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/}},
-            password:{value:"", criteria:{type:"text",minLength:6, pattern:new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})")}},
+            password:{value:"", criteria:{type:"text",minLength:6, pattern:/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/}},
             confirmPassword:{value:"",},
-            remember:{value:false}
+            country:{value:"", criteria:{type:"text", minLength:2}},
+            remember:{value:false},
+            skills:{
+                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
+                skillsFetched:[],
+            },
         }
     }
 
-    changeState = (key, value) =>{
+    clearSkill = (index) => {
         this.setState(state => {
+          let skills = state.skills.skillsSelected.value;
+          skills.splice(index,1)
+          let base = state.skills;
+          let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+          base.skills = skillsObj;
+          return({skills:base});
+        })
+      }
+
+
+    addSkill = (skill) => {
+        if(!(this.state.skills.skillsSelected["value"].includes(skill))){
+          let skills = this.state.skills.skillsSelected["value"].slice();
+    
+          let criteria = this.state.skills.skillsSelected["criteria"];
+        this.setState(state => {
+          let base = state.skills;
+          skills.push(skill);
+          if(this.checkCriteria(skills, criteria).check){
+          base.skillsSelected.value = skills;
+          return({skills:base});
+          }else {
+            this.addToast(this.checkCriteria(skills, criteria, "skills").message);
+            return ({});
+          }
+        })
+      }else {
+        this.addToast("You cannot select two repeated skills")
+      }
+      }
+
+    componentDidMount() {
+        $('#skills-input').keypress((event) => {
+            if(event.keyCode == 13){
+              if(event.target.value !== ""){
+             
+    
+                firebase.firestore().collection("skills").get()
+                .then(snapshot => {
+                  let skillsArr = [];
+                  snapshot.forEach(doc => {
+                    skillsArr.push(doc.data().name);
+                  })
+                   this.setState(state => {
+                let base = state.skills;
+                let skills = base.skillsSelected["value"];
+      
+                if((skills.includes(event.target.value) === false)){
+                  if(skillsArr.includes(event.target.value)){
+                    skills.push(event.target.value);
+                    let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+                     base.skillsSelected = skillsObj;
+
+                    this.skillInput.value = "";
+                    return({skills:base})
+                    
+                  }else {
+                    this.addToast(`The skill "${event.target.value}" is not registered`);
+                  }
+    
+                }else {
+                  this.addToast("You cannot select two repeated skills")
+                  return {}
+                }
+                })
+                
+               
+              })
+            
+          }
+          }
+          });
+
+          firebase.firestore().collection("skills").get()
+          .then(async snapshot => {
+            let skills = [];
+            snapshot.forEach(doc => {
+              skills.push(doc.data().name);
+            })
+      
+            
+            //autocomplete(document.getElementById("skills-input"), skills, this.addSkill);
+          })
+    }
+
+    changeState = (key, value, feedback, customMsg) =>{
+        this.setState(state => {
+            if(!feedback){
             let base = state[key]
             base.value = value;
             return {[key]:base}
+            }else {
+                let criteria = checkCriteria(value,state[key]["criteria"], key)
+                if(criteria.check){
+                    let base = state[key]
+                    base.value = value;
+                    feedback.style.display ="none";
+                    return {[key]:base}
+                }else {
+                    feedback.textContent = (customMsg !== null) || (customMsg !== undefined)?customMsg:criteria.message;
+                    feedback.style.display ="block";
+                    return {}
+                }
+            }
+            
         })
     }
 
@@ -27,14 +137,18 @@ export default class SignUpDrawer extends React.Component {
         let check = 0;
         let messages = [];
         Object.keys(this.state).forEach(key => {
+            if(key !== "skills"){
             if(!(checkCriteria(this.state[key]["value"],this.state[key]["criteria"],key).check)){
                 check = 1;
+                alert(key);
                 messages.push(checkCriteria(this.state[key]["value"],this.state[key]["criteria"],key).message);
             }
+        }
         })
-        if(check = 0){
-            this.props.handleAuth("signUp",this.state.email, this.state.password, this.state.confirmPassword)
+        if(check === 0){
+            this.props.handleAuth("signUp",this.state.email["value"], this.state.password["value"], this.state.confirmPassword["value"])
         }else {
+        
             for(let i = 0; i < messages.length; i++){
                 this.props.addToast(messages[i]);
             }
@@ -49,21 +163,28 @@ export default class SignUpDrawer extends React.Component {
             <div className="modal-content">
                             <div className="modal-header">
                                 <h4 className="modal-title text-center">Sign Up</h4>
-                                <button type="button" className="close" data-dismiss="modal">&times;</button>
                             </div>
                             <div className="modal-body">
                             <form>
                               <div className="form-group">
                                 <label>Email address:</label>
-                                <input type="email" className="form-control" id="email" onChange={(e) => {this.changeState("email",e.target.value)}} />
+                                <input type="email" className="form-control" onChange={(e) => {this.changeState("email",e.target.value, e.target.parentElement.childNodes[2], "Invalid Email")}} />
+                                <div className="invalid-feedback">Valid.</div>
                               </div>
                               <div className="form-group">
                                 <label>Password:</label>
-                                <input type="password" className="form-control" id="pwd" onChange={(e) => {this.changeState("password",e.target.value)}}/>
+                                <input type="password" className="form-control" onChange={(e) => {this.changeState("password",e.target.value,e.target.parentElement.childNodes[2], `Password Must: Contain at least 8 characters,
+at least 1 number,
+at least 1 lowercase character (a-z),
+at least 1 uppercase character (A-Z),
+no contain special characters
+`)}}/>
+                                <div className="invalid-feedback">Valid.</div>
                               </div>
                               <div className="form-group">
                                 <label >Confirm Password:</label>
-                                <input type="password" className="form-control" id="pwd" onChange={(e) => {this.changeState("confirmPassword",e.target.value)}}/>
+                                <input type="password" className="form-control" onChange={(e) => {this.changeState("confirmPassword",e.target.value, e.target.parentElement.childNodes[2])}}/>
+                                <div className="invalid-feedback">Valid.</div>
                               </div>
                               <div className="form-group form-check">
                                 <label className="form-check-label">
@@ -74,7 +195,7 @@ export default class SignUpDrawer extends React.Component {
                               <div className="form-group">
                                  <label>Country</label> 
                                  <div>
-                                 <select value={this.state.signUpData.country} className="custom-select-sm" onChange={(e) => {e.persist(); this.setState(state => {this.changeState("country", e.target.options[e.target.selectedIndex].value)})}} >
+                                 <select value={this.state.country.value} className="custom-select-sm" onChange={(e) => {e.persist(); this.changeState("country", e.target.options[e.target.selectedIndex].value)}} >
      <option value="">Select Your Country</option>
    <option value="Afganistan">Afghanistan</option>
    <option value="Albania">Albania</option>
@@ -329,8 +450,8 @@ export default class SignUpDrawer extends React.Component {
                               <div className="form-group">
                                   <label>Your Skills</label>
                                 <div>
-                                {this.props.skills.skillsSelected.value.map((skill, index) => {
-                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.props.clearSkill(index)}}>clear</i></button>
+                                {this.state.skills.skillsSelected.value.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
                                 })}
                                 <div>
                                 <div className="autocomplete">

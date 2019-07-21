@@ -37,8 +37,8 @@ export default class Home extends React.Component {
                 value:6
             },
             inbox:{
-                count:null,
-                elements:null
+                count:0,
+                elements:[]
             },
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
@@ -406,7 +406,7 @@ export default class Home extends React.Component {
                                 this.markAsRead()
                                 }
                             },
-                            dropdownItems:this.state.inbox.count !== null?this.state.inbox.elements.map((element,i) => {
+                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.map((element,i) => {
                                return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{this.handleInboxEvent(element.action)}}
                                  }):[{
                                 href:"",
@@ -424,13 +424,13 @@ export default class Home extends React.Component {
                             dropdownItems:this.state.user === null?[]:[
                                 {
                                     href:"",
-                                    text:"Settings",
+                                    text:"Profile",
                                     key:1,
                                     onClick:() => {},
                                 },
                                 {
                                     href:"",
-                                    text:"logout",
+                                    text:"Logout",
                                     onClick:()=> {firebase.auth().signOut()},
                                     key:2
                                 }
@@ -455,7 +455,7 @@ export default class Home extends React.Component {
                                     let pageSize = state.pageSize;
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});
-                                })}}  />
+                                }); this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);}}  />
                             </div>
                             <div className="form-group">
                                   <label>Filter By Skills</label>
@@ -513,27 +513,32 @@ export default class Home extends React.Component {
                                 {
                                     text:project.type,
                                     icon:"gps_fixed",
+                                    desc:"Type of contract",
                                     key:1
                                 },
                                 {
                                     text:project.budget,
                                     icon:"attach_money",
-                                    key:2
+                                    key:2,
+                                    desc:"Budget of the project"
                                 },
                                 {
                                     text:project.applicants?project.applicants.length:0,
                                     icon:"people",
-                                    key:3
+                                    key:3,
+                                    desc:"Applicants in this project"
                                 },
                                 {
                                     text:"Payment Verified",
                                     icon:"check_circle",
-                                    key:4
+                                    key:4,
+                                    desc:"This client has verified his payment method"
                                 },
                                 {
                                     text:project.country,
                                     icon:"place",
-                                    key:5
+                                    key:5,
+                                    desc:"Country of the client"
                                 }
                             ]
 

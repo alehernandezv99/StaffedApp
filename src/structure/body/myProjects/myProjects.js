@@ -34,8 +34,8 @@ export default class MyProjects extends React.Component {
                 value:4
             },
             inbox:{
-                count:null,
-                elements:null
+                count:0,
+                elements:[]
             },
             projects:[],
             size:null,
@@ -340,7 +340,7 @@ export default class MyProjects extends React.Component {
                                 this.markAsRead()
                                 }
                             },
-                            dropdownItems:this.state.inbox.count !== null?this.state.inbox.elements.map((element,i) => {
+                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.map((element,i) => {
                                return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{this.handleInboxEvent(element.action)}}
                                  }):[{
                                 href:"",
@@ -359,7 +359,7 @@ export default class MyProjects extends React.Component {
                             dropdownItems:this.state.user === null?[]:[
                                 {
                                     href:"",
-                                    text:"Settings",
+                                    text:"Profile",
                                     icon:"power_settings_new",
                                     onClick:() => {},
                                     state:"",
@@ -367,7 +367,7 @@ export default class MyProjects extends React.Component {
                                 },
                                 {
                                     href:"",
-                                    text:"logout",
+                                    text:"Logout",
                                     icon:"power_settings_new",
                                     onClick:()=> {firebase.auth().signOut()},
                                     key:2,
@@ -424,7 +424,7 @@ export default class MyProjects extends React.Component {
                                <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("applicants",this.state.pageSize.value)}} href="#applied">Applied</a>
                            </li>
                            <li className="nav-item mr-auto">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("references",this.state.pageSize.value)}} href="#saved">Saved</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("references",this.state.pageSize.value)}} href="#archived">Archived</a>
                           </li>
                         </ul>
 
@@ -760,7 +760,7 @@ export default class MyProjects extends React.Component {
                            </ul>}
                                </div>
 
-                               <div className="tab-pane container" id="saved">
+                               <div className="tab-pane container" id="archived">
 
                                {this.state.projects.length > 0?this.state.projects.map((project, index) => {
                             let title = project.title;

@@ -73,7 +73,7 @@ export default class JobModule extends React.Component {
                 </div>
                 <div className="mt-2 text-left">
                 {this.props.specs.map(element => {
-                    return (<label key={element.key} className=" mr-2 mt-2 jobModule-label"><i className="material-icons align-middle jobModule-icon" > {element.icon}</i> <span className="ml-0 align-middle">{element.text}</span></label>)
+                    return (<label key={element.key} title={element.desc} className=" mr-2 mt-2 jobModule-label"><i className="material-icons align-middle jobModule-icon" > {element.icon}</i> <span className="ml-0 align-middle">{element.text}</span></label>)
                 })}
                 </div>
             </div>
