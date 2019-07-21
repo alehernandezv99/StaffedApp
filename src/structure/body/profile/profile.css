@@ -1,0 +1,14 @@
+.btn-custom-3 {
+    background-color:transparent !important;
+    color:#3a7bd5 !important;
+    border-color:#3a7bd5;
+}
+
+.btn-custom-3:hover {
+    background-color: #3a7bd5 !important;
+    color:white !important;
+}
+
+.card-title {
+    color:#3a7bd5 !important;
+}

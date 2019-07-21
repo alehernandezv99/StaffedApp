@@ -79,7 +79,7 @@ export default function Footer(){
 
   </div>
   
-  <div class="footer-copyright text-center bg-special py-3">© 2019 Copyright:
+  <div className="footer-copyright text-center bg-special py-3">© 2019 Copyright:
     <a href="https://mdbootstrap.com/education/bootstrap/" className="links-white"> Alejandro Hernandez | Esteban Hernandez</a>
   </div>
 

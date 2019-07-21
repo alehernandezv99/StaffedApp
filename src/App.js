@@ -59,7 +59,7 @@ class App extends React.Component {
         {this.state.currentPage[0] === true?<LandingPage handleStates={this.handleStates}/>:null}
         {this.state.currentPage[1] === true?<Home handleStates={this.handleStates} />:null}
         {this.state.currentPage[2] === true?<MyProjects handleStates={this.handleStates} />:null}
-        {this.state.currentPage[3] === true?<Profile handleStates={this.handleStates} />:null}
+        {this.state.currentPage[3] === true?<Profile handleStates={this.handleStates} userId={firebase.auth().currentUser.uid}/>:null}
       </Suspense>
       <Footer />
     </div>
