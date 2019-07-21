@@ -7,6 +7,7 @@ import firebase from "../../../firebaseSetUp";
 import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, Divider} from "@blueprintjs/core";
 import TextCollapse from "./textCollapse";
 import EditProposalModule from "./editProposalModule";
+import CVcontent from "./CVcontent";
 
 export default class Profile extends React.Component {
     constructor(props){
@@ -15,6 +16,7 @@ export default class Profile extends React.Component {
             user:null,
             toasts: [ /* IToastProps[] */ ],
             CV:{
+                description:[],
                 experience:[],
                 education:[],
                 portfolio:[],
@@ -33,11 +35,14 @@ export default class Profile extends React.Component {
                 id:"",
                 prop:"",
                 type:"",
+                title:"",
+                content:"",
                 index:0,
                 handleClose:() => {
                     this.setState(state => {
                         let base = state.editPanel;
                         base.isOpen = false;
+                        base.id = "";
                         return{editPanel:base}
                     })
                 },
@@ -67,8 +72,9 @@ export default class Profile extends React.Component {
         }))
     }
 
-    openEditPanel = (type,id, prop, index) => {
+    openEditPanel = (type,id, prop, index, title, content) => {
         this.setState(state => {
+     
             let base = state.editPanel;
             base.type = type;
             base.id= id;
@@ -76,8 +82,37 @@ export default class Profile extends React.Component {
             if(index){
                 base.index =index;
             }
+            if(title){
+                base.title = title
+            }
+            if(content){
+                base.content= content;
+            }
             return{editPanel:base}
         })
+        this.state.editPanel.handleOpen()
+    }
+
+    deleteContent = (prop,index) => {
+        
+        if(window.confirm("Sure you want to delete this item?")){
+        firebase.firestore().collection("CVs").doc(this.state.CV.id).get()
+        .then(doc => {
+            let arr = doc.data()[prop];
+            arr.splice(index,1)
+            firebase.firestore().collection("CVs").doc(this.state.CV.id).update({[prop]:arr})
+            .then(() => {
+                this.addToast("Element Deleted");
+                this.loadCv();
+            })
+            .catch(e => {
+                this.addToast(e.message);
+            })
+        })
+        .catch(e => {
+            this.addToast(e.message);
+        })
+    }
     }
 
     loadCv = () => {
@@ -95,6 +130,7 @@ export default class Profile extends React.Component {
                     uid:this.props.userId,
                     uemail:doc.data().email,
                     username:doc.data().displayName?doc.data().displayName:"",
+                    description:[],
                     experience:[],
                     education:[],
                     portfolio:[],
@@ -126,6 +162,7 @@ export default class Profile extends React.Component {
         })
         })
     }
+
 
     componentDidMount(){
         this.loadCv();
@@ -244,22 +281,22 @@ export default class Profile extends React.Component {
                     ]
                 }
                 />{this.state.editPanel.id !== ""?
-                <EditProposalModule section={this.state.editPanel.prop} callBack={this.loadCv()} isOpen={this.state.editPanel.isOpen} handleClose={this.state.editPanel.handleClose} id={this.state.editPanel.id} prop={this.state.editPanel.prop} type={this.state.editPanel.type} addToast={this.addToast}/>
+                <EditProposalModule index={this.state.editPanel.index} title={this.state.editPanel.title} content={this.state.editPanel.content} section={this.state.editPanel.prop} callBack={() => {this.loadCv()}} isOpen={this.state.editPanel.isOpen} handleClose={this.state.editPanel.handleClose} id={this.state.editPanel.id} prop={this.state.editPanel.prop} type={this.state.editPanel.type} addToast={this.addToast}/>
                 :null}
                 <div className="container-fluid text-center">
                     <div className="container mt-2">
                         <img src="https://www.w3schools.com/bootstrap4/img_avatar1.png" style={{width:"150px"}} className="rounded-circle" />
                     </div>
-                        <div className="container">
+                   
                             <h6 className="mt-2">{this.state.user !== null?this.state.user.displayName?this.state.user.displayName:this.state.user.email:"Loading..."}</h6>
-                            <h5 className="mt-3">{this.state.user !== null?this.state.user.profession?this.state.user.profession:"":"Loading..."}</h5>
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                 incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis 
-                                 nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-                                 Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu 
-                                 fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa 
-                                 qui officia deserunt mollit anim id est laborum.</p>
-                        </div>
+  
+                            {this.state.CV.description.length > 0?
+                           <div className="container">
+                            <h5 className="mt-3">{this.state.user !== null?this.state.CV.description[0].title:"Loading..."}</h5>
+                            <p>{this.state.CV.description[0].text}</p>
+                            </div>
+                            :<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>}
+                        
                 </div>
                 <div className="container-fluid">
                     <div id="accordion">
@@ -269,16 +306,12 @@ export default class Profile extends React.Component {
                             </div>
                       <div className="collapse show" data-parent="#accordion" id="experience">
                        {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
-                           return (<div className="card-body" key={i}>
-                               <div className="card-title">{element.title}</div>
-                               <div className="container-fluid">
-                                   <TextCollapse key={i} maxWidth={400} text={element.text} />
-                                </div>
-                                <Divider/>
-                               </div>)
-                       })
-                        :null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"experience"); this.state.editPanel.handleOpen()}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                           return (
+                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => {this.deleteContent("experience",i); }} title={element.title} text={element.text}/>
+
+                       )
+                           }):null}
+                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"experience");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                     </div>
 
                     </div>
@@ -289,17 +322,13 @@ export default class Profile extends React.Component {
                             </div>
                         
                             <div className="collapse show" id="education">
-                        {this.state.CV.education.length > 0?this.state.CV.education.map((element,i) => {
-                           return (<div className="card-body" key={i}>
-                               <div className="card-title">{element.title}</div>
-                               <div className="container-fluid">
-                                   <TextCollapse key={i} maxWidth={400} text={element.text} />
-                                </div>
-                                <Divider/>
-                               </div>)
-                       })
-                        :null}
-                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2"><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                            {this.state.CV.education.length > 0?this.state.CV.education.map((element,i) => {
+                           return (
+                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"education",i,element.title,element.text)}} delete={() => {this.deleteContent("education",i); }} title={element.title} text={element.text}/>
+
+                       )
+                           }):null}
+                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"education");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
                     </div>
 
@@ -310,16 +339,12 @@ export default class Profile extends React.Component {
 
                         <div className="collapse show" id="portfolio">
                         {this.state.CV.portfolio.length > 0?this.state.CV.portfolio.map((element,i) => {
-                           return (<div className="card-body" key={i}>
-                               <div className="card-title">{element.title}</div>
-                               <div className="container-fluid">
-                                   <TextCollapse key={i} maxWidth={400} text={element.text} />
-                                </div>
-                                <Divider/>
-                               </div>)
-                       })
-                        :null}
-                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2"><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                           return (
+                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {this.deleteContent("portfolio",i); }} title={element.title} text={element.text}/>
+
+                       )
+                           }):null}
+                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"portfolio");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
                     </div>
 
@@ -330,16 +355,12 @@ export default class Profile extends React.Component {
 
                         <div className="collapse show"  id="skills">
                         {this.state.CV.skills.length > 0?this.state.CV.skills.map((element,i) => {
-                           return (<div className="card-body" key={i}>
-                               <div className="card-title">{element.title}</div>
-                               <div className="container-fluid">
-                                   <TextCollapse key={i} maxWidth={400} text={element.text} />
-                                </div>
-                                <Divider/>
-                               </div>)
-                       })
-                        :null}
-                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2"><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                           return (
+                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"skills",i,element.title,element.text)}} delete={() => {this.deleteContent("skills",i); }} title={element.title} text={element.text}/>
+
+                       )
+                           }):null}
+                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"skills");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
                     </div>
 
@@ -350,16 +371,12 @@ export default class Profile extends React.Component {
 
                         <div className="collapse show"  id="expertise">
                         {this.state.CV.expertise.length > 0?this.state.CV.expertise.map((element,i) => {
-                           return (<div className="card-body" key={i}>
-                               <div className="card-title">{element.title}</div>
-                               <div className="container-fluid">
-                                   <TextCollapse key={i} maxWidth={400} text={element.text} />
-                                </div>
-                                <Divider/>
-                               </div>)
-                       })
-                        :null}
-                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2"><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                           return (
+                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {this.deleteContent("expertise",i); }} title={element.title} text={element.text}/>
+
+                       )
+                           }):null}
+                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"expertise");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
                     </div>
 
@@ -370,16 +387,12 @@ export default class Profile extends React.Component {
 
                         <div className="collapse show" id="contact">
                         {this.state.CV.contact.length > 0?this.state.CV.contact.map((element,i) => {
-                           return (<div className="card-body" key={i}>
-                               <div className="card-title">{element.title}</div>
-                               <div className="container-fluid">
-                                   <TextCollapse key={i} maxWidth={400} text={element.text} />
-                                </div>
-                                <Divider/>
-                               </div>)
-                       })
-                        :null}
-                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2"><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                           return (
+                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {this.deleteContent("contact",i); }} title={element.title} text={element.text}/>
+
+                       )
+                           }):null}
+                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"contact");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
                 </div>
             </div>

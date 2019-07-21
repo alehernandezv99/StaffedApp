@@ -1,0 +1,18 @@
+.card-body {
+    position: relative !important;
+}
+
+.right-corner-btn {
+    position: absolute;
+    top:5px;
+    right:5px;
+    padding: 5px;
+    border-radius:4px;
+    border:none;
+    background-color:transparent;
+}
+
+.right-corner-btn button{
+    border:none;
+    background-color:transparent;
+}

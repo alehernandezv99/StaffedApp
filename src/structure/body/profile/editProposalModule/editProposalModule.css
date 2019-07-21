@@ -1,4 +1,4 @@
 .textarea-custom-1 {
     resize: none;
-    max-height:500px;
+    height:200px !important;
 }

@@ -13,7 +13,8 @@ export default class EditProposalModule extends React.Component {
         }
     }
 
-    updateCV = (type, index) => {
+    updateCV = (type,element, index) => {
+        element.disabled = true;
         let check = 0;
         let messages = [];
         Object.keys(this.state).forEach(key => {
@@ -40,16 +41,18 @@ export default class EditProposalModule extends React.Component {
 
             firebase.firestore().collection("CVs").doc(this.props.id).update({[this.props.prop]:arr})
             .then(() => {
-                this.props.addToast("Successfully Added");
+                this.props.addToast(`Successfully ${type}${type.includes("e")?"d":"ed"}`);
                 this.props.handleClose();
                 this.props.callBack();
             })
             .catch(e => {
                 this.props.addToast(e.message);
+                element.disabled = false;
             })
         })
         .catch(e => {
             this.props.addToast(e.message);
+            element.disabled = false;
         })
     }else {
         for(let i = 0; i < messages.length; i++){
@@ -60,7 +63,19 @@ export default class EditProposalModule extends React.Component {
     }
 
     componentDidMount(){
-   
+        if(this.props.type === "update"){
+            this.setState(state =>{
+                let base1 = state.title;
+                let base2 = state.content;
+                base1.value= this.props.title;
+                base2.value = this.props.content
+
+                return {
+                    title:base1,
+                    content:base2
+                }
+            })
+        }
     }
 
     changeValue = (value, obj)  => {
@@ -85,8 +100,8 @@ export default class EditProposalModule extends React.Component {
                          <textarea className="form-control textarea-custom-1" value={this.state.content["value"]} onChange={(e) => {this.changeValue(e.target.value, "content")}}></textarea>
                         
                      </div>
-                     {this.props.type ==="update"?<button type="button" className="btn btn-custom-1"  onClick={()=> {this.updateCV("update",this.props.index)}}><i className="material-icons align-middle">edit</i> Update</button>:null}
-                         {this.props.type === "add"?<button type="button" className="btn btn-custom-1" onClick={() => {this.updateCV("add")}}><i className="material-icons align-middle">add</i> Add</button>:null}
+                     {this.props.type ==="update"?<button type="button" className="btn btn-custom-1"  onClick={(e)=> {this.updateCV("update",e.target,this.props.index)}}><i className="material-icons align-middle">edit</i> Update</button>:null}
+                         {this.props.type === "add"?<button type="button" className="btn btn-custom-1" onClick={(e) => {this.updateCV("add",e.target)}}><i className="material-icons align-middle">add</i> Add</button>:null}
                  </div>
                  </div>
             </Drawer>

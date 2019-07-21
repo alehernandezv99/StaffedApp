@@ -411,13 +411,13 @@ export default class MyProjects extends React.Component {
                              <li className="nav-item ml-auto">
                                <a className="nav-link active" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value)}} href="#all">All</a>
                             </li>
-                            <li clasName="nav-item">
+                            <li className="nav-item">
                                <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"author",firebase.auth().currentUser.uid)}} href="#createdByMe">Created By Me</a>
                             </li>
-                            <li clasName="nav-item">
+                            <li className="nav-item">
                                <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"status","In Development")}} href="#inDevelopment">In Development</a>
                             </li>
-                            <li clasName="nav-item">
+                            <li className="nav-item">
                                <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"status","Completed")}} href="#completed">Completed</a>
                             </li>
                             <li className="nav-item">

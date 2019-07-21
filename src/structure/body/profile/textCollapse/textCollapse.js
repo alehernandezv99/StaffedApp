@@ -25,9 +25,7 @@ export default class TextCollapse extends React.Component {
       }
 
     componentDidMount(){
-        console.log(this.dots);
-        console.log(this.more);
-        console.log(this.myBtn);
+
         let check  = 0;
 
           if(this.dots === undefined){
