@@ -12,7 +12,8 @@ import LoadingSpinner from "./structure/loading/loadingSpinner";
 
 const LandingPage = lazy(() => import("./structure/body/landingPage"))
 const Home = lazy(() => import("./structure/body/home"));
-const MyProjects = lazy(() => import("./structure/body/myProjects"))
+const MyProjects = lazy(() => import("./structure/body/myProjects"));
+const Profile = lazy(() => import("./structure/body/profile"));
 
 class App extends React.Component {
   constructor(props){
@@ -20,7 +21,7 @@ class App extends React.Component {
     this.handleStates = this.handleStates.bind(this);
 
     this.state = {
-      currentPage:[true,false,false]
+      currentPage:[true,false,false,false]
     }
   }
 
@@ -58,6 +59,7 @@ class App extends React.Component {
         {this.state.currentPage[0] === true?<LandingPage handleStates={this.handleStates}/>:null}
         {this.state.currentPage[1] === true?<Home handleStates={this.handleStates} />:null}
         {this.state.currentPage[2] === true?<MyProjects handleStates={this.handleStates} />:null}
+        {this.state.currentPage[3] === true?<Profile handleStates={this.handleStates} />:null}
       </Suspense>
       <Footer />
     </div>

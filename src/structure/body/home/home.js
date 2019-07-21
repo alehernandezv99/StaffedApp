@@ -426,7 +426,7 @@ export default class Home extends React.Component {
                                     href:"",
                                     text:"Profile",
                                     key:1,
-                                    onClick:() => {},
+                                    onClick:() => {this.props.handleStates(3)},
                                 },
                                 {
                                     href:"",
