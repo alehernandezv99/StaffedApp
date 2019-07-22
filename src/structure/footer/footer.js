@@ -18,8 +18,8 @@ export default function Footer(){
       <div className="col-md-6 mt-md-0 mt-3">
 
     
-        <h5 className="text-uppercase">Thanks For Coming</h5>
-        <p>Contact Us If You Have Any Doubts.</p>
+        <h5 className="text-uppercase">Help/ Support Page</h5>
+      
 
       </div>
 

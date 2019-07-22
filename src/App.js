@@ -10,6 +10,7 @@ import {lazy,Suspense} from "react";
 import firebase from "./firebaseSetUp";
 import LoadingSpinner from "./structure/loading/loadingSpinner";
 
+
 const LandingPage = lazy(() => import("./structure/body/landingPage"))
 const Home = lazy(() => import("./structure/body/home"));
 const MyProjects = lazy(() => import("./structure/body/myProjects"));

@@ -9,6 +9,8 @@ import ProposalModule from "./proposalModule";
 import ContractModule from "./contractModule";
 import AbsoluteLoading from "../../loading/absoluteLoading";
 import { app } from "firebase";
+import { DatePicker, TimePrecision } from "@blueprintjs/datetime";
+import { isDate } from "util";
 
 export default class DrawerJob extends React.Component {
     constructor(props){
@@ -25,7 +27,7 @@ export default class DrawerJob extends React.Component {
                 price:{value:"", criteria:{type:"number", min:10, max:50000}},
                 receive:{value:"", criteria:{type:"number", min:10}},
                 message:{value:"", criteria:{type:"text", minLength:5, maxLength:500}},
-                deadline:{value:"One week", criteria:{type:"text", minLength:2}}
+                deadline:{value:new Date(), criteria:{}}
             },
             proposalFetched:null,
             contract:"",
@@ -144,6 +146,7 @@ export default class DrawerJob extends React.Component {
                 deadline:this.state.proposalFetched.deadline.value,
                 updated:firebase.firestore.Timestamp.now(),
             }
+            console.log(data);
             firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
             .then(snapshot => {
                 if(!(snapshot.empty)){
@@ -216,7 +219,7 @@ export default class DrawerJob extends React.Component {
         })
     }
 
-    checkChange(element, reference){
+    checkChange(element, reference, dateException){
       let check = 0 ;
   
         Object.keys(this.state.proposalFetchedListener).forEach(key => {
@@ -224,10 +227,36 @@ export default class DrawerJob extends React.Component {
              if(!(Number.isNaN(Number(this.state.proposalFetchedListener[key]["value"]))) && (this.state.proposalFetchedListener[key]["value"] !== "")){
                 check = 1
              }else {
+                 if(this.state.proposalFetchedListener[key]["value"].toDate() === undefined || !isDate(this.state.proposalFetchedListener[key]["value"].toDate())){
                 if(this.state.proposalFetchedListener[key]["value"].toLowerCase() !== reference[key]["value"].toLowerCase()){
 
                     check = 1
                 }
+                
+            }else {
+                
+               let date1 = this.state.proposalFetchedListener[key]["value"].toDate() !== undefined?this.state.proposalFetchedListener[key]["value"].toDate():this.state.proposalFetchedListener[key] 
+                let date2 = reference[key]["value"] === undefined?undefined:reference[key]["value"].toDate() !== undefined?reference[key]["value"].toDate():reference[key]["value"];
+                let check2 = 0
+                if(isDate(date1) && isDate(date2)){
+                if(date1.getDate() !== date2.getDate()){
+                    check2++;
+                }
+                if(date1.getMonth() === date2.getMonth()){
+                    check2 ++
+                }
+                if(date1.getFullYear() === date2.getFullYear()){
+                    check2++;
+                }
+
+                if(check2 === 3){
+                    check = 1;
+                }
+            }else {
+                check = 1;
+            }
+                
+            }
              }
              
 
@@ -235,14 +264,16 @@ export default class DrawerJob extends React.Component {
         })
 
         if(check === 1){
-
+            if(!dateException){
         element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px #d5d23a";
         element.style.borderColor = "#d5d23a"
+            }
         this.setState({hasChanged:true})
         }else {
-
+            if(!dateException){
         element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6)";
              element.style.borderColor = "rgba(82, 168, 236, 0.6)"
+            }
              this.setState({hasChanged:false})
         }
 
@@ -421,12 +452,17 @@ export default class DrawerJob extends React.Component {
                        
                          Object.keys(proposals).forEach(key => {
                        
-                             if((Number.isNaN(Number(proposals[key]))) || proposals[key] === ""){
+                             if(((Number.isNaN(Number(proposals[key]))) || proposals[key] === "") && proposals[key] === undefined){
                                  obj.value = proposals[key];
                                  obj.criteria = {type:"text", minLength:4, maxLength:500}
-                             }else {
+                             }else if(!((Number.isNaN(Number(proposals[key]))) || proposals[key] === "")){
                                  obj.value = proposals[key];
                                  obj.criteria = {type:"number", min:10, max:50000}
+                             }else {
+                               
+                                obj.value = proposals[key].toDate();
+                                console.log(obj.value);
+                                obj.criteria = {}
                              }
                              proposalFetched[key] = Object.assign({},obj);
                          })
@@ -538,12 +574,17 @@ export default class DrawerJob extends React.Component {
             }
 
             if(!(checkCriteria(value.value, propBase["criteria"], prop).check)){
+                if(index){
                 value.parentNode.childNodes[index].style.display ="block";
                 let message =checkCriteria(value.value, propBase["criteria"], prop).message;
                 value.parentNode.childNodes[index].textContent = message;
+                }
             }else {
+                if(index){
                 value.parentNode.childNodes[index].style.display ="none";
+                }
             }
+            console.log(value)
 
             return (
                 {
@@ -551,7 +592,9 @@ export default class DrawerJob extends React.Component {
                 }
             )
         })
+        if(cb){
         cb()
+        }
     }
 
     render(){
@@ -702,17 +745,14 @@ export default class DrawerJob extends React.Component {
                         <div className="col-sm-5">
                           <h4>Deadline</h4>
                         </div>
-                        <div className="text-left">
-                          <select type="number" className="form-control" value={this.state.proposal.deadline.value} onChange={(e) => {this.setValue("proposal","deadline",e.target,1, () => {}); }}>
-                              <option>Select a Deadline</option>
-                              <option>One Day</option>
-                              <option>Two Days</option>
-                              <option>One Week</option>
-                              <option>Two Weeks</option>
-                              <option>One Month</option>
-                              <option>Two Months</option>
-                              <option>More Than Two Months</option>
-                          </select>
+                        <div className="col">
+                        <DatePicker
+                              minDate={new Date()}
+                              maxDate={new Date(new Date().setMonth(new Date().getMonth()+4))}
+                             className={Classes.ELEVATION_1}
+                             onChange={(newDate) => this.setValue("proposal","deadline",newDate,)}
+                             value={this.state.proposal.deadline.value}
+                           />
 
                           <div className="invalid-feedback">Valid.</div>
                         </div>
@@ -778,16 +818,14 @@ export default class DrawerJob extends React.Component {
                         <div className="col-sm-5">
                           <h4>Deadline</h4>
                         </div>
-                        <div className="text-left">
-                          <select className="custom-select-sm" defaultValue={this.state.proposalFetched.deadline.value} onChange={(e) => {e.persist(); this.setValue("proposalFetched","deadline",e.target,1, ()=> { this.checkChange(e.target,this.state.proposalFetched)}); }}>
-                              <option value="One Day">One Day</option>
-                              <option value="Two Days">Two Days</option>
-                              <option value="One Week">One Week</option>
-                              <option value="Two Weeks">Two Weeks</option>
-                              <option value="One Month">One Month</option>
-                              <option value="Two Months">Two Months</option>
-                              <option value="More Than Two Months">More Than Two Months</option>
-                          </select>
+                        <div className="col">
+                        <DatePicker
+                              minDate={new Date()}
+                              maxDate={new Date(new Date().setMonth(new Date().getMonth()+4))}
+                             className={Classes.ELEVATION_1}
+                             onChange={async(newDate) => { await this.setValue("proposalFetched","deadline",newDate,); this.checkChange(newDate, this.state.proposalFetched, true)}}
+                             value={this.state.proposalFetched.deadline.value !== undefined?this.state.proposalFetched.deadline.value.toDate() !== undefined?this.state.proposalFetched.deadline.value.toDate():this.state.proposalFetched.deadline.value:this.state.proposalFetched.deadline.value}
+                           />
 
                           <div className="invalid-feedback">Valid.</div>
                         </div>
@@ -838,4 +876,10 @@ export default class DrawerJob extends React.Component {
             </div>
         )
     }
+}
+
+function toDateTime(secs) {
+    var t = new Date(1970, 0, 1); // Epoch
+    t.setSeconds(secs);
+    return t;
 }
