@@ -8,6 +8,8 @@ import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, Divider} fro
 import TextCollapse from "./textCollapse";
 import EditProposalModule from "./editProposalModule";
 import CVcontent from "./CVcontent";
+import UploadImg from "./uploadImg";
+import ProfileLoading from "../../loading/profileLoading";
 
 export default class Profile extends React.Component {
     constructor(props){
@@ -28,6 +30,23 @@ export default class Profile extends React.Component {
             inbox:{
                 count:0,
                 elements:[]
+            },
+            uploadImg:{
+                isOpen:false,
+                handleClose:() => {
+                    this.setState(state => {
+                        let base = state.uploadImg
+                        base.isOpen = false;
+                        return {uploadImg:base}
+                    })
+                },
+                handleOpen:() => {
+                    this.setState(state => {
+                        let base = state.uploadImg
+                        base.isOpen = true;
+                        return {uploadImg:base}
+                    })
+                }
             },
             isLoading:false,
             editPanel:{
@@ -52,7 +71,7 @@ export default class Profile extends React.Component {
                         base.isOpen = true;
                         return {editPanel:base}
                     })
-                }
+                },
             }
         }
 
@@ -171,7 +190,9 @@ export default class Profile extends React.Component {
 
     render() {
         return(
+            
             <div>
+                
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
@@ -283,17 +304,46 @@ export default class Profile extends React.Component {
                 />{this.state.editPanel.id !== ""?
                 <EditProposalModule index={this.state.editPanel.index} title={this.state.editPanel.title} content={this.state.editPanel.content} section={this.state.editPanel.prop} callBack={() => {this.loadCv()}} isOpen={this.state.editPanel.isOpen} handleClose={this.state.editPanel.handleClose} id={this.state.editPanel.id} prop={this.state.editPanel.prop} type={this.state.editPanel.type} addToast={this.addToast}/>
                 :null}
+                {this.state.CV.editable === true?<UploadImg callback={() => {this.loadCv()}} isOpen={this.state.uploadImg.isOpen} handleClose={this.state.uploadImg.handleClose} />:null}
+                <div>
+                    {this.state.user === null? <ProfileLoading />:
+                    <div>
                 <div className="container-fluid text-center">
                     <div className="container mt-2">
-                        <img src="https://www.w3schools.com/bootstrap4/img_avatar1.png" style={{width:"150px"}} className="rounded-circle" />
+                        <div className="container-fluid" style={{position:"relative"}}>
+                   
+                                    <div style={{backgroundImage:`url(${this.state.user.photoURL?this.state.user.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"150px",
+                                    height:"150px",
+                                    marginLeft:"50%",
+                                    transform:"translate(-50%,0)"
+                                }} className="rounded-circle" ></div>
+
+                        <div className="dropdown right-corner-btn">
+                              <button type="button" className="dropdown-toggle" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
+                                <div className="dropdown-menu dropdown-menu-right">
+                                <button className="dropdown-item" onClick={() => {this.state.uploadImg.handleOpen()}}>Upload</button>
+                              </div>
+                             </div>
+                        </div>
                     </div>
                    
                             <h6 className="mt-2">{this.state.user !== null?this.state.user.displayName?this.state.user.displayName:this.state.user.email:"Loading..."}</h6>
   
                             {this.state.CV.description.length > 0?
-                           <div className="container">
-                            <h5 className="mt-3">{this.state.user !== null?this.state.CV.description[0].title:"Loading..."}</h5>
-                            <p>{this.state.CV.description[0].text}</p>
+                           <div className="container" style={{position:"relative"}}>
+                            <h5 className="mt-3" ref={ref => {this.title = ref}}>{this.state.user !== null?this.state.CV.description[0].title:"Loading..."}</h5>
+                            <p ref={ref => {this.text = ref}}>{this.state.CV.description[0].text}</p>
+                            <div className="dropdown right-corner-btn">
+                              <button type="button" className="dropdown-toggle" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
+                                <div className="dropdown-menu dropdown-menu-right">
+                                <button className="dropdown-item" onClick={() => {this.openEditPanel("update",this.state.CV.id,"description",0,this.title.textContent,this.text.textContent)}}>Edit</button>
+                                <button className="dropdown-item" onClick={() => {this.deleteContent("description",0); }}>Delete</button>
+                              </div>
+                             </div>
                             </div>
                             :<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>}
                         
@@ -394,9 +444,15 @@ export default class Profile extends React.Component {
                            }):null}
                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"contact");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
+                        
+                </div>
                 </div>
             </div>
             </div>
+            }
+            </div>
+                
+            
             </div>
         )
     }

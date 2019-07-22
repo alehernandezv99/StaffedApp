@@ -363,17 +363,21 @@ export default class DrawerJob extends React.Component {
     }
 
     fetchProjectProps = () =>{
-            
+    
         firebase.firestore().collection("projects").doc(this.props.id).get()
          .then(async snapshot => {
+      
              let project = [];
                  project.push(snapshot.data());
                  let quantity = 0;
                  let idAuthorProject = project[0].author
-                 let author = await firebase.firestore().collection("users").doc(project[0].author).get();
-                 author = author.data().displayName?author.data().displayName:author.data().email;
-
+                 let userAuthor = await firebase.firestore().collection("users").doc(project[0].author).get();
+                  let data = userAuthor.data();
+                 let author = data.displayName?data.displayName:data.email;
+                 let img = data.photoURL;
+   
                  project[0].author = author;
+                 project[0].authorImg = img;
                  let references = snapshot.data().references;
                 let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
  
@@ -383,7 +387,7 @@ export default class DrawerJob extends React.Component {
                 if(!(idAuthorProject === firebase.auth().currentUser.uid)){
                  firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
                  .then(snapshot2 => {
-                    
+             
                  let documentF = null;
                  let isOwner = false;
                  let contract = "";
@@ -632,7 +636,21 @@ export default class DrawerJob extends React.Component {
                         }
                         <div className="container-fluid mt-4">
                         <h4><i className="material-icons">person</i> <span>Client</span></h4>
+                        <div className="row" >
+                            <div className="col-sm-4">
+                            <div style={{backgroundImage:`url(${this.state.project[0].authorImg?this.state.project[0].authorImg:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"50px",
+                                    height:"50px",
+                                }} className="rounded-circle" ></div>
+                            </div>
+                            <div className="col">
                         <h6 className="mt-3">{this.state.project[0].author}</h6>
+                           </div>
+                        </div>
+
                         </div>
                         <div className="container-fluid mt-4">
                         <h4><i className="material-icons">assistant_photo</i> <span>Country</span></h4>
@@ -663,16 +681,16 @@ export default class DrawerJob extends React.Component {
 
                           <div className="row mt-3">
                         <div className="col-sm-5">
-                          <h4>Pioneering Service Cost</h4>
+                          <h4>StaffedApp Service Cost</h4>
                         </div>
                         <div className="text-left">
-                          <h6>-15% (-{ Math.round((this.state.proposal.price.value * 0.15)*100)/100} $)</h6>
+                          <h6>15% ({ Math.round((this.state.proposal.price.value * 0.15)*100)/100} $)</h6>
                         </div>
                           </div>
 
                           <div className="row mt-3">
                         <div className="col-sm-5">
-                          <h4>You Receive</h4>
+                          <h4>You will Receive</h4>
                         </div>
                         <div className="text-left">
                           <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1, ()=> {},"proposal","price",-(1-(1/(1-0.15)))); }}/>
@@ -739,10 +757,10 @@ export default class DrawerJob extends React.Component {
 
                           <div className="row mt-3">
                         <div className="col-sm-5">
-                          <h4>Pioneering Service Cost</h4>
+                          <h4>StaffedApp Service Cost</h4>
                         </div>
                         <div className="text-left">
-                          <h6>-15% (-{ Math.round((this.state.proposalFetched.price.value * 0.15)*100)/100} $)</h6>
+                          <h6>15% ({ Math.round((this.state.proposalFetched.price.value * 0.15)*100)/100} $)</h6>
                         </div>
                           </div>
 

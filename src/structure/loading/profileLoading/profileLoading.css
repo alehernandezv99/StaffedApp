@@ -1,0 +1,11 @@
+.center-img {
+    width:150px;
+    height:150px;
+    background-color:lightgray;
+    border-radius:50%;
+}
+
+.flexbox-center {
+    display: flex;
+    justify-content: center;
+}

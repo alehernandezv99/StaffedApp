@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@blueprintjs/core": "^3.17.1",
+    "@blueprintjs/datetime": "^3.11.0",
     "firebase": "^6.2.4",
     "jquery": "^3.4.1",
     "react": "^16.8.6",

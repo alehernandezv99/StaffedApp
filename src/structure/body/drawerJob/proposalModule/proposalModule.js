@@ -52,7 +52,7 @@ export default class ProposalModule extends React.Component {
         this.myFunction(this.dots, this.more, this.myBtn)
         this.setState({user:doc.data().displayName?doc.data().displayName:doc.data().email})
         }else {
-            this.setState({user:doc.data().displayName?doc.data().displayName:doc.data().email})
+            this.setState({user:doc.data()})
         }
         
           })
@@ -65,9 +65,24 @@ export default class ProposalModule extends React.Component {
             <div className="container mt-2">
                 <div className="card" style={{position:"relative"}}>
                 <div className="card-body">
-                <div className="form-group">
+                <div className="form-group mt-2">
                     {this.state.user === ""?<div className="spinner-border"></div>:
-                    <h6>{this.state.user}</h6>
+                     <div className="row">
+                         <div className="col-sm-2">
+                         <div style={{backgroundImage:`url(${this.state.user.photoURL?this.state.user.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"50px",
+                                    height:"50px",
+                                    marginLeft:"50%",
+                                    transform:"translate(-50%,0)"
+                                }} className="rounded-circle" ></div>
+                        </div>
+                        <div className="col" style={{display:"flex",alignItems:"center"}}>
+                    <h6>{this.state.user.displayName?this.state.user.displayName:this.state.user.email}</h6>
+                    </div>
+                    </div>
                     }
                 </div>
                 <div className="form-group">

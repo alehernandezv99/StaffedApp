@@ -563,7 +563,15 @@ export default class Home extends React.Component {
                         <div className="col">
                             <div className="card">
                                 <div className="card-body text-center">
-                                    <img src="https://www.w3schools.com/bootstrap4/img_avatar1.png" style={{width:"150px"}} className="rounded-circle" />
+                                    <div style={{backgroundImage:`url(${this.state.user[0].photoURL?this.state.user[0].photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"150px",
+                                    height:"150px",
+                                    marginLeft:"50%",
+                                    transform:"translate(-50%,0)"
+                                }} className="rounded-circle" ></div>
                                     <div className="text-center mt-2">{firebase.auth().currentUser?firebase.auth().currentUser.displayName?firebase.auth().currentUser.displayName:firebase.auth().currentUser.email:<div className="spinner-loading"></div>}</div>
                                     <div className="mt-2 text-left"><i className="material-icons">style</i> {this.state.user[0].cards} Cards</div>
                                     <div className="mt-2 text-left"><i className="material-icons">event_note</i> {this.state.user[0].proposals.length} Proposals</div>
