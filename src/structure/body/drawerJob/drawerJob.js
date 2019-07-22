@@ -121,7 +121,7 @@ export default class DrawerJob extends React.Component {
 
     updateProposal = () => {
 
-       
+       if(window.confirm("Sure you want to update your proposal?")){
         let objectProposal = this.state.proposalFetched;
         
         let check = 0;
@@ -175,9 +175,12 @@ export default class DrawerJob extends React.Component {
                     this.addToast(messages[i]);
                 }
             }
+        }
     }
 
     acceptProposal = (idProject, idProposal) => {
+
+        if(window.confirm("Sure you want to accept this proposal")){
         this.toggleLoading();
 
         let batch = firebase.firestore().batch();
@@ -217,6 +220,7 @@ export default class DrawerJob extends React.Component {
             this.addToast(e.message);
             this.toggleLoading();
         })
+    }
     }
 
     checkChange(element, reference, dateException){
@@ -292,6 +296,8 @@ export default class DrawerJob extends React.Component {
     }
 
     submitProposal(){
+
+        if(window.confirm("Sure you want to apply for this project?")){
         let objectProposals = this.state.proposal;
         let check = 0;
         let messages = [];
@@ -390,7 +396,7 @@ export default class DrawerJob extends React.Component {
             }
         }
 
-        
+    }
     }
 
     fetchProjectProps = () =>{
@@ -452,17 +458,20 @@ export default class DrawerJob extends React.Component {
                        
                          Object.keys(proposals).forEach(key => {
                        
-                             if(((Number.isNaN(Number(proposals[key]))) || proposals[key] === "") && proposals[key] === undefined){
+                             if(((Number.isNaN(Number(proposals[key]))) || proposals[key] === "") && proposals[key].seconds === undefined){
                                  obj.value = proposals[key];
                                  obj.criteria = {type:"text", minLength:4, maxLength:500}
-                             }else if(!((Number.isNaN(Number(proposals[key]))) || proposals[key] === "")){
+                             }else if(!((Number.isNaN(Number(proposals[key]))) && proposals[key] !== "")){
                                  obj.value = proposals[key];
                                  obj.criteria = {type:"number", min:10, max:50000}
                              }else {
-                               
+                                
+                               if(key !== "id"){
+                                   
                                 obj.value = proposals[key].toDate();
-                                console.log(obj.value);
+                                
                                 obj.criteria = {}
+                               }
                              }
                              proposalFetched[key] = Object.assign({},obj);
                          })
@@ -562,7 +571,11 @@ export default class DrawerJob extends React.Component {
            
             let objBase = state[obj];
             let propBase = objBase[prop];
+            if(!isDate(value)){
             propBase["value"] = valueCollected;
+            }else {
+                propBase["value"] = value; 
+            }
             objBase[prop] = propBase;
 
             if(coeficent){
@@ -584,7 +597,7 @@ export default class DrawerJob extends React.Component {
                 value.parentNode.childNodes[index].style.display ="none";
                 }
             }
-            console.log(value)
+            
 
             return (
                 {
@@ -824,9 +837,9 @@ export default class DrawerJob extends React.Component {
                               maxDate={new Date(new Date().setMonth(new Date().getMonth()+4))}
                              className={Classes.ELEVATION_1}
                              onChange={async(newDate) => { await this.setValue("proposalFetched","deadline",newDate,); this.checkChange(newDate, this.state.proposalFetched, true)}}
-                             value={this.state.proposalFetched.deadline.value !== undefined?this.state.proposalFetched.deadline.value.toDate() !== undefined?this.state.proposalFetched.deadline.value.toDate():this.state.proposalFetched.deadline.value:this.state.proposalFetched.deadline.value}
+                             value={this.state.proposalFetched.deadline.value}
                            />
-
+                    
                           <div className="invalid-feedback">Valid.</div>
                         </div>
                           </div>
