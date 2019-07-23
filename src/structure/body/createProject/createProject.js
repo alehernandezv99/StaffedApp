@@ -1,7 +1,7 @@
 import React from "react";
 import "./createProject.css";
 import $ from "jquery";
-import { Button, Position, Toast, Toaster, Classes} from "@blueprintjs/core";
+import { Button, Position, Classes, Slider, Drawer, DateInput, Toaster, Toast} from "@blueprintjs/core";
 import firebase from "../../../firebaseSetUp";
 import LoadingSpinner from "../../loading/loadingSpinner";
 import autocomplete from "../../../utils/autocomplete";
@@ -80,63 +80,55 @@ export default class CreateProject extends React.Component{
         isLoading:!state.isLoading
     }))
 }
+  
+bindSkillInput = () => {
+  $('#skills-input-1').keypress((event) => {
+    if(event.keyCode == 13){
+      if(event.target.value !== ""){
+     
+
+        firebase.firestore().collection("skills").get()
+        .then(snapshot => {
+          let skillsArr = [];
+          snapshot.forEach(doc => {
+            skillsArr.push(doc.data().name);
+          })
+           this.setState(state => {
+        let formA = state.formA;
+        let skills = formA.skills["value"];
+
+        if((skills.includes(event.target.value) === false)){
+          if(skillsArr.includes(event.target.value)){
+            skills.push(event.target.value);
+            let skillsObj = {value:skills, criteria:this.state.formA.skills.criteria}
+            formA.skills = skillsObj;
+            
+            this.skillInput.value = "";
+            return({formA:formA})
+           
+          }else {
+            this.addToast(`The skill "${event.target.value}" is not registered`);
+          }
+
+        }else {
+          this.addToast("You cannot select two repeated skills")
+          return {}
+        }
+        })
+        
+       
+      })
+    
+  }
+  }
+  });
+}
 
     componentDidMount(){
 
       $(".cp-section-2").hide();
 
-      $('#skills-input').keypress((event) => {
-        if(event.keyCode == 13){
-          if(event.target.value !== ""){
-         
-
-            firebase.firestore().collection("skills").get()
-            .then(snapshot => {
-              let skillsArr = [];
-              snapshot.forEach(doc => {
-                skillsArr.push(doc.data().name);
-              })
-               this.setState(state => {
-            let formA = state.formA;
-            let skills = formA.skills["value"];
-  
-            if((skills.includes(event.target.value) === false)){
-              if(skillsArr.includes(event.target.value)){
-                skills.push(event.target.value);
-                let skillsObj = {value:skills, criteria:this.state.formA.skills.criteria}
-                formA.skills = skillsObj;
-                
-                this.skillInput.value = "";
-                return({formA:formA})
-               
-              }else {
-                this.addToast(`The skill "${event.target.value}" is not registered`);
-              }
-
-            }else {
-              this.addToast("You cannot select two repeated skills")
-              return {}
-            }
-            })
-            
-           
-          })
-        
-      }
-      }
-      });
-
-      firebase.firestore().collection("skills").get()
-    .then(async snapshot => {
-      let skills = [];
-      snapshot.forEach(doc => {
-        skills.push(doc.data().name);
-      })
-
       
-      autocomplete(document.getElementById("skills-input"), skills, this.addSkill);
-    })
-
       
 
       firebase.firestore().collection("categories").get()
@@ -148,23 +140,23 @@ export default class CreateProject extends React.Component{
         this.setState({categories:categories})
       })
 
+      this.findSubCategory()
+
     
     }
 
-    findSubCategory(category){
-      firebase.firestore().collection("categories").where("name","==",category).get()
+    findSubCategory(){
+      firebase.firestore().collection("subCategories").get()
       .then(snapshot => {
+        let subCategories = [];
         snapshot.forEach(doc => {
-          firebase.firestore().collection("categories").doc(doc.id).collection("subCategories").get()
-          .then(snapshot2 => {
-            let subCategories = [];
-            snapshot2.forEach(doc2 => {
-              subCategories.push(doc2.data().name);
+              subCategories.push(doc.data().name);
             })
 
             this.setState({subCategories:subCategories});
-          })
-        })
+      })
+      .catch(e => {
+        this.addToast(e.message);
       })
     }
 
@@ -215,7 +207,20 @@ export default class CreateProject extends React.Component{
 
 
     async setValue(obj, field, value, feedbackElement, element){
-      
+      if(this.setted === undefined){
+        this.setted = true;
+        firebase.firestore().collection("skills").get()
+    .then(async snapshot => {
+      let skills = [];
+      snapshot.forEach(doc => {
+        skills.push(doc.data().name);
+      })
+
+      this.bindSkillInput();
+      autocomplete(document.getElementById("skills-input-1"), skills, this.addSkill);
+    })
+      }
+
       if(this.state[obj][field]["criteria"]){
       if(this.checkCriteria(value, this.state[obj][field]["criteria"],field).check){
         if(feedbackElement && element){
@@ -255,15 +260,12 @@ export default class CreateProject extends React.Component{
       let formB = this.state.formB;
 
       let skills = formA.skills["value"];
-      let skillsObj = {};
-
-      for(let i = 0; i< skills.length; i++){
-        skillsObj[skills[i]] = true;
-      }
+    
+      
       let data = {
         title:formA.title["value"],
         description:formA.description["value"],
-        skills:skillsObj,
+        skills:skills,
         category:formA.category["value"],
         subCategory:formA.subCategory["value"],
         type:formB.type["value"],
@@ -290,16 +292,20 @@ export default class CreateProject extends React.Component{
       .then(() => {
         this.toggleLoading();
         this.addToast("Project Successfully Created");
+        this.props.handleClose();
+        this.setted = undefined;
       })
       .catch(e => {
         this.toggleLoading();
         this.addToast(e.message);
+        this.setted = undefined;
       })
 
       })
       .catch(e => {
         this.addToast("Something is Wrong :(");
         this.toggleLoading();
+        this.setted = undefined;
       })
 
       
@@ -311,20 +317,22 @@ export default class CreateProject extends React.Component{
 
     render(){
     return(
-        <div className="modal fade" id={this.props.id}>
+      <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+        <div className={Classes.DRAWER_BODY}>
+       <div className={`${Classes.DIALOG_BODY}`}>
+      
           {this.state.isLoading === true? <LoadingSpinner />:null}
           <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
            {/* "Toasted!" will appear here after clicking button. */}
             {this.state.toasts.map(toast => <Toast {...toast} />)}
          </Toaster>
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
+                        <div className="card">
+                            <div className="card-header">
                             
-                                <h4 className="modal-title text-center">Create Project</h4>
-                                <button type="button" className="close" data-dismiss="modal">&times;</button>
+                                <h4 className="card-title text-center">Create Project</h4>
+                              
                             </div>
-                            <div className="modal-body">
+                            <div className="card-body">
                             <form className="cp-section-1" >
                               <div className="form-group">
                                 <label>Title</label>
@@ -344,7 +352,7 @@ export default class CreateProject extends React.Component{
                                 <label>Category</label>
                                 <div>
                                   {this.state.categories.length > 0 ?
-                                <select onChange={(e) => {this.setValue("formA","category",e.target.options[e.target.selectedIndex].value); this.findSubCategory(e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
+                                <select onChange={(e) => {this.setValue("formA","category",e.target.options[e.target.selectedIndex].value);}} className="custom-select-sm mb-1">
                                   <option>Select Category</option>
                                   {this.state.categories.map((category ,i) => {
                                     return (<option key={i}>{category}</option>)
@@ -365,7 +373,7 @@ export default class CreateProject extends React.Component{
                                     return (<option key={i}>{category}</option>)
                                   })}
                                 </select>
-                                :<div>Select a Category First</div>
+                                :<div className="spinnder-border"></div>
                                   }
                                 </div>
                               </div>
@@ -378,8 +386,9 @@ export default class CreateProject extends React.Component{
                                 })}
                                 </div>
                                 <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-input" className="form-control" required/>
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-input-1" className="form-control" required/>
                                 </div>
+                                
                               </div>
                               
                               <div>
@@ -388,7 +397,7 @@ export default class CreateProject extends React.Component{
                               </div>
                             </form>
 
-                            <form className="cp-section-2">
+                            <form className="cp-section-2" style={{display:"none"}}>
                             <div className="from-group">
                                   <label>Type of Contract</label>
                                   <div>
@@ -419,14 +428,17 @@ export default class CreateProject extends React.Component{
                             </form>
 
                             </div>
-                            <div className="modal-footer">
+                            <div className="card-footer">
                               <button type="button" className="btn btn-custom-1" onClick={() => {this.gotToNextPage(".cp-section-2",".cp-section-1")}}>Back</button>
-                                <button type="button" className="btn btn-danger" data-dismiss="modal">Close</button>
+                                <button type="button" className="btn btn-danger ml-3" onClick={() => {this.props.handleClose()}}>Cancel</button>
                             </div>
                             
                         </div>
-                    </div>
+                    
+                
                 </div>
+                </div>
+                </Drawer>
     )
 }
 }

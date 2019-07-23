@@ -53,6 +53,23 @@ export default class Home extends React.Component {
                 isOpen:false,
                 projectId:"",
                 proposalId:"",
+            },
+            createProject:{
+                isOpen:false,
+                handleClose:() => {
+                    this.setState(state => {
+                        let base = state.createProject;
+                        base.isOpen = false;
+                        return {createProject:base}
+                    })
+                },
+                handleOpen:() => {
+                    this.setState(state => {
+                        let base = state.createProject;
+                        base.isOpen = true;
+                        return {createProject:base}
+                    })
+                }
             }
         }
 
@@ -145,7 +162,7 @@ export default class Home extends React.Component {
           }
         })
 
-        this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+        this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
       }else {
         this.addToast("You cannot select two repeated skills")
       }
@@ -237,6 +254,97 @@ export default class Home extends React.Component {
             return {proposalsViewer:base}
         })
     }
+    reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit) => {
+        let newIndex = index !== undefined?index:0;
+        let ref = firebase.firestore().collection("projects");
+
+        ref= ref.where("skills","array-contains",arr[newIndex])
+
+        ref = ref.orderBy("created","desc")
+
+  
+        //ef = ref.limit(currentLimit);
+        
+        ref.get()
+        .then(snapshot => {
+            let currentIds = ids !== undefined?ids:[];
+            let currentSize = 0;
+
+            snapshot.forEach(document => {
+                if(!(currentIds.includes(document.data().id))){
+                    currentSize++;
+                    currentIds.push(document.data().id);
+                }
+            })
+
+            let size = sizeAcum !== undefined?sizeAcum + currentSize:currentSize;
+            let lastSeem = {}
+            let newDictionary = []
+            if(page){
+              
+            lastSeem = snapshot.docs[((Math.ceil(limit/arr.length))*(page))-1];
+            
+             newDictionary = dictionary !== undefined?dictionary:[];
+             newDictionary.push(lastSeem);
+             console.log("This is the dictionary " + newDictionary);
+            }
+
+            let ref = firebase.firestore().collection("projects");
+
+            ref= ref.where("skills","array-contains",arr[newIndex])
+
+            ref = ref.orderBy("created","desc")
+
+            let currentLimit = 0
+            
+
+            if(index !== (arr.length - 1)){
+
+                currentLimit = Math.ceil(limit/arr.length);
+                console.log(currentLimit)
+                }else {
+        
+                    currentLimit = (limit - (Math.ceil(limit/arr.length)*(arr.length- 1)-acumDeficit));
+                    if(currentLimit < 1 || currentLimit < 0){
+                        currentLimit = 1
+                    }
+            }
+
+            if(page){
+            ref = ref.startAfter(lastSeem).limit(currentLimit);
+            }else {
+                ref = ref.limit(currentLimit); 
+            }
+            ref.get()
+            .then(snapshot2 => {
+                let newProjects = projects?projects:[];
+                let checkSize = 0;
+                let deficit = 0;
+                snapshot2.forEach(doc => {
+                    if(currentIds.includes(doc.data().id)){
+                        checkSize++;
+                    newProjects.push(doc.data());
+                    }else {
+                        deficit++
+                    }
+                })
+                
+                let newDeficit = acumDeficit !== undefined?acumDeficit + deficit:deficit;
+
+
+                if(newIndex === (arr.length - 1)){
+                    this.setState({
+                        projects:newProjects,
+                        size:size,
+                    })
+                }else {
+                    newIndex++;
+                    this.reloadProjectsFixed(limit,field,arr,page,newIndex,size,newDictionary,newProjects,currentIds,newDeficit);
+                }
+                
+            })
+        })
+    }
 
    reloadProjects(limit,field, arr, page){
         let ref = firebase.firestore().collection("projects")
@@ -316,7 +424,7 @@ export default class Home extends React.Component {
                 let skillsUser = doc.data().skills;
                 skills.skillsSelected.value = skillsUser;
                 let objOfSkills = {};
-                this.reloadProjects(this.state.pageSize.value,"skills", skillsUser); 
+                this.reloadProjectsFixed(this.state.pageSize.value,"skills", skillsUser); 
                 return {
                 user:[doc.data()],
                 skills:skills,
@@ -389,9 +497,7 @@ export default class Home extends React.Component {
                             text:"Create Project",
                             href:"",
                             icon:"add",
-                            dataToggle:"modal",
-                            dataTarget:"#createProjectPanel",
-                            onClick:() => {},
+                            onClick:() => {this.state.createProject.handleOpen()},
                             key:6
                         },
                         {
@@ -455,7 +561,7 @@ export default class Home extends React.Component {
                                     let pageSize = state.pageSize;
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});
-                                }); this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);}}  />
+                                }); this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);}}  />
                             </div>
                             <div className="form-group">
                                   <label>Filter By Skills</label>
@@ -503,7 +609,7 @@ export default class Home extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:key,
+                                    text:skills[key],
                                     key:i
                                 });
                             })
@@ -555,7 +661,7 @@ export default class Home extends React.Component {
                                      }
                                      return pages
                                  })().map((data, i) => {
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
                                  })                                                                  }
                              <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
                            </ul>}
@@ -582,7 +688,7 @@ export default class Home extends React.Component {
                     </div>
                     }
                 </div>
-                <CreateProject id={"createProjectPanel"}/>
+                <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
             </div>
         )
     }

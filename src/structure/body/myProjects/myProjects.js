@@ -443,7 +443,7 @@ export default class MyProjects extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:key,
+                                    text:skills[key],
                                     key:i
                                 });
                             })
@@ -509,7 +509,7 @@ export default class MyProjects extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:key,
+                                    text:skills[key],
                                     key:i
                                 });
                             })
@@ -574,7 +574,7 @@ export default class MyProjects extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:key,
+                                    text:skills[key],
                                     key:i
                                 });
                             })
@@ -640,7 +640,7 @@ export default class MyProjects extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:key,
+                                    text:skills[key],
                                     key:i
                                 });
                             })
@@ -707,7 +707,7 @@ export default class MyProjects extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:key,
+                                    text:skills[key],
                                     key:i
                                 });
                             })
@@ -773,7 +773,7 @@ export default class MyProjects extends React.Component {
 
                             Object.keys(skills).forEach((key, i) =>{
                                 skillsObj.push({
-                                    text:key,
+                                    text:skills[key],
                                     key:i
                                 });
                             })
