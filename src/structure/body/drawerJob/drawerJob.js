@@ -46,9 +46,11 @@ export default class DrawerJob extends React.Component {
     }
 
     toggleLoading(){
+        if(this._mounted){
         this.setState(state => ({
             isLoading:!state.isLoading
         }))
+    }
     }
 
     performTransaction(collection, prop, value, type, messageSucess, messageFailure,cb){
@@ -275,13 +277,17 @@ export default class DrawerJob extends React.Component {
         element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px #d5d23a";
         element.style.borderColor = "#d5d23a"
             }
+            if(this._mounted){
         this.setState({hasChanged:true})
+            }
         }else {
             if(!dateException){
         element.style.boxShadow = "0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6)";
              element.style.borderColor = "rgba(82, 168, 236, 0.6)"
             }
+            if(this._mounted){
              this.setState({hasChanged:false})
+            }
         }
 
     }
@@ -291,7 +297,9 @@ export default class DrawerJob extends React.Component {
             if(this.state.action !== ""){
                 if(this.state.action === "view contract"){
                     this.changePage("#dj-section-1","#dj-section-4")
+                    if(this._mounted){
                     this.setState({action:""});
+                    }
                 }
             }
             return "";
@@ -502,9 +510,9 @@ export default class DrawerJob extends React.Component {
                     project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
 
               
-
+                    if(this._mounted){
                       this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener, isOwner:isOwner, contract:contract, action:this.props.action});
-                     
+                    }
                 
                  })
                  .catch(e => {
@@ -546,8 +554,9 @@ export default class DrawerJob extends React.Component {
                         }
                         index++
                     })
+                    if(this._mounted){
                     this.setState({project:project, isSaved:isSaved, isOwner:true, proposals:proposals ,contract:contract, action:this.props.action})
-                    
+                    }
                  })
 
                  
@@ -560,7 +569,12 @@ export default class DrawerJob extends React.Component {
  
      }
 
+     componentWillUnmount() {
+        this._mounted = false;
+     }
+
     componentDidMount(){
+        this._mounted = true;
        this.fetchProjectProps();
     }
 

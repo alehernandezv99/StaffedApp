@@ -28,10 +28,13 @@ export default class ProposalModule extends React.Component {
         
       }
 
+      componentWillUnmount(){
+        this._mounted = false;
+      }
      
 
       componentDidMount(){
-
+        this._mounted = true;
         
           firebase.firestore().collection("users").doc(this.props.user).get()
           .then(doc => {
@@ -50,9 +53,13 @@ export default class ProposalModule extends React.Component {
         if(check ==0){
         this.myFunction(this.dots, this.more, this.myBtn)
         this.myFunction(this.dots, this.more, this.myBtn)
+        if(this._mounted){
         this.setState({user:doc.data().displayName?doc.data().displayName:doc.data().email})
+        }
         }else {
+            if(this._mounted){
             this.setState({user:doc.data()})
+            }
         }
         
           })

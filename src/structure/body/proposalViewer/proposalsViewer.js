@@ -16,8 +16,12 @@ export default class ProposalsViewer extends React.Component {
             author:"",
         }
     }
+    componentWillMount() {
+        this._mounted =false;
+    }
 
     componentDidMount(){
+        this._mounted = true;
         firebase.firestore().collection("projects").doc(this.props.projectId).get()
         .then(doc => {
             let project = doc.data();
@@ -30,7 +34,9 @@ export default class ProposalsViewer extends React.Component {
                     
                     firebase.firestore().collection("users").doc(project.author).get()
                     .then(author => {
+                        if(this._mounted){
                     this.setState({project:project, proposal:proposal, user:user.data().displayName?user.data().displayName:user.data().email ,author:author.data().displayName?author.data().displayName:author.data().email});
+                        }
                 })
                 })
                 .catch(e => {

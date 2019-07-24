@@ -28,7 +28,7 @@ class App extends React.Component {
   }
 
   handleStates(index, data){
-    console.log(data);
+
     this.setState(state => {
       let currentPage = state.currentPage;
       for(let i = 0; i < currentPage.length; i++){

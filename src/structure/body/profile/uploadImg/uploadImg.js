@@ -7,6 +7,14 @@ export default class UploadImg extends React.Component {
         super(props);
     }
 
+    componentDidMount(){
+      this._mounted = true;
+    }
+
+    componentWillUnmount(){
+      this._mounted = false;
+    }
+
     upload= (e) => {
         let file = e.target.files[0];
         let storageRef = firebase.storage().ref()

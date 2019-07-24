@@ -9,7 +9,7 @@ import autocomplete from "../../../../utils/autocomplete";
 export default class SignUpDrawer extends React.Component {
     constructor(props){
         super(props);
-
+        this.checkCriteria = checkCriteria;
         this.state = {
             name:{value:"", criteria:{type:"text", pattern:/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/}},
             email:{value:"", criteria:{type:"text", pattern:/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/}},
@@ -25,6 +25,7 @@ export default class SignUpDrawer extends React.Component {
     }
 
     clearSkill = (index) => {
+      if(this._mounted){
         this.setState(state => {
           let skills = state.skills.skillsSelected.value;
           skills.splice(index,1)
@@ -34,6 +35,7 @@ export default class SignUpDrawer extends React.Component {
           return({skills:base});
         })
       }
+      }
 
 
     addSkill = (skill) => {
@@ -41,6 +43,7 @@ export default class SignUpDrawer extends React.Component {
           let skills = this.state.skills.skillsSelected["value"].slice();
     
           let criteria = this.state.skills.skillsSelected["criteria"];
+          if(this._mounted){
         this.setState(state => {
           let base = state.skills;
           skills.push(skill);
@@ -52,54 +55,55 @@ export default class SignUpDrawer extends React.Component {
             return ({});
           }
         })
+      }
       }else {
         this.addToast("You cannot select two repeated skills")
       }
       }
 
-    componentDidMount() {
+      bindSkillsInput=  () => {
         $('#skills-input').keypress((event) => {
-            if(event.keyCode == 13){
-              if(event.target.value !== ""){
-             
-    
-                firebase.firestore().collection("skills").get()
-                .then(snapshot => {
-                  let skillsArr = [];
-                  snapshot.forEach(doc => {
-                    skillsArr.push(doc.data().name);
-                  })
-                   this.setState(state => {
-                let base = state.skills;
-                let skills = base.skillsSelected["value"];
-      
-                if((skills.includes(event.target.value) === false)){
-                  if(skillsArr.includes(event.target.value)){
-                    skills.push(event.target.value);
-                    let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
-                     base.skillsSelected = skillsObj;
-
-                    this.skillInput.value = "";
-                    return({skills:base})
-                    
-                  }else {
-                    this.addToast(`The skill "${event.target.value}" is not registered`);
-                  }
-    
-                }else {
-                  this.addToast("You cannot select two repeated skills")
-                  return {}
-                }
+          if(event.keyCode == 13){
+            if(event.target.value !== ""){
+           
+  
+              firebase.firestore().collection("skills").get()
+              .then(snapshot => {
+                let skillsArr = [];
+                snapshot.forEach(doc => {
+                  skillsArr.push(doc.data().name);
                 })
-                
-               
-              })
-            
-          }
-          }
-          });
+                 this.setState(state => {
+              let base = state.skills;
+              let skills = base.skillsSelected["value"];
+    
+              if((skills.includes(event.target.value) === false)){
+                if(skillsArr.includes(event.target.value)){
+                  skills.push(event.target.value);
+                  let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+                   base.skillsSelected = skillsObj;
 
-          firebase.firestore().collection("skills").get()
+                  this.skillInput.value = "";
+                  return({skills:base})
+                  
+                }else {
+                  this.addToast(`The skill "${event.target.value}" is not registered`);
+                }
+  
+              }else {
+                this.addToast("You cannot select two repeated skills")
+                return {}
+              }
+              })
+              
+             
+            })
+          
+        }
+        }
+        });
+
+        firebase.firestore().collection("skills").get()
           .then(async snapshot => {
             let skills = [];
             snapshot.forEach(doc => {
@@ -107,11 +111,20 @@ export default class SignUpDrawer extends React.Component {
             })
       
             
-            //autocomplete(document.getElementById("skills-input"), skills, this.addSkill);
+            autocomplete(document.getElementById("skills-input"), skills, this.addSkill);
           })
+      }
+
+    componentDidMount() {
+      this._mounted= true;
+    }
+
+    componentWillUnmount(){
+      this._mounted = false;
     }
 
     changeState = (key, value, feedback, customMsg) =>{
+    if(this._mounted){
         this.setState(state => {
             if(!feedback){
             let base = state[key]
@@ -132,6 +145,7 @@ export default class SignUpDrawer extends React.Component {
             }
             
         })
+      }
     }
 
     validateAuthentication = () => {
@@ -461,7 +475,12 @@ no contain special characters
                                 })}
                                 <div>
                                 <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-input" className="form-control" required/>
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} onChange={(e) => {
+                                  if(!this.setted){
+                                    this.bindSkillsInput();
+                                    this.setted= true;
+                                  }
+                                }} type="text" placeholder="Choose your skill and press enter" id="skills-input" className="form-control" required/>
                                 </div>
                                 </div>
 

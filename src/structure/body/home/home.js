@@ -108,6 +108,7 @@ export default class Home extends React.Component {
     }
 
     handleInboxEvent(action){
+        if(this._mounted){
         if(action.type === "view contract"){
             this.setState({action:action.type, idProject:action.id ,isOpenDrawerJob:true})
         }else if(action.type === "view proposal"){
@@ -121,11 +122,19 @@ export default class Home extends React.Component {
             })
         }
     }
+    }
+
+    componentWillUnmount(){
+        this._mounted = false;
+
+    }
 
     toggleLoading = () => {
+        if(this._mounted){
         this.setState(state => ({
             isLoading:!state.isLoading
         }))
+    }
     }
 
     addToast = (message) => {
@@ -133,7 +142,9 @@ export default class Home extends React.Component {
     }
 
     handleCloseDrawerJob = () => {
+        if(this._mounted){
         this.setState({isOpenDrawerJob:false,idProject:"no-set",action:""})
+        }
     }
 
    async clearSkill(index){
@@ -143,7 +154,9 @@ export default class Home extends React.Component {
           let base = state.skills;
           let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
           base.skills = skillsObj;
+          if(this._mounted){
           return({skills:base, projects:[], projectsId:[]});
+          }
         })
 
         this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
@@ -160,10 +173,14 @@ export default class Home extends React.Component {
           skills.push(skill);
           if(this.checkCriteria(skills, criteria).check){
           base.skillsSelected.value = skills;
+          if(this._mounted){
           return({skills:base, projects:[], projectsId:[]});
+          }
           }else {
             this.addToast(this.checkCriteria(skills, criteria, "skills").message);
+            if(this._mounted){
             return ({});
+            }
           }
         })
 
@@ -181,12 +198,7 @@ export default class Home extends React.Component {
         }
       }
 
-    componentDidMount(){
-        if(this.state.inbox.count == null){
-            $(".inbox").hide();
-        }else {
-            $(".inbox").show();
-        }
+      bindSkillsInput = () => {
         $('#skills-filter').keypress((event) => {
             if(event.keyCode == 13){
               if(event.target.value !== ""){
@@ -228,6 +240,26 @@ export default class Home extends React.Component {
           }
           });
 
+          firebase.firestore().collection("skills").get()
+          .then(async snapshot => {
+            let skills = [];
+            snapshot.forEach(doc => {
+            skills.push(doc.data().name);
+    })
+
+          autocomplete(document.getElementById("skills-filter"), skills, this.addSkill);
+  })
+      }
+
+    componentDidMount(){
+        this._mounted = true;
+        if(this.state.inbox.count == null){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+        
+
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -265,12 +297,13 @@ export default class Home extends React.Component {
             indexAlgolia.search({query:string,
                 hitsPerPage:this.state.pageSize.value,
                 page:page !== undefined?page:0 }, (err, {hits,nbHits} = {}) => {
-    
+                    if(this._mounted){
                 this.setState( {
                     projects:hits,
                     searchBar:true,
                     size:nbHits
                 })
+            }
             })
        
     }
@@ -368,11 +401,13 @@ export default class Home extends React.Component {
 
 
                 if(newIndex === (arr.length - 1) || arr.length === 0){
+                    if(this._mounted){
                     this.setState({
                         projects:newProjects,
                         size:size,
                         searchBar:false
                     })
+                }
                 }else {
                     newIndex++;
                     this.reloadProjectsFixed(limit,field,arr,page,newIndex,size,newDictionary,newProjects,currentIds,newDeficit);
@@ -431,10 +466,11 @@ export default class Home extends React.Component {
         
 
         })
-
+    
     }
 
    async updateUser(id){
+       
         firebase.firestore().collection("users").doc(id).get()
         .then(async doc => {
            firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
@@ -449,12 +485,15 @@ export default class Home extends React.Component {
                     count++
                 }
             })
+
+            if(this._mounted){
             this.setState({inbox:{
                 count:count,
                 elements:elements
             }})
+        }
            })
-           
+           if(this._mounted){
              this.setState(state => {
                 let skills = state.skills;
                 let skillsUser = doc.data().skills;
@@ -466,7 +505,7 @@ export default class Home extends React.Component {
                 skills:skills,
                 }
             })
-           
+        }
         })
     }
 
@@ -607,20 +646,12 @@ export default class Home extends React.Component {
                                 })}
                                 <div>
                                 <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-filter" className="form-control" required/>
-                                {
-                                    (() => {
-                                        firebase.firestore().collection("skills").get()
-                                            .then(async snapshot => {
-                                              let skills = [];
-                                              snapshot.forEach(doc => {
-                                              skills.push(doc.data().name);
-                                      })
-
-                                     autocomplete(document.getElementById("skills-filter"), skills, this.addSkill);
-                                    })
-                                    })()
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onClick={(e) => {
+                                if(!this.setted){
+                                    this.bindSkillsInput()
+                                    this.setted = true;
                                 }
+                                }} id="skills-filter" className="form-control" required/>
                                 </div>
                                 </div>
 

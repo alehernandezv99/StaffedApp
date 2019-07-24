@@ -35,18 +35,22 @@ export default class Profile extends React.Component {
             uploadImg:{
                 isOpen:false,
                 handleClose:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.uploadImg
                         base.isOpen = false;
                         return {uploadImg:base}
                     })
+                }
                 },
                 handleOpen:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.uploadImg
                         base.isOpen = true;
                         return {uploadImg:base}
                     })
+                }
                 }
             },
             isLoading:false,
@@ -59,36 +63,44 @@ export default class Profile extends React.Component {
                 content:"",
                 index:0,
                 handleClose:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.editPanel;
                         base.isOpen = false;
                         base.id = "";
                         return{editPanel:base}
                     })
+                }
                 },
                 handleOpen:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.editPanel;
                         base.isOpen = true;
                         return {editPanel:base}
                     })
+                }
                 },
             },
             createProject:{
                 isOpen:false,
                 handleClose:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = false;
                         return {createProject:base}
                     })
+                }
                 },
                 handleOpen:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = true;
                         return {createProject:base}
                     })
+                }
                 }
             }
         }
@@ -104,9 +116,11 @@ export default class Profile extends React.Component {
     }
 
     toggleLoading = () => {
+        if(this._mounted){
         this.setState(state => ({
             isLoading:!state.isLoading
         }))
+    }
     }
 
      markAsRead = async() =>{
@@ -205,7 +219,9 @@ export default class Profile extends React.Component {
                             
                             base.editable =true;
                         }
+                        if(this._mounted){
                         this.setState({CV:base});
+                        }
                     })
                 })
             }
@@ -216,7 +232,9 @@ export default class Profile extends React.Component {
                             
                             base.editable =true;
                         }
+                        if(this._mounted){
                         this.setState({CV:base});
+                        }
                 })
             }
         })
@@ -225,8 +243,13 @@ export default class Profile extends React.Component {
 
 
     componentDidMount(){
+        this._mounted = true;
         this.loadCv();
 
+    }
+
+    componentWillUnmount(){
+        this._mounted = false;
     }
 
     render() {

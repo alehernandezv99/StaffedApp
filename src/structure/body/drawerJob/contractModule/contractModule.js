@@ -10,14 +10,23 @@ export default class ContractModule extends React.Component {
         }
     }
 
+    componentWillUnmount(){
+        this._mounted = false;
+    }
+
     componentDidMount(){
+        this._mounted = true;
         if(firebase.auth().currentUser.uid === this.props.freelancer){
+            if(this._mounted){
             this.setState({freelancer:"You"})
+            }
         }else {
 
         firebase.firestore().collection("users").doc(this.props.freelancer).get()
         .then(doc => {
+            if(this._mounted){
             this.setState({freelancer:doc.data().displayName?doc.data().displayName:doc.data().email})
+            }
         })
     }
     }

@@ -54,18 +54,22 @@ export default class MyProjects extends React.Component {
             createProject:{
                 isOpen:false,
                 handleClose:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = false;
                         return {createProject:base}
                     })
+                }
                 },
                 handleOpen:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = true;
                         return {createProject:base}
                     })
+                }
                 }
             }
 
@@ -88,9 +92,11 @@ export default class MyProjects extends React.Component {
             newProjects.push(projects[i])
         }
 
+        if(this._mounted){
         this.setState({
             projects:newProjects
         })
+    }
     }
     }
 
@@ -98,6 +104,8 @@ export default class MyProjects extends React.Component {
         if(action.type === "view contract"){
             this.setState({action:action.type, idProject:action.id ,isOpenDrawerJob:true})
         }else if(action.type === "view proposal"){
+
+            if(this._mounted){
             this.setState(state => {
                 let base = state.proposalsViewer;
                 base.isOpen = true;
@@ -107,6 +115,12 @@ export default class MyProjects extends React.Component {
                 return ({proposalsViewer:base});
             })
         }
+        }
+
+    }
+
+    componentWillUnmount(){
+        this._mounted = false;
     }
 
     findMyProjects = (arr,limit,page, field,element) => {
@@ -153,10 +167,13 @@ export default class MyProjects extends React.Component {
                     return dateA - dateB;
                 });
                 projects.reverse();
+
+                if(this._mounted){
                 this.setState({
                     projects:projects,
                     size:size,
                 })
+            }
                 })
         })
     }
@@ -176,12 +193,14 @@ export default class MyProjects extends React.Component {
                     count++
                 }
             })
+            if(this._mounted){
             this.setState({inbox:{
                 count:count,
                 elements:elements
             }})
+        }
            })
-           
+           if(this._mounted){
              this.setState(state => {
                
          
@@ -189,11 +208,13 @@ export default class MyProjects extends React.Component {
                 user:[doc.data()],
                 }
             })
+        }
            
         })
     }
 
     async clearSkill(index){
+        if(this._mounted){
         await this.setState(state => {
            let skills = state.skills.skillsSelected.value;
            skills.splice(index,1)
@@ -202,6 +223,7 @@ export default class MyProjects extends React.Component {
            base.skills = skillsObj;
            return({skills:base, projects:[], projectsId:[]});
          })
+        }
  
         // this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
  
@@ -254,6 +276,8 @@ export default class MyProjects extends React.Component {
        }
 
     componentDidMount(){
+
+        this._mounted = true;
         firebase.auth().onAuthStateChanged(async(user) => {
             if (user) {
                 
@@ -272,16 +296,21 @@ export default class MyProjects extends React.Component {
     }
 
     toggleLoading =() => {
+        if(this._mounted){
         this.setState(state => ({
             isLoading:!state.isLoading
         }))
     }
+    }
 
     handleCloseDrawerJob = () => {
+        if(this._mounted){
         this.setState({isOpenDrawerJob:false,idProject:"no-set",action:""})
+        }
     }
 
     handleCloseProposalViewer = () => {
+        if(this._mounted){
         this.setState(state => {
             let base = state.proposalsViewer
             base.isOpen = false;
@@ -289,6 +318,7 @@ export default class MyProjects extends React.Component {
             base.proposalId = "";
             return {proposalsViewer:base}
         })
+    }
     }
    
 

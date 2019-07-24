@@ -12,10 +12,20 @@ export default class LoginDrawer extends React.Component {
         };
     }
 
+    componentDidMount(){
+        this._mounted = true;
+    }
+
+    componentWillUnmount(){
+        this._mounted = false;
+    }
+
     changeState = (key, value) =>{
+        if(this._mounted){
         this.setState({
             [key]:value
         })
+    }
     }
 
 

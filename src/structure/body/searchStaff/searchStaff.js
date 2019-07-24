@@ -35,18 +35,22 @@ export default class SearchStaff extends React.Component {
             createProject:{
                 isOpen:false,
                 handleClose:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = false;
                         return {createProject:base}
                     })
+                }
                 },
                 handleOpen:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = true;
                         return {createProject:base}
                     })
+                }
                 }
             },
             pageSize:{
@@ -80,23 +84,33 @@ export default class SearchStaff extends React.Component {
                     count++
                 }
             })
+            if(this._mounted){
             this.setState({inbox:{
                 count:count,
                 elements:elements
             }})
+        }
            })
-           
+           if(this._mounted){
              this.setState(state => {
 
+                
                 return {
                 user:[doc.data()],
-                }
+                
+            }
             })
+        }
            
         })
     }
 
+    componentWillUnmount(){
+        this._mounted = false;
+    }
+
     componentDidMount(){
+        this._mounted = true;
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
               // User is signed in.
@@ -118,9 +132,11 @@ export default class SearchStaff extends React.Component {
                   arr.push(doc.data());
               })
 
+              if(this._mounted){
               this.setState({
                   CVs:arr
               })
+            }
           })
     }
 
@@ -129,11 +145,13 @@ export default class SearchStaff extends React.Component {
             hitsPerPage:this.state.pageSize.value,
             page:page !== undefined?page:0 }, (err, {hits,nbHits} = {}) => {
 
+                if(this._mounted){
             this.setState( {
                 CVs:hits,
                 searchBar:true,
                 size:nbHits
             })
+        }
         })
     }
 
@@ -252,9 +270,9 @@ export default class SearchStaff extends React.Component {
                 <div className="container-fluid pt-4 pb-4">
                     <div className="row">
                         <div className="col-sm-3">
-                          <ul class="nav flex-column">
-                          <li class="nav-item">
-                           <a class="nav-link active" href="#">Search CVs</a>
+                          <ul className="nav flex-column">
+                          <li className="nav-item">
+                           <a className="nav-link active" href="#">Search CVs</a>
                            </li>
                           </ul>
                         </div>

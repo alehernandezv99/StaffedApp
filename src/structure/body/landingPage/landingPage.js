@@ -53,29 +53,43 @@ export default class LandingPage extends React.Component {
             
             loginDrawer:{
                 isOpen:false,
-                handleClose:() => {this.setState(state => {
+                handleClose:() => {
+                    if(this._mounted){
+                    this.setState(state => {
                     let base = state.loginDrawer;
                     base.isOpen = false
                     return {loginDrawer:base}
-                })},
-                handleOpen:() => {this.setState(state => {
+                })
+            }
+            },
+                handleOpen:() => {
+                    if(this._mounted){
+                    this.setState(state => {
                     let base = state.loginDrawer;
                     base.isOpen = true
                     return {loginDrawer:base}
-                })} 
+                })
+            }
+            } 
             },
             signUpDrawer:{
                 isOpen:false,
-                handleClose:() => {this.setState(state => {
+                handleClose:() => {
+                    if(this._mounted){
+                    this.setState(state => {
                     let base = state.signUpDrawer;
                     base.isOpen = false
                     return {signUpDrawer:base}
-                })},
-                handleOpen:() => {this.setState(state => {
+                })
+            }},
+                handleOpen:() => {
+                    if(this._mounted){
+                    this.setState(state => {
                     let base = state.signUpDrawer;
                     base.isOpen = true
                     return {signUpDrawer:base}
                 })} 
+            }
             }
 
         }
@@ -112,7 +126,9 @@ export default class LandingPage extends React.Component {
         firebase.firestore().collection(collection).doc(id).get()
         .then(doc => {
             if(!doc.exists){
+                if(this._mounted){
                 this.setData(collection, id, data, cb1, cb2)
+                }
             }else {
                 cb1();
                 this.props.handleStates(1);
@@ -134,9 +150,13 @@ export default class LandingPage extends React.Component {
         }
     }
 
+    componentWillUnmount(){
+        this._mounted = false;
+    }
+
     componentDidMount(){
 
-        
+        this._mounted = true;
 
 
           $(document).ready(function(){
@@ -200,11 +220,13 @@ export default class LandingPage extends React.Component {
     }
 
     async changeState(object, field, value){
+        if(this._mounted){
         await this.setState(state => {
             let objectRef = state[object];
             objectRef[field] = value
             return ({[object]:objectRef});
         })
+    }
     }
 
     handleAuth(type, email, password, cPassword){
@@ -239,9 +261,11 @@ export default class LandingPage extends React.Component {
     }
 
     toggleLoading(){
+        if(this._mounted){
         this.setState(state => ({
             isLoading:!state.isLoading
         }))
+    }
     }
     setStates = async(data) => {
         let formObj = {};
@@ -251,9 +275,11 @@ export default class LandingPage extends React.Component {
                 formObj[key] = data[key]["value"];
             }
         })
+        if(this._mounted){
       await  this.setState({
             signUpData:formObj
         })
+    }
 
         this.handleAuth("signUp",this.state.signUpData.email, this.state.signUpData.password, this.state.signUpData.confirmPassword)
     }

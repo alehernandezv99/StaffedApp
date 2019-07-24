@@ -11,13 +11,18 @@ export default class CVContainer extends React.Component{
             user:null
         }
     }
-
+    componentWillUnmount(){
+        this._mounted = false;
+    }
     componentDidMount(){
+        this._mounted = true;
         firebase.firestore().collection("users").doc(this.props.id).get()
         .then((snapshot) => {
+            if(this._mounted){
             this.setState({
                 user:[snapshot.data()]
             })
+        }
         })
     }
 

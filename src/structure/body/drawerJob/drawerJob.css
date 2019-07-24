@@ -1,3 +1,5 @@
 .light-text {
     color:gray;
+    font-size: 15px;
+    font-weight: lighter !important;
 }

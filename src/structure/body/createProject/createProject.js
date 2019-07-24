@@ -62,6 +62,7 @@ export default class CreateProject extends React.Component{
       let skills = this.state.formA.skills["value"].slice();
 
       let criteria = this.state.formA.skills["criteria"];
+      if(this._mounted){
     this.setState(state => {
       let formA = state.formA;
       skills.push(skill);
@@ -73,15 +74,18 @@ export default class CreateProject extends React.Component{
         return ({});
       }
     })
+  }
   }else {
     this.addToast("You cannot select two repeated skills")
   }
   }
 
   toggleLoading(){
+    if(this._mounted){
     this.setState(state => ({
         isLoading:!state.isLoading
     }))
+  }
 }
   
 bindSkillInput = () => {
@@ -96,6 +100,8 @@ bindSkillInput = () => {
           snapshot.forEach(doc => {
             skillsArr.push(doc.data().name);
           })
+
+          if(this._mounted){
            this.setState(state => {
         let formA = state.formA;
         let skills = formA.skills["value"];
@@ -118,6 +124,7 @@ bindSkillInput = () => {
           return {}
         }
         })
+      }
         
        
       })
@@ -126,9 +133,14 @@ bindSkillInput = () => {
   }
   });
 }
+  
+componentWillUnmount(){
+  this._mounted = false;
+}
 
     componentDidMount(){
 
+      this._mounted = true;
       $(".cp-section-2").hide();
 
       
