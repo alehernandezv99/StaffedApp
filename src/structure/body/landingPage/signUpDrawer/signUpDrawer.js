@@ -467,7 +467,7 @@ no contain special characters
                             </form>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-danger" onClick={this.props.handleClose}>Close</button>
+                                <button type="button" className="btn btn-danger" onClick={this.props.handleClose}>Cancel</button>
                             </div>
                             
                         </div>

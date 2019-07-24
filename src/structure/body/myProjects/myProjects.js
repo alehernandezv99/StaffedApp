@@ -28,6 +28,8 @@ export default class MyProjects extends React.Component {
             isLoading:false,
             user:null,
             toasts: [ /* IToastProps[] */ ],
+            queryString:"",
+            currentFilter: () => { this.findMyProjects("involved",this.state.pageSize.value)},
             pageSize:{
                 min:4,
                 max:12,
@@ -48,6 +50,23 @@ export default class MyProjects extends React.Component {
                 isOpen:false,
                 projectId:"",
                 proposalId:"",
+            },
+            createProject:{
+                isOpen:false,
+                handleClose:() => {
+                    this.setState(state => {
+                        let base = state.createProject;
+                        base.isOpen = false;
+                        return {createProject:base}
+                    })
+                },
+                handleOpen:() => {
+                    this.setState(state => {
+                        let base = state.createProject;
+                        base.isOpen = true;
+                        return {createProject:base}
+                    })
+                }
             }
 
         }
@@ -56,6 +75,23 @@ export default class MyProjects extends React.Component {
         this.refHandlers = {
             toaster:(ref) => {this.toaster = ref},
         }
+    }
+
+    specificQuery = (string) => {
+        alert("Triggered");
+        alert(string)
+        let projects = this.state.projects;
+        let newProjects = [];
+
+        for(let i = 0; i<projects.length; i++){
+        if(projects[i].title.toLowerCase().includes(string.toLowerCase())){
+            newProjects.push(projects[i])
+        }
+
+        this.setState({
+            projects:newProjects
+        })
+    }
     }
 
     handleInboxEvent(action){
@@ -323,9 +359,7 @@ export default class MyProjects extends React.Component {
                             text:"Create Project",
                             href:"",
                             icon:"add",
-                            dataToggle:"modal",
-                            dataTarget:"#createProjectPanel",
-                            onClick:() => {},
+                            onClick:() => {this.state.createProject.handleOpen()},
                             key:6
                         },
                         {
@@ -361,7 +395,7 @@ export default class MyProjects extends React.Component {
                                     href:"",
                                     text:"Profile",
                                     icon:"power_settings_new",
-                                    onClick:() => {},
+                                    onClick:() => {this.props.handleStates(3)},
                                     state:"",
                                     key:1
                                 },
@@ -386,19 +420,19 @@ export default class MyProjects extends React.Component {
                     <DrawerJob openProposal={(id,id2) => {this.setState({isOpenDrawerJob:false,idProject:"",proposalsViewer:{isOpen:true,projectId:id,proposalId:id2}})}} action={this.state.action} id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectId ===""?null:<ProposalsViewer openProject={(id) => {this.setState({isOpenDrawerJob:true, idProject:id, proposalsViewer:{isOpen:false,proposalId:"",projectId:""}})}} handleClose={this.handleCloseProposalViewer} projectId={this.state.proposalsViewer.projectId} proposalId={this.state.proposalsViewer.proposalId} isOpen={this.state.proposalsViewer.isOpen} />}
                     <div className="col-sm-4">
-                    <div className="input-group mb-3 mt-3 mx-auto">
-                          <input type="text" className="form-control" placeholder="Search" />
+                    <div className="input-group mb-3 mt-3 mx-auto px-3">
+                          <input type="text" className="form-control" placeholder="Search" onChange={(e) => {this.setState({queryString:e.target.value})}}/>
                             <div className="input-group-append">
-                            <button className="btn btn-custom-1" type="submit">Search</button> 
+                            <button className="btn btn-custom-1" type="button" onClick={() => {this.specificQuery(this.state.queryString)}}>Search</button> 
                          </div>
                         </div>
                     <div className="form-group mx-auto mt-4 " style={{width:"300px"}}>
                                 <label>Page Size</label>
-                                <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
+                                <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={async(e) => {await this.setState(state => {
                                     let pageSize = state.pageSize;
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});
-                                })}}  />
+                                });this.state.currentFilter() }}  />
                             </div>
    
                         </div>
@@ -409,22 +443,22 @@ export default class MyProjects extends React.Component {
                         
                         <ul className="nav nav-tabs mt-3">
                              <li className="nav-item ml-auto">
-                               <a className="nav-link active" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value)}} href="#all">All</a>
+                               <a className="nav-link active" data-toggle="pill" onClick={()=> {let callback = () => { this.findMyProjects("involved",this.state.pageSize.value)}; callback(); this.setState({currentFilter:callback})}} href="#all">All</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"author",firebase.auth().currentUser.uid)}} href="#createdByMe">Created By Me</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() => this.findMyProjects("involved",this.state.pageSize.value,null,"author",firebase.auth().currentUser.uid); callback(); this.setState({currentFilter:callback})}} href="#createdByMe">Created By Me</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"status","In Development")}} href="#inDevelopment">In Development</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("involved",this.state.pageSize.value,null,"status","In Development"); callback(); this.setState({currentFilter:callback})}} href="#inDevelopment">In Development</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("involved",this.state.pageSize.value,null,"status","Completed")}} href="#completed">Completed</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("involved",this.state.pageSize.value,null,"status","Completed"); callback(); this.setState({currentFilter:callback})}} href="#completed">Completed</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("applicants",this.state.pageSize.value)}} href="#applied">Applied</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("applicants",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#applied">Applied</a>
                            </li>
                            <li className="nav-item mr-auto">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {this.findMyProjects("references",this.state.pageSize.value)}} href="#archived">Archived</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("references",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#archived">Archived</a>
                           </li>
                         </ul>
 
@@ -474,10 +508,12 @@ export default class MyProjects extends React.Component {
                                     text:project.country,
                                     icon:"place",
                                     key:5
-                                }
+                                },
                             ]
 
-                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            let date = project.created.toDate().toDateString();
+
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -540,10 +576,12 @@ export default class MyProjects extends React.Component {
                                     text:project.country,
                                     icon:"place",
                                     key:5
-                                }
+                                },
                             ]
 
-                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            let date = project.created.toDate().toDateString();
+
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -605,10 +643,12 @@ export default class MyProjects extends React.Component {
                                     text:project.country,
                                     icon:"place",
                                     key:5
-                                }
+                                },
                             ]
 
-                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            let date = project.created.toDate().toDateString();
+
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
                             
 
@@ -671,10 +711,12 @@ export default class MyProjects extends React.Component {
                                     text:project.country,
                                     icon:"place",
                                     key:5
-                                }
+                                },
                             ]
 
-                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            let date = project.created.toDate().toDateString();
+
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -738,10 +780,13 @@ export default class MyProjects extends React.Component {
                                     text:project.country,
                                     icon:"place",
                                     key:5
-                                }
+                                },
+                              
                             ]
 
-                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            let date = project.created.toDate().toDateString();
+
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -804,10 +849,12 @@ export default class MyProjects extends React.Component {
                                     text:project.country,
                                     icon:"place",
                                     key:5
-                                }
+                                },
+                               
                             ]
+                            let date = project.created.toDate().toDateString();
 
-                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -829,7 +876,7 @@ export default class MyProjects extends React.Component {
                         </div>
                     </div>
                 </div>}
-                <CreateProject id={"createProjectPanel"}/>
+                <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
             </div>
         )
     }

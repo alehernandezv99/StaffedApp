@@ -6,6 +6,9 @@ import firebase from "../../../firebaseSetUp";
 import LoadingSpinner from "../../loading/loadingSpinner";
 import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
+const index = client.initIndex('projects');
 
 
 export default class CreateProject extends React.Component{
@@ -275,6 +278,7 @@ bindSkillInput = () => {
         references:[],
         applicants:[],
         created:firebase.firestore.Timestamp.now(),
+        updated:firebase.firestore.Timestamp.now(),
         cards:2,
         id:firebase.firestore().collection("projects").doc().id
       }
@@ -289,11 +293,17 @@ bindSkillInput = () => {
         data.involved = [snapshot.data().email]
 
         firebase.firestore().collection("projects").doc(data.id).set(data)
-      .then(() => {
-        this.toggleLoading();
-        this.addToast("Project Successfully Created");
-        this.props.handleClose();
-        this.setted = undefined;
+      .then(async () => {
+        let objAlgolia = data;
+        objAlgolia.objectID = data.id;
+
+        index.saveObjects([objAlgolia]).then(() => {
+          console.log("Project Created");
+          this.addToast("Project Created");
+          this.props.handleClose();
+        })
+      
+        
       })
       .catch(e => {
         this.toggleLoading();

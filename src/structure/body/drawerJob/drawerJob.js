@@ -8,9 +8,12 @@ import checkCriteria from "../../../utils/checkCriteria";
 import ProposalModule from "./proposalModule";
 import ContractModule from "./contractModule";
 import AbsoluteLoading from "../../loading/absoluteLoading";
-import { app } from "firebase";
+
 import { DatePicker, TimePrecision } from "@blueprintjs/datetime";
 import { isDate } from "util";
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
+const index = client.initIndex('projects');
 
 export default class DrawerJob extends React.Component {
     constructor(props){
@@ -360,7 +363,7 @@ export default class DrawerJob extends React.Component {
                        involved.push(firebase.auth().currentUser.email)
                    }
 
-                   batch.update(firebase.firestore().collection("projects").doc(this.props.id), {applicants:applicants, involved:involved})
+                   batch.update(firebase.firestore().collection("projects").doc(this.props.id), {applicants:applicants, involved:involved, updated:firebase.firestore.Timestamp.now()})
 
                    batch.commit().then(async () => {
                     this.addToast("Proposal Submitted");
@@ -639,7 +642,7 @@ export default class DrawerJob extends React.Component {
                                     let skillsArr = []
                                     Object.keys(skillsObj).forEach((key,i) => {
                                         skillsArr.push({
-                                            text:key,
+                                            text:skillsObj[key],
                                             key:i
                                         })
                                     })
@@ -687,24 +690,24 @@ export default class DrawerJob extends React.Component {
                         {
                         this.state.isSaved === true?null:
                         <div className="action-btns text-center">
-                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">save_alt</i> Save</button>
+                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">stars</i> Archive</button>
                         </div>
                         }
                         <div className="container-fluid mt-4">
-                        <h4><i className="material-icons">person</i> <span>Client</span></h4>
-                        <div className="row" >
-                            <div className="col-sm-4">
-                            <div style={{backgroundImage:`url(${this.state.project[0].authorImg?this.state.project[0].authorImg:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
+        
+                        <div className="container-fluid" style={{display:"flex",justifyContent:"center",flexDirection:"column",alignItems:"center"}} >
+                            
+                            <div className="mt-3" style={{backgroundImage:`url(${this.state.project[0].authorImg?this.state.project[0].authorImg:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
                                     backgroundPosition:"center",
                                     backgroundSize:"cover",
                                     backgroundRepeat:"no-repeat",
-                                    width:"50px",
-                                    height:"50px",
+                                    width:"100px",
+                                    height:"100px",
                                 }} className="rounded-circle" ></div>
-                            </div>
-                            <div className="col">
+                          
+                          
                         <h6 className="mt-3">{this.state.project[0].author}</h6>
-                           </div>
+                        
                         </div>
 
                         </div>
@@ -873,10 +876,12 @@ export default class DrawerJob extends React.Component {
                       {this.state.contract !== ""?
                      <ContractModule freelancer={this.state.contract.freelancer} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} />:
                     <div className="container-fluid">
-                        {this.state.proposals.map((proposal,i) => {
+                        {this.state.proposals.length > 0?this.state.proposals.map((proposal,i) => {
                         return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
                     })
-                    }
+                    :<div className="container-fluid text-center">
+                        <h4>No Proposals</h4>
+                        </div>}
                     </div>
                       }
                   </div>

@@ -13,7 +13,9 @@ import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
 import "./home.css";
-import { arrayLengthCompare } from "@blueprintjs/core/lib/esm/common/utils";
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
+const indexAlgolia = client.initIndex('projects');
 
 export default class Home extends React.Component {
     constructor(props){
@@ -31,6 +33,8 @@ export default class Home extends React.Component {
             toasts: [ /* IToastProps[] */ ],
             projects:[],
             projectsId:[],
+            queryString:"",
+            searchBar:false,
             size:null,
             pageSize:{
                 min:6,
@@ -256,114 +260,32 @@ export default class Home extends React.Component {
         })
     }
 
-    specificSearch = (limit, title, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit,) => {
-        let newIndex = index !== undefined?index:0;
-        let ref = firebase.firestore().collection("projects");
+    specificSearch = (string, page) => {
 
-        ref= ref.where("skills","array-contains",arr[newIndex])
-
-        ref = ref.orderBy("created","desc")
-
-        if(title){
-            ref = ref.orderBy("title")
-            ref = ref.startAt(title.toLowerCase())
-            ref = ref.endAt(title.toLowerCase())
-        }
-  
-        //ef = ref.limit(currentLimit);
-        
-        ref.get()
-        .then(snapshot => {
-            let currentIds = ids !== undefined?ids:[];
-            let currentSize = 0;
-
-            snapshot.forEach(document => {
-                if(!(currentIds.includes(document.data().id))){
-                    currentSize++;
-                    currentIds.push(document.data().id);
-                }
-            })
-
-            let size = sizeAcum !== undefined?sizeAcum + currentSize:currentSize;
-            let lastSeem = {}
-            let newDictionary = []
-            if(page){
-              
-            lastSeem = snapshot.docs[((Math.ceil(limit/arr.length))*(page))-1];
-            
-             newDictionary = dictionary !== undefined?dictionary:[];
-             newDictionary.push(lastSeem);
-             console.log("This is the dictionary " + newDictionary);
-            }
-
-            let ref = firebase.firestore().collection("projects");
-
-            ref= ref.where("skills","array-contains",arr[newIndex])
-
-            ref = ref.orderBy("created","desc")
-
-            let currentLimit = 0
-            
-
-            if(index !== (arr.length - 1)){
-
-                currentLimit = Math.ceil(limit/arr.length);
-                console.log(currentLimit)
-                }else {
-        
-                    currentLimit = (limit - (Math.ceil(limit/arr.length)*(arr.length- 1)-acumDeficit));
-                    if(currentLimit < 1 || currentLimit < 0){
-                        currentLimit = 1
-                    }
-            }
-
-            if(page){
-            ref = ref.startAfter(lastSeem).limit(currentLimit);
-            }else {
-                ref = ref.limit(currentLimit); 
-            }
-            ref.get()
-            .then(snapshot2 => {
-                let newProjects = projects?projects:[];
-                let checkSize = 0;
-                let deficit = 0;
-                snapshot2.forEach(doc => {
-                    if(currentIds.includes(doc.data().id)){
-                        checkSize++;
-                    newProjects.push(doc.data());
-                    }else {
-                        deficit++
-                    }
+            indexAlgolia.search({query:string,
+                hitsPerPage:this.state.pageSize.value,
+                page:page !== undefined?page:0 }, (err, {hits,nbHits} = {}) => {
+    
+                this.setState( {
+                    projects:hits,
+                    searchBar:true,
+                    size:nbHits
                 })
-                
-                let newDeficit = acumDeficit !== undefined?acumDeficit + deficit:deficit;
-
-
-                if(newIndex === (arr.length - 1)){
-                    this.setState({
-                        projects:newProjects,
-                        size:size,
-                    })
-                }else {
-                    newIndex++;
-                    this.reloadProjectsFixed(limit,title,arr,page,newIndex,size,newDictionary,newProjects,currentIds,newDeficit);
-                }
-                
             })
-        })
+       
     }
 
     reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit) => {
         let newIndex = index !== undefined?index:0;
         let ref = firebase.firestore().collection("projects");
 
+        
         if(arr.length > 0){
         ref= ref.where("skills","array-contains",arr[newIndex])
         }
 
         ref = ref.orderBy("created","desc")
-  
-        //ef = ref.limit(currentLimit);
+        
         
         ref.get()
         .then(snapshot => {
@@ -449,6 +371,7 @@ export default class Home extends React.Component {
                     this.setState({
                         projects:newProjects,
                         size:size,
+                        searchBar:false
                     })
                 }else {
                     newIndex++;
@@ -706,9 +629,9 @@ export default class Home extends React.Component {
                         </div>
                         <div className="col-sm-6">
                         <div className="input-group mb-3 mt-3 mx-auto">
-                          <input type="text" className="form-control" placeholder="Search" />
+                          <input type="text" className="form-control" onChange={(e) => {this.setState({queryString:e.target.value})}} placeholder="Search" />
                             <div className="input-group-append">
-                            <button className="btn btn-custom-1" type="submit">Search</button> 
+                            <button className="btn btn-custom-1" type="submit" onClick={() => {this.specificSearch(this.state.queryString)}}>Search</button> 
                          </div>
                         </div>
                         {this.state.projects.length > 0?this.state.projects.map((project, index) => {
@@ -758,10 +681,14 @@ export default class Home extends React.Component {
                                     icon:"place",
                                     key:5,
                                     desc:"Country of the client"
-                                }
+                                },
+                                
                             ]
 
-                            return <JobModule addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            let date = project.created.toDate().toDateString();
+                
+
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
                            {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -774,7 +701,11 @@ export default class Home extends React.Component {
                                      }
                                      return pages
                                  })().map((data, i) => {
+                                     if(this.state.searchBar === false){
                                      return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
+                                     }else {
+                                        return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specificSearch(this.state.queryString,i)}} href="#">{i}</a></li>
+                                     }
                                  })                                                                  }
                              <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
                            </ul>}

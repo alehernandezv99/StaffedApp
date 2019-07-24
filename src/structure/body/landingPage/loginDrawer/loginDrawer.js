@@ -50,7 +50,7 @@ export default class LoginDrawer extends React.Component {
 </form>
 </div>
 <div className="card-footer">
-    <button type="button" className="btn btn-danger" onClick={this.props.handleClose}>Close</button>
+    <button type="button" className="btn btn-danger" onClick={this.props.handleClose}>Cancel</button>
 </div>
 </div>
                 </div>  

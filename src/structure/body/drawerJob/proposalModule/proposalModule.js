@@ -89,7 +89,8 @@ export default class ProposalModule extends React.Component {
                     <h6>{this.props.price}$</h6>
                 </div>
                 <div className="form-group">
-                    <h6>{this.props.deadline}</h6>
+                    
+                    <h6>{`${this.props.deadline.toDate().toDateString()}`}</h6>
                 </div>
                 <div className="form-group">
                     {this.props.presentation.length > 130?
