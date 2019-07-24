@@ -1,8 +1,8 @@
 const express = require('express')
 const app = express()
-const algoliasearch = require('algoliasearch/lite');
+const algoliasearch = require('algoliasearch');
 const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
-const index = client.initIndex('projects');
+const index = client.initIndex('CVs');
 var admin = require("firebase-admin");
 
 var serviceAccount = require("../functions/freelanceapp-78578-firebase-adminsdk-rzifn-e2e9c82390.json");
@@ -15,7 +15,7 @@ admin.initializeApp({
 
 let records = []
 
-admin.firestore().collection("projects").get().then(async(projects) => {
+admin.firestore().collection("CVs").get().then(async(projects) => {
   projects.forEach(doc => {
     let obj = doc.data()
     obj.objectID = doc.id;

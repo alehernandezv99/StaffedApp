@@ -493,7 +493,7 @@ export default class Home extends React.Component {
                             type:"link",
                             text:"Search Staff",
                             href:"",
-                            onClick:() => {},
+                            onClick:() => {this.props.handleStates(4)},
                             icon:"search",
                             key:2
                         },
@@ -559,7 +559,7 @@ export default class Home extends React.Component {
                         },
                         {
                             type:"dropdown",
-                            text:this.state.user === null?"Loading...":this.state.user[0].email,
+                            text:this.state.user === null?"Loading...":this.state.user[0].displayName?this.state.user[0].displayName:this.state.user[0].email,
                             href:"",
                             key:5,
                             onClick:() => {},
@@ -568,7 +568,7 @@ export default class Home extends React.Component {
                                     href:"",
                                     text:"Profile",
                                     key:1,
-                                    onClick:() => {this.props.handleStates(3)},
+                                    onClick:() => {this.props.handleStates(3, firebase.auth().currentUser.uid)},
                                 },
                                 {
                                     href:"",
@@ -684,8 +684,15 @@ export default class Home extends React.Component {
                                 },
                                 
                             ]
-
-                            let date = project.created.toDate().toDateString();
+                            let date;
+                            
+                            try {
+                            date = project.created.toDate().toDateString();
+                            
+                            }catch(e){
+                            
+                                date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
+                            }
                 
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />

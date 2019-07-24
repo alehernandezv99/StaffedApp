@@ -9,6 +9,7 @@ import TextCollapse from "./textCollapse";
 import EditProposalModule from "./editProposalModule";
 import CVcontent from "./CVcontent";
 import UploadImg from "./uploadImg";
+import CreateProject from "../createProject";
 import ProfileLoading from "../../loading/profileLoading";
 
 export default class Profile extends React.Component {
@@ -72,6 +73,23 @@ export default class Profile extends React.Component {
                         return {editPanel:base}
                     })
                 },
+            },
+            createProject:{
+                isOpen:false,
+                handleClose:() => {
+                    this.setState(state => {
+                        let base = state.createProject;
+                        base.isOpen = false;
+                        return {createProject:base}
+                    })
+                },
+                handleOpen:() => {
+                    this.setState(state => {
+                        let base = state.createProject;
+                        base.isOpen = true;
+                        return {createProject:base}
+                    })
+                }
             }
         }
 
@@ -89,6 +107,29 @@ export default class Profile extends React.Component {
         this.setState(state => ({
             isLoading:!state.isLoading
         }))
+    }
+
+     markAsRead = async() =>{
+
+        try {
+        let refs = []
+        let call = await firebase.firestore().collection("users").doc(this.state.user[0].uid).collection("inbox").get()
+        call.forEach(ref => {
+          refs.push(firebase.firestore().collection("users").doc(this.state.user[0].uid).collection("inbox").doc(ref.id))
+        })
+
+        let batch = firebase.firestore().batch();
+
+        for(let i = 0; i< refs.length; i++){
+            batch.update(refs[i], {state:"read"})
+        }
+        await batch.commit();
+
+    }catch(e){
+        this.addToast(e.message);
+    }
+    
+
     }
 
     openEditPanel = (type,id, prop, index, title, content) => {
@@ -136,8 +177,8 @@ export default class Profile extends React.Component {
 
     loadCv = () => {
         firebase.firestore().collection("users").doc(this.props.userId).get()
-        .then(doc => {
-            this.setState({user:doc.data()});
+        .then(async doc => {
+           await this.setState({user:doc.data()});
 
             firebase.firestore().collection("CVs").where("uid","==",this.props.userId).get()
         .then(snapshot => {
@@ -212,7 +253,7 @@ export default class Profile extends React.Component {
                             type:"link",
                             text:"Search Staff",
                             href:"",
-                            onClick:() => {},
+                            onClick:() => {this.props.handleStates(4)},
                             icon:"search",
                             key:2
                         },
@@ -254,7 +295,7 @@ export default class Profile extends React.Component {
                             icon:"add",
                             dataToggle:"modal",
                             dataTarget:"#createProjectPanel",
-                            onClick:() => {},
+                            onClick:() => {this.state.createProject.handleOpen()},
                             key:6
                         },
                         {
@@ -280,7 +321,7 @@ export default class Profile extends React.Component {
                         },
                         {
                             type:"dropdown",
-                            text:this.state.user === null?"Loading...":this.state.user.email,
+                            text:this.state.user === null?"Loading...":this.state.user.displayName?this.state.user.displayName:this.state.user.email,
                             href:"",
                             key:5,
                             onClick:() => {},
@@ -322,12 +363,13 @@ export default class Profile extends React.Component {
                                     transform:"translate(-50%,0)"
                                 }} className="rounded-circle" ></div>
 
-                        <div className="dropdown right-corner-btn">
+                        
+                       {this.state.CV.editable === true? <div className="dropdown right-corner-btn">
                               <button type="button" className="dropdown-toggle" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
                                 <div className="dropdown-menu dropdown-menu-right">
                                 <button className="dropdown-item" onClick={() => {this.state.uploadImg.handleOpen()}}>Upload</button>
                               </div>
-                             </div>
+                             </div>:null}
                         </div>
                     </div>
                    
@@ -337,15 +379,16 @@ export default class Profile extends React.Component {
                            <div className="container" style={{position:"relative"}}>
                             <h5 className="mt-3" ref={ref => {this.title = ref}}>{this.state.user !== null?this.state.CV.description[0].title:"Loading..."}</h5>
                             <p ref={ref => {this.text = ref}}>{this.state.CV.description[0].text}</p>
-                            <div className="dropdown right-corner-btn">
+
+                            {this.state.CV.editable === true?<div className="dropdown right-corner-btn">
                               <button type="button" className="dropdown-toggle" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
                                 <div className="dropdown-menu dropdown-menu-right">
                                 <button className="dropdown-item" onClick={() => {this.openEditPanel("update",this.state.CV.id,"description",0,this.title.textContent,this.text.textContent)}}>Edit</button>
                                 <button className="dropdown-item" onClick={() => {this.deleteContent("description",0); }}>Delete</button>
                               </div>
-                             </div>
+                             </div>:null}
                             </div>
-                            :<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>}
+                            :this.state.CV.editable === true?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
                         
                 </div>
                 <div className="container-fluid">
@@ -357,7 +400,7 @@ export default class Profile extends React.Component {
                       <div className="collapse show" data-parent="#accordion" id="experience">
                        {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
                            return (
-                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => {this.deleteContent("experience",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => {this.deleteContent("experience",i); }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
@@ -374,7 +417,7 @@ export default class Profile extends React.Component {
                             <div className="collapse show" id="education">
                             {this.state.CV.education.length > 0?this.state.CV.education.map((element,i) => {
                            return (
-                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"education",i,element.title,element.text)}} delete={() => {this.deleteContent("education",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"education",i,element.title,element.text)}} delete={() => {this.deleteContent("education",i); }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
@@ -390,7 +433,7 @@ export default class Profile extends React.Component {
                         <div className="collapse show" id="portfolio">
                         {this.state.CV.portfolio.length > 0?this.state.CV.portfolio.map((element,i) => {
                            return (
-                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {this.deleteContent("portfolio",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {this.deleteContent("portfolio",i); }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
@@ -406,7 +449,7 @@ export default class Profile extends React.Component {
                         <div className="collapse show"  id="skills">
                         {this.state.CV.skills.length > 0?this.state.CV.skills.map((element,i) => {
                            return (
-                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"skills",i,element.title,element.text)}} delete={() => {this.deleteContent("skills",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"skills",i,element.title,element.text)}} delete={() => {this.deleteContent("skills",i); }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
@@ -422,7 +465,7 @@ export default class Profile extends React.Component {
                         <div className="collapse show"  id="expertise">
                         {this.state.CV.expertise.length > 0?this.state.CV.expertise.map((element,i) => {
                            return (
-                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {this.deleteContent("expertise",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {this.deleteContent("expertise",i); }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
@@ -438,7 +481,7 @@ export default class Profile extends React.Component {
                         <div className="collapse show" id="contact">
                         {this.state.CV.contact.length > 0?this.state.CV.contact.map((element,i) => {
                            return (
-                               <CVcontent key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {this.deleteContent("contact",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {this.deleteContent("contact",i); }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
@@ -452,7 +495,7 @@ export default class Profile extends React.Component {
             }
             </div>
                 
-            
+            <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
             </div>
         )
     }

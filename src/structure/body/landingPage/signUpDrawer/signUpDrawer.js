@@ -11,6 +11,7 @@ export default class SignUpDrawer extends React.Component {
         super(props);
 
         this.state = {
+            name:{value:"", criteria:{type:"text", pattern:/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/}},
             email:{value:"", criteria:{type:"text", pattern:/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/}},
             password:{value:"", criteria:{type:"text",minLength:6, pattern:/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/}},
             confirmPassword:{value:"",},
@@ -140,13 +141,13 @@ export default class SignUpDrawer extends React.Component {
             if(key !== "skills"){
             if(!(checkCriteria(this.state[key]["value"],this.state[key]["criteria"],key).check)){
                 check = 1;
-                alert(key);
+                
                 messages.push(checkCriteria(this.state[key]["value"],this.state[key]["criteria"],key).message);
             }
         }
         })
         if(check === 0){
-            this.props.handleAuth("signUp",this.state.email["value"], this.state.password["value"], this.state.confirmPassword["value"])
+            this.props.setStates(this.state)
         }else {
         
             for(let i = 0; i < messages.length; i++){
@@ -166,6 +167,11 @@ export default class SignUpDrawer extends React.Component {
                             </div>
                             <div className="modal-body">
                             <form>
+                            <div className="form-group">
+                                <label>Name:</label>
+                                <input type="text" className="form-control" onChange={(e) => {this.changeState("name",e.target.value, e.target.parentElement.childNodes[2], "Invalid Name")}} />
+                                <div className="invalid-feedback">Valid.</div>
+                              </div>
                               <div className="form-group">
                                 <label>Email address:</label>
                                 <input type="email" className="form-control" onChange={(e) => {this.changeState("email",e.target.value, e.target.parentElement.childNodes[2], "Invalid Email")}} />

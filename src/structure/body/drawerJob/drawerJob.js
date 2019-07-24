@@ -729,7 +729,7 @@ export default class DrawerJob extends React.Component {
                       <div className="form-group">
                           <div className="row mt-3">
                         <div className="col-sm-5">
-                          <h4>Price</h4>
+                          <h4>Price <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
                           <input type="number" value={this.state.proposal.price.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",e.target,1, ()=> {},"proposal","receive",-0.15)}}/>
@@ -749,7 +749,7 @@ export default class DrawerJob extends React.Component {
 
                           <div className="row mt-3">
                         <div className="col-sm-5">
-                          <h4>You will Receive</h4>
+                          <h4>You will Receive <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
                           <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1, ()=> {},"proposal","price",-(1-(1/(1-0.15)))); }}/>
@@ -802,7 +802,7 @@ export default class DrawerJob extends React.Component {
                       <div className="form-group">
                           <div className="row mt-3">
                         <div className="col-sm-5">
-                          <h4>Price</h4>
+                          <h4>Price <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
                           <input type="number" value={this.state.proposalFetched.price.value} className="form-control" onChange={(e) => {e.persist(); this.setValue("proposalFetched","price",e.target,1, () => {this.checkChange(e.target, this.state.proposalFetched)},"proposalFetched","received",-0.15); }}/>
@@ -822,7 +822,7 @@ export default class DrawerJob extends React.Component {
 
                           <div className="row mt-3">
                         <div className="col-sm-5">
-                          <h4>You Receive</h4>
+                          <h4>You Receive <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
                           <input type="number" className="form-control" value={this.state.proposalFetched.received.value} onChange={(e) => {e.persist(); this.setValue("proposalFetched","received",e.target,1, ()=> { this.checkChange(e.target,this.state.proposalFetched)},"proposalFetched","price",-(1-(1/(1-0.15)))); }}/>

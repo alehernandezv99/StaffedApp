@@ -41,6 +41,7 @@ export default class LandingPage extends React.Component {
                 remember:false
             },
             signUpData:{
+                name:"",
                 email:"",
                 password:"",
                 confirmPassword:"",
@@ -175,7 +176,7 @@ export default class LandingPage extends React.Component {
               var providerData = user.providerData;
 
               let data = {
-                  displayName:displayName,
+                  displayName:displayName?displayName:this.state.signUpData.name,
                   email: email,
                   emailVerified: emailVerified,
                   photoURL: photoURL,
@@ -241,6 +242,20 @@ export default class LandingPage extends React.Component {
         this.setState(state => ({
             isLoading:!state.isLoading
         }))
+    }
+    setStates = async(data) => {
+        let formObj = {};
+        Object.keys(data).forEach(key => {
+            
+            if(key !== "skills"){
+                formObj[key] = data[key]["value"];
+            }
+        })
+      await  this.setState({
+            signUpData:formObj
+        })
+
+        this.handleAuth("signUp",this.state.signUpData.email, this.state.signUpData.password, this.state.signUpData.confirmPassword)
     }
 
     render(){
@@ -363,7 +378,7 @@ export default class LandingPage extends React.Component {
 
             <div className="container-fluid">
                 <LoginDrawer handleAuth={this.handleAuth} isOpen={this.state.loginDrawer.isOpen} handleClose={this.state.loginDrawer.handleClose} openPanel={() => {this.state.loginDrawer.handleClose(); this.state.signUpDrawer.handleOpen()}}/>
-                <SignUpDrawer addToast={this.addToast} skills={this.state.skills} handleAuth={this.handleAuth} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
+                <SignUpDrawer addToast={this.addToast} skills={this.state.skills} setStates={this.setStates} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
 
             </div>
             </div>

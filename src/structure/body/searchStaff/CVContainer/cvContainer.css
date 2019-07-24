@@ -1,0 +1,15 @@
+.CV-container {
+    cursor: pointer;
+    transition: 0.3s;
+    position: relative;
+}
+
+.CV-container:hover {
+    box-shadow:0 5px 5px 0 rgba(0,0,0,0.1);
+}
+
+.email-bottom-right {
+    position: absolute;
+    right: 10px;
+    bottom:10px;
+}

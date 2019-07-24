@@ -344,7 +344,7 @@ bindSkillInput = () => {
                             </div>
                             <div className="card-body">
                             <form className="cp-section-1" >
-                              <div className="form-group">
+                              <div className="form-group mt-2">
                                 <label>Title</label>
                                 <input type="text" placeholder="Title of the project" onChange={(e) => {
                                   this.setValue("formA","title",e.target.value,e.target.parentNode.childNodes[2], e.target)}} className="form-control"  required/>
@@ -358,7 +358,7 @@ bindSkillInput = () => {
                                 <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
                               </div>
-                              <div className="form-group">
+                              <div className="form-group mt-2">
                                 <label>Category</label>
                                 <div>
                                   {this.state.categories.length > 0 ?
@@ -373,7 +373,7 @@ bindSkillInput = () => {
                                 </div>
                               </div>
 
-                              <div className="form-group">
+                              <div className="form-group mt-2">
                                 <label>Sub Category</label>
                                 <div>
                                   {this.state.subCategories.length > 0 ?
@@ -388,7 +388,7 @@ bindSkillInput = () => {
                                 </div>
                               </div>
 
-                              <div className="form-group" ref={el => this.skills = el} id="skills">
+                              <div className="form-group mt-2" ref={el => this.skills = el} id="skills">
                                 <label >Skills Required</label>
                                 <div>
                                 {this.state.formA.skills.value.map((skill, index) => {
@@ -416,14 +416,14 @@ bindSkillInput = () => {
                                  </select>
                                  </div>
                               </div>
-                              <div className="form-group">
-                                  <label>Budget</label>
+                              <div className="form-group mt-2">
+                                  <label>Budget <span className="light-text">($US Dollars)</span></label>
                                   <input type="number" className="form-control" onChange={(e) => {this.setValue("formB","budget", e.target.value,e.target.parentNode.childNodes[2], e.target)}} required/>
                                   <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
                               </div>
                              
-                              <div className="form-group">
+                              <div className="form-group mt-2">
                                 <label>Project Level</label>
                                 <div>
                                   <select className="custom-select-sm" onChange={(e) => {this.setValue("formB","level", e.target.options[e.target.selectedIndex].value)}}>
