@@ -13,6 +13,7 @@ import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
 import "./home.css";
+import { arrayLengthCompare } from "@blueprintjs/core/lib/esm/common/utils";
 
 export default class Home extends React.Component {
     constructor(props){
@@ -380,8 +381,12 @@ export default class Home extends React.Component {
             let lastSeem = {}
             let newDictionary = []
             if(page){
-              
+            
+            if(arr.length > 0){
             lastSeem = snapshot.docs[((Math.ceil(limit/arr.length))*(page))-1];
+             } else {
+                lastSeem = snapshot.docs[(limit*(page))-1];
+            }
             
              newDictionary = dictionary !== undefined?dictionary:[];
              newDictionary.push(lastSeem);
@@ -390,23 +395,32 @@ export default class Home extends React.Component {
 
             let ref = firebase.firestore().collection("projects");
 
+            if(arr.length > 0){
             ref= ref.where("skills","array-contains",arr[newIndex])
+            }
 
             ref = ref.orderBy("created","desc")
 
-            let currentLimit = 0
+            let currentLimit = 0;
             
 
             if(index !== (arr.length - 1)){
 
+                if(arr.length > 0){
                 currentLimit = Math.ceil(limit/arr.length);
-            
+                
+                }else {
+                    currentLimit= 6;
+                }
+                
                 }else {
         
                     currentLimit = (limit - (Math.ceil(limit/arr.length)*(arr.length- 1)-acumDeficit));
                     if(currentLimit < 1 || currentLimit < 0){
                         currentLimit = 1
                     }
+                    currentLimit = currentLimit === 0?6:currentLimit;
+                    
             }
 
             if(page){
@@ -431,7 +445,7 @@ export default class Home extends React.Component {
                 let newDeficit = acumDeficit !== undefined?acumDeficit + deficit:deficit;
 
 
-                if(newIndex === (arr.length - 1)){
+                if(newIndex === (arr.length - 1) || arr.length === 0){
                     this.setState({
                         projects:newProjects,
                         size:size,
