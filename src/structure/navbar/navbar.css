@@ -19,6 +19,7 @@
 
 .navbar {
     z-index:10 !important;
+    opacity: 0.99 !important;
 }
 
 

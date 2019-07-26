@@ -21,6 +21,9 @@ export default class ProposalsViewer extends React.Component {
     }
 
     componentDidMount(){
+      
+        
+        try {
         this._mounted = true;
         firebase.firestore().collection("projects").doc(this.props.projectId).get()
         .then(doc => {
@@ -51,13 +54,16 @@ export default class ProposalsViewer extends React.Component {
         .catch(e => {
             alert(e.message)
         })
+    }catch(e){
+        console.log(e.message);
+    }
     }
 
     render(){
         return(
             <div>
                 
-                 <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+                 <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
                  <div className={Classes.DRAWER_BODY}>
                  <div className={`${Classes.DIALOG_BODY}`}>
                      {this.state.proposal === null?<ProposaslsViewerLoading />:
@@ -104,7 +110,7 @@ export default class ProposalsViewer extends React.Component {
                         </div>
                         <div className="form-group">
                             <h4>Deadline</h4>
-                            <h6>{this.state.proposal.deadline}</h6>
+                            <h6>{this.state.proposal.deadline.toDate().toDateString()}</h6>
                         </div>
                         <div className="form-group mt-4">
                             <h4>Presentation</h4>

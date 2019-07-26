@@ -1,2 +1,2 @@
-import firebase from "./firebaseConfig";
-export default firebase;
+const firebase = require("./firebaseConfig");
+module.exports =  firebase;

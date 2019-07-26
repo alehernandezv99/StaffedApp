@@ -12,6 +12,7 @@ import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import LoadingSpinner from "../../loading/loadingSpinner"
 import JobModule from "../home/jobModule";
+import $ from "jquery";
 
 export default class MyProjects extends React.Component {
     constructor(props){
@@ -22,7 +23,6 @@ export default class MyProjects extends React.Component {
         this.checkCriteria = checkCriteria;
         this.updateUser = this.updateUser.bind(this);
         this.markAsRead = this.markAsRead.bind(this);
-        this.handleInboxEvent = this.handleInboxEvent.bind(this);
         
         this.state = {
             isLoading:false,
@@ -41,15 +41,68 @@ export default class MyProjects extends React.Component {
             },
             projects:[],
             size:null,
-            idProject:"no-set",
-            action:"",
-            isOpenDrawerJob:false,
+            drawerJob:{
+                projectID:"",
+                action:"",
+                isOpen:false,
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = false;
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:(projectID,action) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = true;
+                            base.action = action;
+                            base.projectID = projectID
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                }
+            },
             pagination:[],
             isLoading:false,
             proposalsViewer:{
                 isOpen:false,
-                projectId:"",
-                proposalId:"",
+                projectID:"",
+                proposalID:"",
+                handleOpen:(projectID, proposalID) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = true;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID;
+                            
+                            return {
+                                proposalsViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:(projectID, proposalID) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = false;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID
+                            return {
+                                proposalsViewer:base
+                            }
+                        })
+                    }
+                }
             },
             createProject:{
                 isOpen:false,
@@ -100,12 +153,17 @@ export default class MyProjects extends React.Component {
     }
     }
 
-    handleInboxEvent(action){
+    handleInboxEvent = (action) =>{
+        if(this._mounted){
         if(action.type === "view contract"){
-            this.setState({action:action.type, idProject:action.id ,isOpenDrawerJob:true})
+            this.setState(state =>{
+                let base = state.drawerJob;
+                base.action = action.type;
+                base.projectID = action.id;
+                base.isOpen = true;
+                return {drawerJob:base}
+            })
         }else if(action.type === "view proposal"){
-
-            if(this._mounted){
             this.setState(state => {
                 let base = state.proposalsViewer;
                 base.isOpen = true;
@@ -115,12 +173,13 @@ export default class MyProjects extends React.Component {
                 return ({proposalsViewer:base});
             })
         }
-        }
-
+    }
     }
 
     componentWillUnmount(){
         this._mounted = false;
+
+        $("a").off("click");
     }
 
     findMyProjects = (arr,limit,page, field,element) => {
@@ -257,6 +316,7 @@ export default class MyProjects extends React.Component {
            let skills = this.state.skills.skillsSelected["value"].slice();
      
            let criteria = this.state.skills.skillsSelected["criteria"];
+           if(this._mounted){
          await this.setState(state => {
            let base = state.skills;
            skills.push(skill);
@@ -268,6 +328,7 @@ export default class MyProjects extends React.Component {
              return ({});
            }
          })
+        }
  
         // this.reloadProjects(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
        }else {
@@ -276,6 +337,33 @@ export default class MyProjects extends React.Component {
        }
 
     componentDidMount(){
+
+        $(document).ready(function(){
+            // Add smooth scrolling to all links
+            $("a").on('click', function(event) {
+              // Make sure this.hash has a value before overriding default behavior
+              if (this.hash !== "") {
+                // Prevent default anchor click behavior
+                event.preventDefault();
+          
+                // Store hash
+                var hash = this.hash;
+          
+                // Using jQuery's animate() method to add smooth page scroll
+                // The optional number (800) specifies the number of milliseconds it takes to scroll to the specified area
+                $('html, body').animate({
+                  scrollTop: $(hash).offset().top - 80
+                }, 800, function(){
+          
+                  // Add hash (#) to URL when done scrolling (default click behavior)
+                  window.location.hash = hash - 80;
+                });
+              } // End if
+            
+            });
+
+        
+          });
 
         this._mounted = true;
         firebase.auth().onAuthStateChanged(async(user) => {
@@ -323,7 +411,9 @@ export default class MyProjects extends React.Component {
    
 
     addToast = (message) => {
+        if(this._mounted){
         this.toaster.show({ message: message});
+        }
     }
 
     render(){
@@ -334,7 +424,10 @@ export default class MyProjects extends React.Component {
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
-                <Navbar logo={logo}
+                <Navbar logo={{
+                    img:logo,
+                    href:"#top"
+                }}
                 leftElements={
                     [
                         {
@@ -446,9 +539,14 @@ export default class MyProjects extends React.Component {
                 {this.state.user === null?<MyProjectLoading />:
                 
                  <div className=" row text-center">
-                   {this.state.idProject === "no-set"?null:
-                    <DrawerJob openProposal={(id,id2) => {this.setState({isOpenDrawerJob:false,idProject:"",proposalsViewer:{isOpen:true,projectId:id,proposalId:id2}})}} action={this.state.action} id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
-                    {this.state.proposalsViewer.projectId ===""?null:<ProposalsViewer openProject={(id) => {this.setState({isOpenDrawerJob:true, idProject:id, proposalsViewer:{isOpen:false,proposalId:"",projectId:""}})}} handleClose={this.handleCloseProposalViewer} projectId={this.state.proposalsViewer.projectId} proposalId={this.state.proposalsViewer.proposalId} isOpen={this.state.proposalsViewer.isOpen} />}
+
+                 <div id="portalContainer" className="text-left">
+                   {this.state.drawerJob.projectID === ""?null:
+                    <DrawerJob openProposal={(id,id2) => {this.state.drawerJob.handleClose(); this.state.proposalsViewer.handleOpen(id, id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={this.state.proposalsViewer.handleClose("","")} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
+                    <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                  </div>
+                    
                     <div className="col-sm-4">
                     <div className="input-group mb-3 mt-3 mx-auto px-3">
                           <input type="text" className="form-control" placeholder="Search" onChange={(e) => {this.setState({queryString:e.target.value})}}/>
@@ -467,7 +565,7 @@ export default class MyProjects extends React.Component {
    
                         </div>
 
-                        <div className="col">
+                        <div className="col" id="top">
                         <h4 className="mt-3">My Projects</h4>
                         <div className="container-fluid">
                         
@@ -954,7 +1052,9 @@ export default class MyProjects extends React.Component {
                         </div>
                     </div>
                 </div>}
-                <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                <div id="portalContainer" className="text-left">
+                
+                </div>
             </div>
         )
     }

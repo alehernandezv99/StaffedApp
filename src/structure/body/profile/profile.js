@@ -11,6 +11,10 @@ import CVcontent from "./CVcontent";
 import UploadImg from "./uploadImg";
 import CreateProject from "../createProject";
 import ProfileLoading from "../../loading/profileLoading";
+import DrawerJob from "../drawerJob";
+import ProposalsViewer from "../proposalViewer";
+import $ from "jquery"
+import { throwStatement } from "@babel/types";
 
 export default class Profile extends React.Component {
     constructor(props){
@@ -27,6 +31,67 @@ export default class Profile extends React.Component {
                 expertise:[],
                 contact:[],
                 editable:false,
+            },
+            drawerJob:{
+                projectID:"",
+                action:"",
+                isOpen:false,
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = false;
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:(projectID,action) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = true;
+                            base.action = action;
+                            base.projectID = projectID
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                }
+            },
+            proposalsViewer:{
+                isOpen:false,
+                projectID:"",
+                proposalID:"",
+                handleOpen:(projectID, proposalID) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = true;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID;
+                            
+                            return {
+                                proposalsViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:(projectID, proposalID) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = false;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID
+                            return {
+                                proposalsViewer:base
+                            }
+                        })
+                    }
+                }
             },
             inbox:{
                 count:0,
@@ -111,6 +176,29 @@ export default class Profile extends React.Component {
         }
     }
 
+    handleInboxEvent = (action) =>{
+        if(this._mounted){
+        if(action.type === "view contract"){
+            this.setState(state =>{
+                let base = state.drawerJob;
+                base.action = action.type;
+                base.projectID = action.id;
+                base.isOpen = true;
+                return {drawerJob:base}
+            })
+        }else if(action.type === "view proposal"){
+            this.setState(state => {
+                let base = state.proposalsViewer;
+                base.isOpen = true;
+                base.projectId = action.id;
+                base.proposalId = action.id2;
+
+                return ({proposalsViewer:base});
+            })
+        }
+    }
+    }
+
     addToast = (message) => {
         this.toaster.show({ message: message});
     }
@@ -189,6 +277,32 @@ export default class Profile extends React.Component {
     }
     }
 
+    loadInbox = (id)=> {
+            firebase.firestore().collection("users").doc(id).get()
+            .then(async doc => {
+               firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
+                   
+                let count = 0
+                let elements = [];
+                messages.forEach(message => {
+                    if(elements.length < 5){
+                    elements.push(message.data());
+                    }
+                    if(message.data().state =="unread"){
+                        count++
+                    }
+                })
+                if(this._mounted){
+                this.setState({inbox:{
+                    count:count,
+                    elements:elements
+                }})
+            }
+               })  
+            })
+        
+    }
+
     loadCv = () => {
         firebase.firestore().collection("users").doc(this.props.userId).get()
         .then(async doc => {
@@ -243,13 +357,61 @@ export default class Profile extends React.Component {
 
 
     componentDidMount(){
+
         this._mounted = true;
-        this.loadCv();
+        
+
+        $(document).ready(function(){
+            // Add smooth scrolling to all links
+            $("a").on('click', function(event) {
+              // Make sure this.hash has a value before overriding default behavior
+              if (this.hash !== "") {
+                // Prevent default anchor click behavior
+                event.preventDefault();
+          
+                // Store hash
+                var hash = this.hash;
+          
+                // Using jQuery's animate() method to add smooth page scroll
+                // The optional number (800) specifies the number of milliseconds it takes to scroll to the specified area
+                $('html, body').animate({
+                  scrollTop: $(hash).offset().top - 80
+                }, 800, function(){
+          
+                  // Add hash (#) to URL when done scrolling (default click behavior)
+                  window.location.hash = hash - 80;
+                });
+              } // End if
+            
+            });
+
+        
+          });
+
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              // User is signed in.
+              if(user.emailVerified === false){
+                  this.addToast("Please Verify Your Email")
+              }
+              this.loadCv();
+              this.loadInbox(user.uid);
+
+              
+              // ...
+            } else {
+              // User is signed out.
+              this.props.handleStates(0)
+              // ...
+            }
+          });
 
     }
 
     componentWillUnmount(){
         this._mounted = false;
+
+        $("a").off("click");
     }
 
     render() {
@@ -261,7 +423,10 @@ export default class Profile extends React.Component {
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
-                <Navbar logo={logo}
+                <Navbar logo={{
+                    img:logo,
+                    href:"#top"
+                }}
                 leftElements={
                     [
                         {
@@ -365,14 +530,21 @@ export default class Profile extends React.Component {
                         }
                     ]
                 }
-                />{this.state.editPanel.id !== ""?
+                />
+                <div id="portalContainer" className="text-left">
+                   {this.state.drawerJob.projectID === ""?null:
+                    <DrawerJob openProposal={(id,id2) => {this.state.drawerJob.handleClose(); this.state.proposalsViewer.handleOpen(id, id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={this.state.proposalsViewer.handleClose("","")} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
+                    <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                  </div>
+                {this.state.editPanel.id !== ""?
                 <EditProposalModule index={this.state.editPanel.index} title={this.state.editPanel.title} content={this.state.editPanel.content} section={this.state.editPanel.prop} callBack={() => {this.loadCv()}} isOpen={this.state.editPanel.isOpen} handleClose={this.state.editPanel.handleClose} id={this.state.editPanel.id} prop={this.state.editPanel.prop} type={this.state.editPanel.type} addToast={this.addToast}/>
                 :null}
                 {this.state.CV.editable === true?<UploadImg callback={() => {this.loadCv()}} isOpen={this.state.uploadImg.isOpen} handleClose={this.state.uploadImg.handleClose} />:null}
                 <div>
                     {this.state.user === null? <ProfileLoading />:
                     <div>
-                <div className="container-fluid text-center">
+                <div className="container-fluid text-center" id="top">
                     <div className="container mt-2">
                         <div className="container-fluid" style={{position:"relative"}}>
                    
@@ -517,8 +689,7 @@ export default class Profile extends React.Component {
             </div>
             }
             </div>
-                
-            <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+            
             </div>
         )
     }

@@ -56,7 +56,7 @@ export default class ContractModule extends React.Component {
                         </div>
                         <div className="form-group">
                             <h4>Deadline</h4>
-                            <h6>{this.props.deadline}</h6>
+                            <h6>{this.props.deadline.toDate().toDateString()}</h6>
                         </div>
                     </div>
                     <div className="card-footer">

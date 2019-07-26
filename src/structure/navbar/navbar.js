@@ -12,8 +12,8 @@ export default class Navbar extends React.Component {
         return(
             <nav className={"navbar navbar-expand-md shadow-sm bg-white sticky-top " + this.props.className }>
 
-  <a className="navbar-brand" href="/" onClick={(e) => {e.preventDefault();}}>
-      <img src={this.props.logo}  style={{width:'30px'}}/>
+  <a className="navbar-brand" href={this.props.logo.href} onClick={(e) => {e.preventDefault();}}>
+      <img src={this.props.logo.img}  style={{width:'30px'}}/>
       </a>
 
 
@@ -24,13 +24,13 @@ export default class Navbar extends React.Component {
 
   <div className="collapse navbar-collapse" id="collapsibleNavbar">
   <ul className="navbar-nav mr-auto">
-        {this.props.leftElements.map(element => {
+        {this.props.leftElements.map((element,i) => {
           return <NavItem type={element.type} count={element.count} state={element.state} icon={element.icon} onClick={element.onClick} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} dropdownItems={element.dropdownItems} />
         })}
     </ul>
 
     <ul className="navbar-nav">
-      {this.props.rightElements.map(element => {
+      {this.props.rightElements.map((element, i) => {
         return <NavItem type={element.type} count={element.count} state={element.state} icon={element.icon} href={element.href} onClick={element.onClick} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} dropdownItems={element.dropdownItems}/>
       })}
     </ul>

@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
 import {lazy,Suspense} from "react";
 import firebase from "./firebaseSetUp";
 import LoadingSpinner from "./structure/loading/loadingSpinner";
+import $ from "jquery";
 
 
 const LandingPage = lazy(() => import("./structure/body/landingPage"))
@@ -46,6 +47,10 @@ class App extends React.Component {
         currentPage:currentPage
       }
     })
+  }
+
+  componentDidMount(){
+   
   }
 
 

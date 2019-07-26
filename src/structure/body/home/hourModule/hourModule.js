@@ -12,7 +12,9 @@ export default class HourModule extends React.Component{
         if(date.getFullYear() === now.getFullYear()){
             if(date.getMonth() === now.getMonth()){
                 if(date.getDate() === now.getDate()){
-                    
+                   if(((now.getHours() - date.getHours())) >= 1){
+                    return `Posted ${(now.getHours() - date.getHours())} hours ago`
+                   }
                 }
             }
         }

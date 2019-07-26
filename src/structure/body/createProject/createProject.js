@@ -6,6 +6,7 @@ import firebase from "../../../firebaseSetUp";
 import LoadingSpinner from "../../loading/loadingSpinner";
 import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
+import KeywordsGeneration from "../../../utils/keywordsGeneration";
 const algoliasearch = require('algoliasearch');
 const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
 const index = client.initIndex('projects');
@@ -279,6 +280,7 @@ componentWillUnmount(){
       
       let data = {
         title:formA.title["value"],
+        keywords:KeywordsGeneration.generateKeywords(formA.title["value"]).concat([""]),
         description:formA.description["value"],
         skills:skills,
         category:formA.category["value"],
@@ -306,16 +308,10 @@ componentWillUnmount(){
 
         firebase.firestore().collection("projects").doc(data.id).set(data)
       .then(async () => {
-        let objAlgolia = data;
-        objAlgolia.objectID = data.id;
-
-        index.saveObjects([objAlgolia]).then(() => {
+    
           console.log("Project Created");
           this.addToast("Project Created");
           this.props.handleClose();
-        })
-      
-        
       })
       .catch(e => {
         this.toggleLoading();
@@ -325,7 +321,7 @@ componentWillUnmount(){
 
       })
       .catch(e => {
-        this.addToast("Something is Wrong :(");
+        this.addToast(e.message);
         this.toggleLoading();
         this.setted = undefined;
       })
@@ -339,7 +335,7 @@ componentWillUnmount(){
 
     render(){
     return(
-      <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+      <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
         <div className={Classes.DRAWER_BODY}>
        <div className={`${Classes.DIALOG_BODY}`}>
       

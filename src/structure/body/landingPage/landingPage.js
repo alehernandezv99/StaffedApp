@@ -152,17 +152,17 @@ export default class LandingPage extends React.Component {
 
     componentWillUnmount(){
         this._mounted = false;
+
+        $("a").off("click");
     }
 
     componentDidMount(){
 
         this._mounted = true;
 
-
-          $(document).ready(function(){
+        $(document).ready(function(){
             // Add smooth scrolling to all links
             $("a").on('click', function(event) {
-          
               // Make sure this.hash has a value before overriding default behavior
               if (this.hash !== "") {
                 // Prevent default anchor click behavior
@@ -181,7 +181,10 @@ export default class LandingPage extends React.Component {
                   window.location.hash = hash - 80;
                 });
               } // End if
+            
             });
+
+        
           });
 
         firebase.auth().onAuthStateChanged((user) => {
@@ -287,13 +290,17 @@ export default class LandingPage extends React.Component {
     render(){
         return(
             <div>
+                
                 {this.state.isLoading === true? <LoadingSpinner />:null}
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
             
-                <Navbar logo={logo}
+                <Navbar logo={{
+                    img:logo,
+                    href:"#top"
+                }}
                 leftElements={
                     [
                         {
@@ -301,6 +308,7 @@ export default class LandingPage extends React.Component {
                             text:"About",
                             href:"#about",
                             onClick:() => {},
+                            key:1
                         },
                         {
                             type:"link",
@@ -329,7 +337,7 @@ export default class LandingPage extends React.Component {
                     [
                         {
                             type:"button",
-                            text:"Login",
+                            text:"Sign In",
                             dataToggle:"modal",
                             dataTarget:"#loginPanel",
                             onClick:this.state.loginDrawer.handleOpen,
@@ -348,7 +356,7 @@ export default class LandingPage extends React.Component {
                     ]
                 }
                 />
-            <div className="container-fluid  text-center padding-1"  id="about">
+            <div className="container-fluid  text-center padding-1"  id="top">
             <img src={MainGraphic} width="450px"/>
                 <h1>Welcome to StaffedApp</h1>            
                 <h5 style={{fontWeight:"normal"}} className="m-3">The Moderm and Simplest Solution for Managing Your Projects
@@ -402,7 +410,7 @@ export default class LandingPage extends React.Component {
                 </div>
             </div>
 
-            <div className="container-fluid">
+            <div className="container-fluid" id="portalContainer">
                 <LoginDrawer handleAuth={this.handleAuth} isOpen={this.state.loginDrawer.isOpen} handleClose={this.state.loginDrawer.handleClose} openPanel={() => {this.state.loginDrawer.handleClose(); this.state.signUpDrawer.handleOpen()}}/>
                 <SignUpDrawer addToast={this.addToast} skills={this.state.skills} setStates={this.setStates} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
 

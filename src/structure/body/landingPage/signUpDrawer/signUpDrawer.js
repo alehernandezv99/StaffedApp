@@ -17,10 +17,7 @@ export default class SignUpDrawer extends React.Component {
             confirmPassword:{value:"",},
             country:{value:"", criteria:{type:"text", minLength:2}},
             remember:{value:false},
-            skills:{
-                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
-                skillsFetched:[],
-            },
+
         }
     }
 
@@ -38,82 +35,7 @@ export default class SignUpDrawer extends React.Component {
       }
 
 
-    addSkill = (skill) => {
-        if(!(this.state.skills.skillsSelected["value"].includes(skill))){
-          let skills = this.state.skills.skillsSelected["value"].slice();
-    
-          let criteria = this.state.skills.skillsSelected["criteria"];
-          if(this._mounted){
-        this.setState(state => {
-          let base = state.skills;
-          skills.push(skill);
-          if(this.checkCriteria(skills, criteria).check){
-          base.skillsSelected.value = skills;
-          return({skills:base});
-          }else {
-            this.addToast(this.checkCriteria(skills, criteria, "skills").message);
-            return ({});
-          }
-        })
-      }
-      }else {
-        this.addToast("You cannot select two repeated skills")
-      }
-      }
 
-      bindSkillsInput=  () => {
-        $('#skills-input').keypress((event) => {
-          if(event.keyCode == 13){
-            if(event.target.value !== ""){
-           
-  
-              firebase.firestore().collection("skills").get()
-              .then(snapshot => {
-                let skillsArr = [];
-                snapshot.forEach(doc => {
-                  skillsArr.push(doc.data().name);
-                })
-                 this.setState(state => {
-              let base = state.skills;
-              let skills = base.skillsSelected["value"];
-    
-              if((skills.includes(event.target.value) === false)){
-                if(skillsArr.includes(event.target.value)){
-                  skills.push(event.target.value);
-                  let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
-                   base.skillsSelected = skillsObj;
-
-                  this.skillInput.value = "";
-                  return({skills:base})
-                  
-                }else {
-                  this.addToast(`The skill "${event.target.value}" is not registered`);
-                }
-  
-              }else {
-                this.addToast("You cannot select two repeated skills")
-                return {}
-              }
-              })
-              
-             
-            })
-          
-        }
-        }
-        });
-
-        firebase.firestore().collection("skills").get()
-          .then(async snapshot => {
-            let skills = [];
-            snapshot.forEach(doc => {
-              skills.push(doc.data().name);
-            })
-      
-            
-            autocomplete(document.getElementById("skills-input"), skills, this.addSkill);
-          })
-      }
 
     componentDidMount() {
       this._mounted= true;
@@ -172,7 +94,7 @@ export default class SignUpDrawer extends React.Component {
 
     render(){
         return(
-            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} isOpen={this.props.isOpen}>
+            <Drawer portalContainer={document.getElementById("portalContainer")} onClose={this.props.handleClose} title={""} isOpen={this.props.isOpen}>
             <div className={Classes.DRAWER_BODY}>
             <div className={`${Classes.DIALOG_BODY}`}>
             <div className="modal-content">
@@ -182,27 +104,25 @@ export default class SignUpDrawer extends React.Component {
                             <div className="modal-body">
                             <form>
                             <div className="form-group">
-                                <label>Name:</label>
-                                <input type="text" className="form-control" onChange={(e) => {this.changeState("name",e.target.value, e.target.parentElement.childNodes[2], "Invalid Name")}} />
+                                <label>* Name:</label>
+                                <input type="text" className="form-control" onChange={(e) => {this.changeState("name",e.target.value, e.target.parentElement.childNodes[2], "Name Must Not Contain Special Characters Or Numbers")}} />
                                 <div className="invalid-feedback">Valid.</div>
                               </div>
                               <div className="form-group">
-                                <label>Email address:</label>
+                                <label>* Email address:</label>
                                 <input type="email" className="form-control" onChange={(e) => {this.changeState("email",e.target.value, e.target.parentElement.childNodes[2], "Invalid Email")}} />
                                 <div className="invalid-feedback">Valid.</div>
                               </div>
                               <div className="form-group">
-                                <label>Password:</label>
-                                <input type="password" className="form-control" onChange={(e) => {this.changeState("password",e.target.value,e.target.parentElement.childNodes[2], `Password Must: Contain at least 8 characters,
-at least 1 number,
-at least 1 lowercase character (a-z),
-at least 1 uppercase character (A-Z),
-no contain special characters
+                                <label>* Password:</label>
+                                <input type="password" className="form-control" onChange={(e) => {this.changeState("password",e.target.value,e.target.parentElement.childNodes[2], `Password Must At Least: Contain 8 characters,
+ 1 number,1 uppercase character (A-Z),
+No contain special characters
 `)}}/>
                                 <div className="invalid-feedback">Valid.</div>
                               </div>
                               <div className="form-group">
-                                <label >Confirm Password:</label>
+                                <label >* Confirm Password:</label>
                                 <input type="password" className="form-control" onChange={(e) => {this.changeState("confirmPassword",e.target.value, e.target.parentElement.childNodes[2])}}/>
                                 <div className="invalid-feedback">Valid.</div>
                               </div>
@@ -213,7 +133,7 @@ no contain special characters
                               </div>
 
                               <div className="form-group">
-                                 <label>Country</label> 
+                                 <label>* Country</label> 
                                  <div>
                                  <select value={this.state.country.value} className="custom-select-sm" onChange={(e) => {e.persist(); this.changeState("country", e.target.options[e.target.selectedIndex].value)}} >
      <option value="">Select Your Country</option>
@@ -467,28 +387,8 @@ no contain special characters
                                  </div>
                               </div>
 
-                              <div className="form-group">
-                                  <label>Your Skills</label>
-                                <div>
-                                {this.state.skills.skillsSelected.value.map((skill, index) => {
-                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
-                                })}
-                                <div>
-                                <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} onChange={(e) => {
-                                  if(!this.setted){
-                                    this.bindSkillsInput();
-                                    this.setted= true;
-                                  }
-                                }} type="text" placeholder="Choose your skill and press enter" id="skills-input" className="form-control" required/>
-                                </div>
-                                </div>
-
-                                </div>
-                              </div>
-
                               <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.validateAuthentication()}}>Sign Up</button>
-                              <p className="text-center mt-3">Already have an account? <a href="#" data-toggle="modal" onClick={this.props.openPanel}>Login</a></p>
+                              <p className="text-center mt-3">Already have an account? <a href="#" data-toggle="modal" onClick={this.props.openPanel}>Sign In</a></p>
                             </form>
                             </div>
                             <div className="modal-footer">

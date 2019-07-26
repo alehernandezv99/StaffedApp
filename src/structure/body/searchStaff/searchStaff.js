@@ -10,6 +10,8 @@ import $ from "jquery";
 import autocomplete from "../../../utils/autocomplete";
 import logo from "../../../res/Graphics/main_logo.png";
 import CVContainer from "./CVContainer";
+import ProposalsViewer from "../proposalViewer";
+import DrawerJob from "../drawerJob";
 
 const algoliasearch = require('algoliasearch');
 const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
@@ -32,6 +34,67 @@ export default class SearchStaff extends React.Component {
                 elements:[]
             },
             size:null,
+            drawerJob:{
+                projectID:"",
+                action:"",
+                isOpen:false,
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = false;
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:(projectID,action) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = true;
+                            base.action = action;
+                            base.projectID = projectID
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                }
+            },
+            proposalsViewer:{
+                isOpen:false,
+                projectID:"",
+                proposalID:"",
+                handleOpen:(projectID, proposalID) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = true;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID;
+                            
+                            return {
+                                proposalsViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:(projectID, proposalID) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = false;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID
+                            return {
+                                proposalsViewer:base
+                            }
+                        })
+                    }
+                }
+            },
             createProject:{
                 isOpen:false,
                 handleClose:() => {
@@ -67,6 +130,29 @@ export default class SearchStaff extends React.Component {
 
     addToast = (message) => {
         this.toaster.show({ message: message});
+    }
+
+    handleInboxEvent = (action) =>{
+        if(this._mounted){
+        if(action.type === "view contract"){
+            this.setState(state =>{
+                let base = state.drawerJob;
+                base.action = action.type;
+                base.projectID = action.id;
+                base.isOpen = true;
+                return {drawerJob:base}
+            })
+        }else if(action.type === "view proposal"){
+            this.setState(state => {
+                let base = state.proposalsViewer;
+                base.isOpen = true;
+                base.projectId = action.id;
+                base.proposalId = action.id2;
+
+                return ({proposalsViewer:base});
+            })
+        }
+    }
     }
 
     updateUser = async(id) =>{
@@ -107,9 +193,39 @@ export default class SearchStaff extends React.Component {
 
     componentWillUnmount(){
         this._mounted = false;
+
+        $("a").off("click");
     }
 
     componentDidMount(){
+
+        $(document).ready(function(){
+            // Add smooth scrolling to all links
+            $("a").on('click', function(event) {
+              // Make sure this.hash has a value before overriding default behavior
+              if (this.hash !== "") {
+                // Prevent default anchor click behavior
+                event.preventDefault();
+          
+                // Store hash
+                var hash = this.hash;
+          
+                // Using jQuery's animate() method to add smooth page scroll
+                // The optional number (800) specifies the number of milliseconds it takes to scroll to the specified area
+                $('html, body').animate({
+                  scrollTop: $(hash).offset().top - 80
+                }, 800, function(){
+          
+                  // Add hash (#) to URL when done scrolling (default click behavior)
+                  window.location.hash = hash - 80;
+                });
+              } // End if
+            
+            });
+
+        
+          });
+
         this._mounted = true;
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -140,6 +256,30 @@ export default class SearchStaff extends React.Component {
           })
     }
 
+    markAsRead = async() =>{
+
+        try {
+        let refs = []
+        let call = await firebase.firestore().collection("users").doc(this.state.user[0].uid).collection("inbox").get()
+        call.forEach(ref => {
+          refs.push(firebase.firestore().collection("users").doc(this.state.user[0].uid).collection("inbox").doc(ref.id))
+        })
+
+        let batch = firebase.firestore().batch();
+
+        for(let i = 0; i< refs.length; i++){
+            batch.update(refs[i], {state:"read"})
+        }
+        await batch.commit();
+
+    }catch(e){
+        this.addToast(e.message);
+    }
+    
+
+    }
+
+
     specificSearch = (string, page) => {
         indexAlgolia.search({query:string,
             hitsPerPage:this.state.pageSize.value,
@@ -163,7 +303,10 @@ export default class SearchStaff extends React.Component {
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
-                <Navbar logo={logo}
+                <Navbar logo={{
+                    img:logo,
+                    href:"#top"
+                }}
                 leftElements={
                     [
                         {
@@ -267,7 +410,14 @@ export default class SearchStaff extends React.Component {
                     ]
                 }/>
                 {this.state.user === null?<SearchStaffLoading/>:
-                <div className="container-fluid pt-4 pb-4">
+                
+                <div className="container-fluid pt-4 pb-4" id="top">
+                    <div id="portalContainer" className="text-left">
+                   {this.state.drawerJob.projectID === ""?null:
+                    <DrawerJob openProposal={(id,id2) => {this.state.drawerJob.handleClose(); this.state.proposalsViewer.handleOpen(id, id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={this.state.proposalsViewer.handleClose("","")} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
+                    <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                  </div>
                     <div className="row">
                         <div className="col-sm-3">
                           <ul className="nav flex-column">
@@ -319,7 +469,6 @@ export default class SearchStaff extends React.Component {
                     
                 </div>
                 }
-                <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
             </div>
         )
     }

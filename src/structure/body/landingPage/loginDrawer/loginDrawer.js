@@ -31,7 +31,7 @@ export default class LoginDrawer extends React.Component {
 
     render(){
         return(
-            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} isOpen={this.props.isOpen}>
+            <Drawer portalContainer={document.getElementById("portalContainer")}  onClose={this.props.handleClose} title={""} isOpen={this.props.isOpen}>
                 <div className={Classes.DRAWER_BODY}>
                 <div className={`${Classes.DIALOG_BODY}`}>
                 <div className="card">
@@ -55,7 +55,7 @@ export default class LoginDrawer extends React.Component {
     <input className="form-check-input" type="checkbox"  onChange={(e) => {this.changeState("remember", e.target.checked)}}/> Remember me
   </label>
   </div>
-  <button type="button" className="btn btn-custom-1 btn-block" onClick={()=> {this.props.handleAuth("login",this.state.email, this.state.password)}}>Enter</button>
+  <button type="button" className="btn btn-custom-1 btn-block" onClick={()=> {this.props.handleAuth("login",this.state.email, this.state.password)}}>Sign In</button>
   <p className="text-center mt-3">You dont have an account? <a href="#" data-toggle="modal" onClick={this.props.openPanel}>Sign Up</a></p>
 </form>
 </div>

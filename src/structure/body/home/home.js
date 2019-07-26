@@ -13,9 +13,6 @@ import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
 import "./home.css";
-const algoliasearch = require('algoliasearch');
-const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
-const indexAlgolia = client.initIndex('projects');
 
 export default class Home extends React.Component {
     constructor(props){
@@ -25,7 +22,6 @@ export default class Home extends React.Component {
         this.clearSkill = this.clearSkill.bind(this);
         this.checkCriteria = checkCriteria;
         this.reloadProjects = this.reloadProjects.bind(this);
-        this.handleInboxEvent = this.handleInboxEvent.bind(this);
         this.markAsRead = this.markAsRead.bind(this);
 
         this.state = {
@@ -49,31 +45,94 @@ export default class Home extends React.Component {
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
             },
-            idProject:"no-set",
-            action:"",
-            isOpenDrawerJob:false,
+            drawerJob:{
+                projectID:"",
+                action:"",
+                isOpen:false,
+                handleClose:async() => {
+                    if(this._mounted){
+                       await this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = false;
+                            base.projectID = "";
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:async(projectID,action) => {
+                    if(this._mounted){
+                      await  this.setState(state => {
+                            let base = state.drawerJob;
+                            base.isOpen = true;
+                            base.action = action;
+                            base.projectID = projectID
+                            return {
+                                drawerJob:base
+                            }
+                        })
+                    }
+                }
+            },
+            
             pagination:[],
             isLoading:false,
             proposalsViewer:{
                 isOpen:false,
-                projectId:"",
-                proposalId:"",
+                projectID:"",
+                proposalID:"",
+                handleOpen:async(projectID, proposalID) => {
+                    if(this._mounted){
+                     await  this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = true;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID;
+                            
+                            let base2 = state.drawerJob;
+                            base2.isOpen = false;
+                            base2.projectID = "";
+                            return {
+                                proposalsViewer:base,
+                                drawerJob:base2
+                            }
+                        })
+                    }
+                },
+                handleClose:async(projectID, proposalID) => {
+                    if(this._mounted){
+                       await this.setState(state => {
+                            let base = state.proposalsViewer;
+                            base.isOpen = false;
+                            base.projectID = projectID;
+                            base.proposalID = proposalID
+                            return {
+                                proposalsViewer:base
+                            }
+                        })
+                    }
+                }
             },
             createProject:{
                 isOpen:false,
                 handleClose:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = false;
                         return {createProject:base}
                     })
+                }
                 },
                 handleOpen:() => {
+                    if(this._mounted){
                     this.setState(state => {
                         let base = state.createProject;
                         base.isOpen = true;
                         return {createProject:base}
                     })
+                }
                 }
             }
         }
@@ -83,6 +142,7 @@ export default class Home extends React.Component {
             toaster:(ref) => {this.toaster = ref},
         }
     }
+
 
     async markAsRead(){
 
@@ -107,10 +167,16 @@ export default class Home extends React.Component {
 
     }
 
-    handleInboxEvent(action){
+    handleInboxEvent = (action) =>{
         if(this._mounted){
         if(action.type === "view contract"){
-            this.setState({action:action.type, idProject:action.id ,isOpenDrawerJob:true})
+            this.setState(state =>{
+                let base = state.drawerJob;
+                base.action = action.type;
+                base.projectID = action.id;
+                base.isOpen = true;
+                return {drawerJob:base}
+            })
         }else if(action.type === "view proposal"){
             this.setState(state => {
                 let base = state.proposalsViewer;
@@ -127,6 +193,7 @@ export default class Home extends React.Component {
     componentWillUnmount(){
         this._mounted = false;
 
+        $("a").off("click");
     }
 
     toggleLoading = () => {
@@ -138,7 +205,9 @@ export default class Home extends React.Component {
     }
 
     addToast = (message) => {
+        if(this._mounted){
         this.toaster.show({ message: message});
+        }
     }
 
     handleCloseDrawerJob = () => {
@@ -258,6 +327,33 @@ export default class Home extends React.Component {
         }else {
             $(".inbox").show();
         }
+
+        $(document).ready(function(){
+            // Add smooth scrolling to all links
+            $("a").on('click', function(event) {
+              // Make sure this.hash has a value before overriding default behavior
+              if (this.hash !== "") {
+                // Prevent default anchor click behavior
+                event.preventDefault();
+          
+                // Store hash
+                var hash = this.hash;
+          
+                // Using jQuery's animate() method to add smooth page scroll
+                // The optional number (800) specifies the number of milliseconds it takes to scroll to the specified area
+                $('html, body').animate({
+                  scrollTop: $(hash).offset().top - 80
+                }, 800, function(){
+          
+                  // Add hash (#) to URL when done scrolling (default click behavior)
+                  window.location.hash = hash - 80;
+                });
+              } // End if
+            
+            });
+
+        
+          });
         
 
 
@@ -282,30 +378,49 @@ export default class Home extends React.Component {
        
     }
 
-    handleCloseProposalViewer = () => {
-        this.setState(state => {
-            let base = state.proposalsViewer
-            base.isOpen = false;
-            base.projectId = "";
-            base.proposalId = "";
-            return {proposalsViewer:base}
-        })
-    }
-
     specificSearch = (string, page) => {
+        firebase.firestore().collection("projects")
+        .where("keywords","array-contains",string.toLowerCase())
+        .orderBy("created","desc")
+        .get()
+        .then(snapshot => {
 
-            indexAlgolia.search({query:string,
-                hitsPerPage:this.state.pageSize.value,
-                page:page !== undefined?page:0 }, (err, {hits,nbHits} = {}) => {
-                    if(this._mounted){
-                this.setState( {
-                    projects:hits,
-                    searchBar:true,
-                    size:nbHits
-                })
+            if(snapshot.empty){
+                if(this._mounted){
+                    this.setState({
+                        projects:[],
+                        size:null
+                    })
+                }
             }
+            let size= snapshot.size;
+            let lastSeem;
+            if(page){
+                lastSeem = snapshot.docs[((this.state.pageSize.value)*(page))-1];
+            }
+            let ref= firebase.firestore().collection("projects")
+            if(page){
+                  ref= ref.where("keywords","array-contains",string.toLowerCase())
+                  .orderBy("created","desc").startAfter(lastSeem).limit(this.state.pageSize.value)
+            }else {
+                ref = ref.where("keywords","array-contains",string.toLowerCase())
+                .orderBy("created","desc").limit(this.state.pageSize.value)
+            }
+
+            ref.get()
+            .then(snapshot2 => {
+                let arr = []
+                snapshot2.forEach(project => {
+                    arr.push(project.data())
+                })
+
+                if(this._mounted){
+                    this.setState({
+                        projects:arr
+                    })
+                }
             })
-       
+        })
     }
 
     reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit) => {
@@ -517,7 +632,10 @@ export default class Home extends React.Component {
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
-                <Navbar logo={logo}
+                <Navbar logo={{
+                    img:logo,
+                    href:"#top"
+                }}
                 leftElements={
                     [
                         {
@@ -626,9 +744,14 @@ export default class Home extends React.Component {
                     {this.state.user === null? <HomeLoading />:
                     
                     <div className="row text-center">
-               {this.state.idProject === "no-set"?null:
-                    <DrawerJob openProposal={(id,id2) => {this.setState({isOpenDrawerJob:false,idProject:"",proposalsViewer:{isOpen:true,projectId:id,proposalId:id2}})}} action={this.state.action} id={this.state.idProject} isOpen={this.state.isOpenDrawerJob} handleClose={this.handleCloseDrawerJob}  toastHandler={(message) => {this.addToast(message)}}/>}
-                    {this.state.proposalsViewer.projectId ===""?null:<ProposalsViewer openProject={(id) => {this.setState({isOpenDrawerJob:true, idProject:id, proposalsViewer:{isOpen:false,proposalId:"",projectId:""}})}} handleClose={this.handleCloseProposalViewer} projectId={this.state.proposalsViewer.projectId} proposalId={this.state.proposalsViewer.proposalId} isOpen={this.state.proposalsViewer.isOpen} />}
+
+                 <div id="portalContainer" className="text-left">
+                   {this.state.drawerJob.projectID === ""?null:
+                    <DrawerJob openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
+                    <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                  </div>
+
                         <div className="col">
                             <div className="form-group">
                                 <label>Page Size</label>
@@ -658,7 +781,7 @@ export default class Home extends React.Component {
                                 </div>
                               </div>
                         </div>
-                        <div className="col-sm-6">
+                        <div className="col-sm-6" id="top">
                         <div className="input-group mb-3 mt-3 mx-auto">
                           <input type="text" className="form-control" onChange={(e) => {this.setState({queryString:e.target.value})}} placeholder="Search" />
                             <div className="input-group-append">
@@ -726,7 +849,7 @@ export default class Home extends React.Component {
                             }
                 
 
-                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
+                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
                            {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -770,7 +893,7 @@ export default class Home extends React.Component {
                     </div>
                     }
                 </div>
-                <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                
             </div>
         )
     }

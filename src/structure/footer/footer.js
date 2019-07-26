@@ -18,7 +18,7 @@ export default function Footer(){
       <div className="col-md-6 mt-md-0 mt-3">
 
     
-        <h5 className="text-uppercase">Help/ Support Page</h5>
+        <h5>StaffedApp support center</h5>
       
 
       </div>
@@ -80,7 +80,7 @@ export default function Footer(){
   </div>
   
   <div className="footer-copyright text-center bg-special py-3">© 2019 Copyright:
-    <a href="https://mdbootstrap.com/education/bootstrap/" className="links-white"> Alejandro Hernandez | Esteban Hernandez</a>
+    <span href="https://mdbootstrap.com/education/bootstrap/" className="links-white"> StaffedApp | All Rights Reserved</span>
   </div>
 
 
