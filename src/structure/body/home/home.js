@@ -379,6 +379,10 @@ export default class Home extends React.Component {
     }
 
     specificSearch = (string, page) => {
+         this.setState({
+            projects:[]
+        })
+
         firebase.firestore().collection("projects")
         .where("keywords","array-contains",string.toLowerCase())
         .orderBy("created","desc")
@@ -424,6 +428,11 @@ export default class Home extends React.Component {
     }
 
     reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit) => {
+        if(acumDeficit === undefined){
+             this.setState({
+                projects:[]
+            })
+        }
         let newIndex = index !== undefined?index:0;
         let ref = firebase.firestore().collection("projects");
 
@@ -747,7 +756,7 @@ export default class Home extends React.Component {
 
                  <div id="portalContainer" className="text-left">
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                   </div>

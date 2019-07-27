@@ -1,6 +1,7 @@
 import React from "react";
 import "./contractModule.css";
 import firebase from "../../../../firebaseSetUp";
+import UserBox from "../../profile/userBox";
 
 export default class ContractModule extends React.Component {
     constructor(props){
@@ -16,19 +17,8 @@ export default class ContractModule extends React.Component {
 
     componentDidMount(){
         this._mounted = true;
-        if(firebase.auth().currentUser.uid === this.props.freelancer){
-            if(this._mounted){
-            this.setState({freelancer:"You"})
-            }
-        }else {
+  
 
-        firebase.firestore().collection("users").doc(this.props.freelancer).get()
-        .then(doc => {
-            if(this._mounted){
-            this.setState({freelancer:doc.data().displayName?doc.data().displayName:doc.data().email})
-            }
-        })
-    }
     }
 
     render(){
@@ -36,11 +26,11 @@ export default class ContractModule extends React.Component {
             <div className="container-fluid">
             <div className="form-group">
                 <h4>Client</h4>
-              <h6 className="ml-3">{this.props.client ===""?<div className="spinner-border"></div>:this.props.client}</h6>
+                <UserBox id={this.props.client} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
             </div>
             <div className="form-group mt-3">
                 <h4>Freelancer</h4>
-                <h6 className="ml-3">{this.state.freelancer === ""?<div className="spinner-border"></div>:this.state.freelancer}</h6>
+               <UserBox id={this.props.freelancer} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
             </div>
             <div className="container-fluid">
                 <div className="card">

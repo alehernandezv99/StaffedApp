@@ -45,20 +45,21 @@ export default class MyProjects extends React.Component {
                 projectID:"",
                 action:"",
                 isOpen:false,
-                handleClose:() => {
+                handleClose:async() => {
                     if(this._mounted){
-                        this.setState(state => {
+                       await this.setState(state => {
                             let base = state.drawerJob;
                             base.isOpen = false;
+                            base.projectID = "";
                             return {
                                 drawerJob:base
                             }
                         })
                     }
                 },
-                handleOpen:(projectID,action) => {
+                handleOpen:async(projectID,action) => {
                     if(this._mounted){
-                        this.setState(state => {
+                      await  this.setState(state => {
                             let base = state.drawerJob;
                             base.isOpen = true;
                             base.action = action;
@@ -76,23 +77,27 @@ export default class MyProjects extends React.Component {
                 isOpen:false,
                 projectID:"",
                 proposalID:"",
-                handleOpen:(projectID, proposalID) => {
+                handleOpen:async(projectID, proposalID) => {
                     if(this._mounted){
-                        this.setState(state => {
+                     await  this.setState(state => {
                             let base = state.proposalsViewer;
                             base.isOpen = true;
                             base.projectID = projectID;
                             base.proposalID = proposalID;
                             
+                            let base2 = state.drawerJob;
+                            base2.isOpen = false;
+                            base2.projectID = "";
                             return {
-                                proposalsViewer:base
+                                proposalsViewer:base,
+                                drawerJob:base2
                             }
                         })
                     }
                 },
-                handleClose:(projectID, proposalID) => {
+                handleClose:async(projectID, proposalID) => {
                     if(this._mounted){
-                        this.setState(state => {
+                       await this.setState(state => {
                             let base = state.proposalsViewer;
                             base.isOpen = false;
                             base.projectID = projectID;
@@ -540,10 +545,10 @@ export default class MyProjects extends React.Component {
                 
                  <div className=" row text-center">
 
-                 <div id="portalContainer" className="text-left">
+                  <div id="portalContainer" className="text-left">
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob openProposal={(id,id2) => {this.state.drawerJob.handleClose(); this.state.proposalsViewer.handleOpen(id, id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
-                    {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={this.state.proposalsViewer.handleClose("","")} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
+                    <DrawerJob openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                   </div>
                     
@@ -586,7 +591,7 @@ export default class MyProjects extends React.Component {
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("applicants",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#applied">Applied</a>
                            </li>
                            <li className="nav-item mr-auto">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("references",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#archived">Archived</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("references",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#archived">Favorite</a>
                           </li>
                         </ul>
 

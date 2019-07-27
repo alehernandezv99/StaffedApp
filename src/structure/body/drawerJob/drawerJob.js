@@ -8,6 +8,7 @@ import checkCriteria from "../../../utils/checkCriteria";
 import ProposalModule from "./proposalModule";
 import ContractModule from "./contractModule";
 import AbsoluteLoading from "../../loading/absoluteLoading";
+import UserBox from "../profile/userBox";
 
 import { DatePicker, TimePrecision } from "@blueprintjs/datetime";
 import { isDate } from "util";
@@ -419,13 +420,13 @@ export default class DrawerJob extends React.Component {
                  project.push(snapshot.data());
                  let quantity = 0;
                  let idAuthorProject = project[0].author
-                 let userAuthor = await firebase.firestore().collection("users").doc(project[0].author).get();
-                  let data = userAuthor.data();
-                 let author = data.displayName?data.displayName:data.email;
-                 let img = data.photoURL;
+                // let userAuthor = await firebase.firestore().collection("users").doc(project[0].author).get();
+                //  let data = userAuthor.data();
+                 //let author = data.displayName?data.displayName:data.email;
+                 //let img = data.photoURL;
    
-                 project[0].author = author;
-                 project[0].authorImg = img;
+                 //project[0].author = author;
+                // project[0].authorImg = img;
                  let references = snapshot.data().references;
                 let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
  
@@ -505,20 +506,12 @@ export default class DrawerJob extends React.Component {
                  }
               
  
-                 firebase.firestore().collection("users").doc(idAuthorProject).get()
-                 .then( async doc => {
-                    project[0].author = doc.data().displayName?doc.data().displayName:doc.data().email;
-
               
                     if(this._mounted){
                       this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener, isOwner:isOwner, contract:contract, action:this.props.action});
                     }
                 
-                 })
-                 .catch(e => {
-                    // this.addToast(e.message);
-                 })
- 
+                 
                  
  
                  })
@@ -708,22 +701,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                         }
                         <div className="container-fluid mt-4">
-        
-                        <div className="container-fluid" style={{display:"flex",justifyContent:"center",flexDirection:"column",alignItems:"center"}} >
-                            
-                            <div className="mt-3" style={{backgroundImage:`url(${this.state.project[0].authorImg?this.state.project[0].authorImg:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
-                                    backgroundPosition:"center",
-                                    backgroundSize:"cover",
-                                    backgroundRepeat:"no-repeat",
-                                    width:"100px",
-                                    height:"100px",
-                                }} className="rounded-circle" ></div>
-                          
-                          
-                        <h6 className="mt-3">{this.state.project[0].author}</h6>
-                        
-                        </div>
-
+                            <UserBox id={this.state.project[0].author} addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} />
                         </div>
                         <div className="container-fluid mt-4">
                         <h4><i className="material-icons">assistant_photo</i> <span>Country</span></h4>
@@ -888,7 +866,7 @@ export default class DrawerJob extends React.Component {
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                       {this.state.contract !== ""?
-                     <ContractModule freelancer={this.state.contract.freelancer} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} />:
+                     <ContractModule freelancer={this.state.contract.freelancer} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
                     <div className="container-fluid">
                         {this.state.proposals.length > 0?this.state.proposals.map((proposal,i) => {
                         return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
