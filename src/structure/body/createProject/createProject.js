@@ -7,9 +7,7 @@ import LoadingSpinner from "../../loading/loadingSpinner";
 import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
 import KeywordsGeneration from "../../../utils/keywordsGeneration";
-const algoliasearch = require('algoliasearch');
-const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
-const index = client.initIndex('projects');
+
 
 
 export default class CreateProject extends React.Component{

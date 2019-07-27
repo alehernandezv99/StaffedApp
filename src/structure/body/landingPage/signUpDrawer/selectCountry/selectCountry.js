@@ -3,7 +3,7 @@ export default function SelectCountry(props){
     return (
         <div>
         <select value={props.value} className="custom-select-sm" onChange={(e)=> {props.onChange(e)}} >
-<option value="">Select Your Country</option>
+<option value="">None</option>
 <option value="Afganistan">Afghanistan</option>
 <option value="Albania">Albania</option>
 <option value="Algeria">Algeria</option>

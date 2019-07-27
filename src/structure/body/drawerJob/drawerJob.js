@@ -318,7 +318,6 @@ export default class DrawerJob extends React.Component {
             if(key !== "quantity"){
             if(!(checkCriteria(objectProposals[key]["value"], objectProposals[key]["criteria"], key).check)){
                 check =1;
-            }else {
                 messages.push((checkCriteria(objectProposals[key]["value"], objectProposals[key]["criteria"], key).message))
             }
         }
@@ -372,7 +371,7 @@ export default class DrawerJob extends React.Component {
                        involved.push(firebase.auth().currentUser.email)
                    }
 
-                   batch.update(firebase.firestore().collection("projects").doc(this.props.id), {applicants:applicants, involved:involved, updated:firebase.firestore.Timestamp.now()})
+                   batch.update(firebase.firestore().collection("projects").doc(this.props.id), {applicants:applicants,proposals:applicants.length, involved:involved, updated:firebase.firestore.Timestamp.now()})
 
                    batch.commit().then(async () => {
                     this.addToast("Proposal Submitted");

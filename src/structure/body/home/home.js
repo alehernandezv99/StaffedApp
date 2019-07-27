@@ -39,7 +39,7 @@ export default class Home extends React.Component {
             size:null,
             budget:[10,50000],
             country:"",
-            proposals:0,
+            proposals:[0,100],
             pageSize:{
                 min:6,
                 max:12,
@@ -174,6 +174,14 @@ export default class Home extends React.Component {
     }
     
 
+    }
+
+    triggerSearch =() => {
+        if(this.state.skills.exclusive === false){
+            this.reloadProjectsFixed(this.state.pageSize.value,"skills",this.state.skills.skillsSelected.value)
+        }else {
+            this.reloadProjects(this.state.pageSize.value, "skillsExclusive",this.state.skills.skillsSelected.value)
+        }
     }
 
     handleInboxEvent = (action) =>{
@@ -457,11 +465,39 @@ export default class Home extends React.Component {
         ref= ref.where("skills","array-contains",arr[newIndex])
         }
 
+        if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
+            ref = ref.orderBy("budget","desc");
+            ref= ref.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
+        }
+
+       
+        if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+           
+            ref = ref.orderBy("proposals","desc")
+            ref= ref.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
+        }
+
+        if(this.state.country !== ""){
+            ref= ref.where("country","==",this.state.country)
+        }
+        if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+
         ref = ref.orderBy("created","desc")
+        }
         
         
         ref.get()
         .then(snapshot => {
+         
+            if(snapshot.empty){
+                if(this._mounted){
+                  
+                    this.setState({
+                        projects:[],
+                        size:null
+                    })
+                }
+            }
             let currentIds = ids !== undefined?ids:[];
             let currentSize = 0;
 
@@ -475,12 +511,14 @@ export default class Home extends React.Component {
             let size = sizeAcum !== undefined?sizeAcum + currentSize:currentSize;
             let lastSeem = {}
             let newDictionary = []
-            if(page){
+            if(page !== undefined){
             
             if(arr.length > 0){
-            lastSeem = snapshot.docs[((Math.ceil(limit/arr.length))*(page))-1];
+            lastSeem = snapshot.docs[((Math.ceil(limit/arr.length))*(page))-(page === 0?0:1)];
+       
              } else {
-                lastSeem = snapshot.docs[(limit*(page))-1];
+                lastSeem = snapshot.docs[(limit*(page))-(page === 0?0:1)];
+               
             }
             
              newDictionary = dictionary !== undefined?dictionary:[];
@@ -494,7 +532,25 @@ export default class Home extends React.Component {
             ref= ref.where("skills","array-contains",arr[newIndex])
             }
 
+            if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
+                ref = ref.orderBy("budget","desc");
+                ref= ref.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
+            }
+
+            if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+            
+                ref = ref.orderBy("proposals","desc")
+                ref= ref.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
+            }
+    
+            if(this.state.country !== ""){
+                ref= ref.where("country","==",this.state.country)
+            }
+
+            if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+
             ref = ref.orderBy("created","desc")
+            }
 
             let currentLimit = 0;
             
@@ -518,13 +574,23 @@ export default class Home extends React.Component {
                     
             }
 
-            if(page){
+            if(page !== undefined){
             ref = ref.startAfter(lastSeem).limit(currentLimit);
             }else {
                 ref = ref.limit(currentLimit); 
             }
             ref.get()
             .then(snapshot2 => {
+           
+                if(snapshot2.empty){
+                    if(this._mounted){
+                
+                        this.setState({
+                            projects:[],
+                            size:null
+                        })
+                    }
+                }
                 let newProjects = projects?projects:[];
                 let checkSize = 0;
                 let deficit = 0;
@@ -544,7 +610,7 @@ export default class Home extends React.Component {
                     if(this._mounted){
                     this.setState({
                         projects:newProjects,
-                        size:size,
+                        size:size === 0?null:size,
                         searchBar:false
                     })
                 }
@@ -565,23 +631,66 @@ export default class Home extends React.Component {
         })
         let ref = firebase.firestore().collection("projects")
         
+        if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10) && !(this.state.proposals[0] > 0 || this.state.proposals[1] < 100)){
         for(let i= 0; i < arr.length; i ++){
             if(arr.length > 0){
             ref = ref.where(`${field}.${arr[i]}`,"==",true)
             }
         }
+    }
+
+        if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
+            ref = ref.orderBy("budget","desc")
+            ref= ref.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
+      
+        }
+
+        if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+            ref = ref.orderBy("proposals","desc")
+            ref= ref.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
+        }
+
+        if(this.state.country !== ""){
+            ref= ref.where("country","==",this.state.country)
+          
+        }
 
         ref.get()
         .then(snapshot => {
-            let lastSeem = snapshot.docs[(this.state.pageSize.value)*(page) -1]
+            if(snapshot.empty){
+                this.setState({
+                    projects:[],
+                    size:null
+                })
+            }
+            let lastSeem = snapshot.docs[(this.state.pageSize.value)*(page) -(page === 0?0:1)]
             let ref2 = firebase.firestore().collection("projects")
             //ref2 = ref2.orderBy("created","desc")
+            if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10) && !(this.state.proposals[0] > 0 || this.state.proposals[1] < 100)){
             for(let i= 0; i < arr.length; i ++){
                 if(arr.length > 0){
                 ref2 = ref2.where(`${field}.${arr[i]}`,"==",true)
                 }
             }
-            if(page){
+        }
+
+            if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
+                ref2 = ref2.orderBy("budget","desc")
+                ref2= ref2.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
+             
+                
+            }
+
+            if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+                ref2 = ref2.orderBy("proposals","desc")
+                ref2= ref2.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
+            }
+    
+            if(this.state.country !== ""){
+                ref2= ref2.where("country","==",this.state.country)
+              
+            }
+            if(page !== undefined){
             ref2 = ref2.startAfter(lastSeem).limit(limit).get()
             }else{
                 ref2 = ref2.limit(limit).get()
@@ -593,16 +702,21 @@ export default class Home extends React.Component {
             if(!(size > 0)){
                 size = null
             }
-            
+           
             snapshot2.forEach(doc => {
+             
                 projects.push(doc.data())
             })
+
+            if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
 
             projects.sort(function(a, b) {
                 var dateA = new Date(a.created.toDate()), dateB = new Date(b.created.toDate());
                 return dateA - dateB;
             });
+        
             projects.reverse();
+        }
             this.setState({
                 projects:projects,
                 size:size,
@@ -838,29 +952,51 @@ export default class Home extends React.Component {
                                 </div>
                               </div>
                               <div  className="form-group mb-4">
-                                  <div className="text-center mb-3">Budget</div>
+                                  <div className="text-center mb-3">Budget <span>($US Dollars)</span></div>
                                   <div className="input-group mb-3 input-group-sm">
                                     <div className="input-group-prepend">
                                        <span className="input-group-text">From</span>
                                    </div>
-                                   <input type="text" className="form-control"/>
+                                   <input type="text" className="form-control" value={this.state.budget[0]} onChange={async(e) => {e.persist();await this.setState(state => {
+                                       if(this._mounted){
+                                       
+                                       return {
+                                       budget:[e.target.value,state.budget[1]],
+                                       }
+                                    
+                                    }
+                                   }); this.triggerSearch()}}/>
                                   </div>
 
                                   <div className="input-group mb-3 input-group-sm">
                                     <div className="input-group-prepend">
                                        <span className="input-group-text">To  </span>
                                    </div>
-                                   <input type="text" className="form-control"/>
+                                   <input type="text" className="form-control" value={this.state.budget[1]} onChange={async(e) => {e.persist();await this.setState(state => {
+                                       if(this._mounted){
+                                       
+                                       return {
+                                       budget:[state.budget[0], e.target.value]
+                                       }
+                                    
+                                    }
+                                   }); this.triggerSearch()}}/>
                                   </div>
                               </div>
                               <div className="form-group mb-4">
                                   <div className="text-center mb-3">Country</div>
-                                  <SelectCountry  />
+                                  <SelectCountry value={this.state.country} onChange={async(e) => { await this.setState({
+                                      country: e.target.options[e.target.selectedIndex].value
+                                  }); this.triggerSearch()}} />
                             </div>
 
                             <div className="form-group mb-4">
                                 <div className="text-center mb-3">Number of Proposals</div>
-                                <RangeSlider min={10} max={100} labelStepSize={10} stepSize={5} value={[20,60]}/>
+                                <RangeSlider min={0} max={100} labelStepSize={10} stepSize={1} onChange={async(e) => {
+                                  await  this.setState({
+                                        proposals:e
+                                    }); this.triggerSearch();
+                                }} value={this.state.proposals}/>
                             </div>
                         </div>
                         <div className="col-sm-6" id="top">
@@ -934,7 +1070,7 @@ export default class Home extends React.Component {
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
-                           {this.state.size === null?null:<ul className="pagination text-center mt-2">
+                           {this.state.projects.length === 0?null:<ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
                              {
                                  (() => {
@@ -945,7 +1081,7 @@ export default class Home extends React.Component {
                                      return pages
                                  })().map((data, i) => {
                                      if(this.state.searchBar === false){
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i):this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value, i) }} href="#">{i}</a></li>
                                      }else {
                                         return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specificSearch(this.state.queryString,i)}} href="#">{i}</a></li>
                                      }

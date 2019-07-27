@@ -13,9 +13,6 @@ import CVContainer from "./CVContainer";
 import ProposalsViewer from "../proposalViewer";
 import DrawerJob from "../drawerJob";
 
-const algoliasearch = require('algoliasearch');
-const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
-const indexAlgolia = client.initIndex('CVs');
 
 
 
@@ -196,6 +193,38 @@ export default class SearchStaff extends React.Component {
         })
     }
 
+    fetchCVs = (limit,page) => {
+        this.specific = false;
+        firebase.firestore().collection("CVs").get()
+          .then(snap => {
+              let size = snap.size;
+              let lastSeem;
+              let ref = firebase.firestore().collection("CVs");
+              lastSeem = snap.docs[(limit*(page))-(page === 0?0:1)];
+
+              if(page){
+                  ref = ref.startAfter(lastSeem).limit(limit)
+              }else {
+                  ref = ref.limit(limit)
+              }
+              
+              ref.get()
+              .then((snap2) => {
+                  let arr = [];
+
+                  snap2.forEach(doc => {
+                      arr.push(doc.data());
+                  })
+                if(this._mounted){
+                    this.setState({
+                        CVs:arr,
+                        size:size
+                    })
+                  }
+              })
+          })
+    }
+
     componentWillUnmount(){
         this._mounted = false;
 
@@ -228,7 +257,7 @@ export default class SearchStaff extends React.Component {
             
             });
 
-        
+    
           });
 
         this._mounted = true;
@@ -245,20 +274,8 @@ export default class SearchStaff extends React.Component {
             }
           });
 
-          firebase.firestore().collection("CVs").get()
-          .then(snap => {
-              let arr =[]
-
-              snap.forEach(doc => {
-                  arr.push(doc.data());
-              })
-
-              if(this._mounted){
-              this.setState({
-                  CVs:arr
-              })
-            }
-          })
+          this.fetchCVs(this.state.pageSize.value,0);
+    
     }
 
     markAsRead = async() =>{
@@ -286,17 +303,31 @@ export default class SearchStaff extends React.Component {
 
 
     specificSearch = (string, page) => {
-        indexAlgolia.search({query:string,
-            hitsPerPage:this.state.pageSize.value,
-            page:page !== undefined?page:0 }, (err, {hits,nbHits} = {}) => {
-
+        this.specific = true;
+        let ref = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase()).get()
+        .then(snap => {
+            let size = snap.size;
+            let lastSeem;
+            lastSeem = snap.docs[(this.state.pageSize.value*(page))-(page === 0?0:1)]; 
+            let ref2 = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase())
+            if(page){
+                ref2 = ref2.startAfter(lastSeem).limit(this.state.pageSize.value);
+            }else {
+                ref2 =ref2.limit(this.state.pageSize.value);
+            }
+            ref2.get()
+            .then(snap2 => {
+                let arr = []
+                snap2.forEach(doc => {
+                    arr.push(doc.data())
+                })
                 if(this._mounted){
-            this.setState( {
-                CVs:hits,
-                searchBar:true,
-                size:nbHits
+                    this.setState({
+                        CVs:arr,
+                        size:size
+                    })
+                }
             })
-        }
         })
     }
 
@@ -463,7 +494,7 @@ export default class SearchStaff extends React.Component {
                                      return pages
                                  })().map((data, i) => {
                                      
-                                        return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specificSearch(this.state.queryString,i)}} href="#">{i}</a></li>
+                                        return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i)}} href="#">{i}</a></li>
                                      
                                  })                                                                  }
                              <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>

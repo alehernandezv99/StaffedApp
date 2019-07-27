@@ -140,22 +140,39 @@ export default class MyProjects extends React.Component {
     }
 
     specificQuery = (string) => {
-        alert("Triggered");
-        alert(string)
+
         let projects = this.state.projects;
         let newProjects = [];
 
+        if(string !== ""){
         for(let i = 0; i<projects.length; i++){
+        
         if(projects[i].title.toLowerCase().includes(string.toLowerCase())){
             newProjects.push(projects[i])
         }
 
-        if(this._mounted){
+        
+    }
+
+    if(newProjects.length > 0){
+    if(this._mounted){
         this.setState({
             projects:newProjects
         })
     }
+}else {
+    if(this._mounted){
+        this.setState({
+            projects:[],
+            size:null
+        })
     }
+}
+}else {
+    this.state.currentFilter();
+}
+    
+    
     }
 
     handleInboxEvent = (action) =>{
@@ -198,7 +215,13 @@ export default class MyProjects extends React.Component {
         }
         ref.get()
         .then(snapshot => {
-          
+
+            if(snapshot.empty){
+                this.setState({
+                    projects:[],
+                    size:null
+                })
+            }
             let ref2 = firebase.firestore().collection("projects");
             let lastSeem = snapshot.docs[(this.state.pageSize.value)*(page) -1]
 
@@ -554,7 +577,7 @@ export default class MyProjects extends React.Component {
                     
                     <div className="col-sm-4">
                     <div className="input-group mb-3 mt-3 mx-auto px-3">
-                          <input type="text" className="form-control" placeholder="Search" onChange={(e) => {this.setState({queryString:e.target.value})}}/>
+                          <input type="text" className="form-control" placeholder="Search" onChange={async(e) => {await this.setState({queryString:e.target.value}); this.specificQuery(this.state.queryString)}}/>
                             <div className="input-group-append">
                             <button className="btn btn-custom-1" type="button" onClick={() => {this.specificQuery(this.state.queryString)}}>Search</button> 
                          </div>
@@ -655,7 +678,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
@@ -731,7 +754,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
@@ -806,7 +829,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
                             
 
                             {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -882,7 +905,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
@@ -960,7 +983,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
@@ -1036,7 +1059,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.setState({idProject:project.id ,isOpenDrawerJob:true})}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
 
 {this.state.size === null?null:<ul className="pagination text-center mt-2">
                              <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
