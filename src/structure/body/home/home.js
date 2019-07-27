@@ -37,7 +37,9 @@ export default class Home extends React.Component {
             queryString:"",
             searchBar:false,
             size:null,
-
+            budget:[10,50000],
+            country:"",
+            proposals:0,
             pageSize:{
                 min:6,
                 max:12,
@@ -837,7 +839,19 @@ export default class Home extends React.Component {
                               </div>
                               <div  className="form-group mb-4">
                                   <div className="text-center mb-3">Budget</div>
-                                  <RangeSlider min={10} max={500} labelStepSize={49} stepSize={10} value={[20,60]}/>
+                                  <div className="input-group mb-3 input-group-sm">
+                                    <div className="input-group-prepend">
+                                       <span className="input-group-text">From</span>
+                                   </div>
+                                   <input type="text" className="form-control"/>
+                                  </div>
+
+                                  <div className="input-group mb-3 input-group-sm">
+                                    <div className="input-group-prepend">
+                                       <span className="input-group-text">To  </span>
+                                   </div>
+                                   <input type="text" className="form-control"/>
+                                  </div>
                               </div>
                               <div className="form-group mb-4">
                                   <div className="text-center mb-3">Country</div>
