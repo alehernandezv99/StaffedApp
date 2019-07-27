@@ -276,10 +276,15 @@ componentWillUnmount(){
       let formB = this.state.formB;
 
       let skills = formA.skills["value"];
-    
+
+      let skillsExclusive = {}
+      for(let i =0; i < skills.length; i++){
+        skillsExclusive[skills[i]]  =  true;
+      }
       
       let data = {
         title:formA.title["value"],
+        skillsExclusive:skillsExclusive,
         keywords:KeywordsGeneration.generateKeywords(formA.title["value"]).concat([""]),
         description:formA.description["value"],
         skills:skills,

@@ -4,7 +4,7 @@ import JobModule from "./jobModule";
 import firebase from "../../../firebaseSetUp";
 import HomeLoading from "../../loading/homeLoading";
 import LoadingSpinner from "../../loading/loadingSpinner";
-import { Button, Position, Toast, Toaster, Classes, Slider, Drawer} from "@blueprintjs/core";
+import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, RangeSlider} from "@blueprintjs/core";
 import CreateProject from "../createProject";
 import $ from "jquery";
 import autocomplete from "../../../utils/autocomplete";
@@ -12,7 +12,12 @@ import checkCriteria from "../../../utils/checkCriteria";
 import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
+import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
 import "./home.css";
+
+//Filter By skills icon
+import icon1 from "../../../res/Graphics/search_icon_exclusive.png";
+import icon2 from "../../../res/Graphics/search_icon_inclusive.png";
 
 export default class Home extends React.Component {
     constructor(props){
@@ -32,6 +37,7 @@ export default class Home extends React.Component {
             queryString:"",
             searchBar:false,
             size:null,
+
             pageSize:{
                 min:6,
                 max:12,
@@ -44,6 +50,7 @@ export default class Home extends React.Component {
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
+                exclusive:false,
             },
             drawerJob:{
                 projectID:"",
@@ -228,8 +235,11 @@ export default class Home extends React.Component {
           }
         })
 
-        this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
-
+        if(this.state.skills.exclusive === false){
+            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+            }else {
+                this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+            }
       }
 
    async addSkill(skill){
@@ -253,7 +263,11 @@ export default class Home extends React.Component {
           }
         })
 
+        if(this.state.skills.exclusive === false){
         this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+        }else {
+            this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+        }
       }else {
         this.addToast("You cannot select two repeated skills")
       }
@@ -542,6 +556,11 @@ export default class Home extends React.Component {
     }
 
    reloadProjects(limit,field, arr, page){
+      
+        this.setState({
+           projects:[]
+    
+        })
         let ref = firebase.firestore().collection("projects")
         
         for(let i= 0; i < arr.length; i ++){
@@ -623,7 +642,11 @@ export default class Home extends React.Component {
                 let skillsUser = doc.data().skills;
                 skills.skillsSelected.value = skillsUser;
                 let objOfSkills = {};
+                if(state.skills.exclusive === false){
                 this.reloadProjectsFixed(this.state.pageSize.value,"skills", skillsUser); 
+                }else {
+                    this.reloadProjects(this.state.pageSize.value,"skillsExclusive", skillsUser); 
+                }
                 return {
                 user:[doc.data()],
                 skills:skills,
@@ -763,15 +786,38 @@ export default class Home extends React.Component {
 
                         <div className="col">
                             <div className="form-group">
-                                <label>Page Size</label>
+                                <div className="text-center mb-3">Page Size</div>
+                              
                                 <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
                                     let pageSize = state.pageSize;
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});
-                                }); this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);}}  />
+
+                                });this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)}}  />
+        
                             </div>
-                            <div className="form-group">
-                                  <label>Filter By Skills</label>
+                            <h4 className="text-center mb-3">Filters</h4>
+                            <div className="form-group mb-4">
+                            <div className="text-center mb-3">Skills</div>
+                            <div className="custom-control custom-switch" onClick={(e) => {
+                                 if(this._mounted){
+                                     this.setState(state => {
+                                         let base = state.skills;
+                                         base.exclusive = !base.exclusive; 
+                                         if(base.exclusive === false){
+                                            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+                                            }else {
+                                                this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                                            }
+                                         return {
+                                             skills:base
+                                         }
+                                     })
+                                 }
+                             }}>
+                             <input type="checkbox" className="custom-control-input" checked={this.state.skills.exclusive} onChange={()=>{}} />
+                             <label className="custom-control-label">Exclusive?</label>
+                           </div>
                                 <div>
                                 {this.state.skills.skillsSelected.value.map((skill, index) => {
                                   return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
@@ -789,6 +835,19 @@ export default class Home extends React.Component {
 
                                 </div>
                               </div>
+                              <div  className="form-group mb-4">
+                                  <div className="text-center mb-3">Budget</div>
+                                  <RangeSlider min={10} max={500} labelStepSize={49} stepSize={10} value={[20,60]}/>
+                              </div>
+                              <div className="form-group mb-4">
+                                  <div className="text-center mb-3">Country</div>
+                                  <SelectCountry  />
+                            </div>
+
+                            <div className="form-group mb-4">
+                                <div className="text-center mb-3">Number of Proposals</div>
+                                <RangeSlider min={10} max={100} labelStepSize={10} stepSize={5} value={[20,60]}/>
+                            </div>
                         </div>
                         <div className="col-sm-6" id="top">
                         <div className="input-group mb-3 mt-3 mx-auto">
