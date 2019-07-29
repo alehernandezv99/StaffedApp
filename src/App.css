@@ -67,5 +67,13 @@
     background-color: DodgerBlue !important; 
     color: #ffffff; 
   }
+  h6 {
+    font-weight: normal !important;
+  }
+
+  .btn-custom-3 {
+    background-color:rgb(221, 194, 43) !important;
+    color:white !important;
+  }
 
 

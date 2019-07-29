@@ -56,7 +56,7 @@ export default class Braintree extends React.Component {
               } }}
 						onInstance={instance => (this.instance = instance)}
 					/>
-					<button onClick={this.buy.bind(this)}>Buy</button>
+					<button onClick={this.buy.bind(this)} className="btn btn-warning btn-lg mx-3">Pay Freelancer</button>
 				</div>
 			);
 		}

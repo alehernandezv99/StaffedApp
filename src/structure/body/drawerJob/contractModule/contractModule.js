@@ -2,7 +2,6 @@ import React from "react";
 import "./contractModule.css";
 import firebase from "../../../../firebaseSetUp";
 import UserBox from "../../profile/userBox";
-import Braintree from "../../../../utils/braintree";
 
 
 
@@ -51,7 +50,16 @@ export default class ContractModule extends React.Component {
                             <h6>{this.props.deadline.toDate().toDateString()}</h6>
                         </div>
                     </div>
-                    <Braintree/>
+                    {this.props.status === "in process"?
+                     <form action={`https://staffed-app.herokuapp.com/pay`} target="_blank" className="m-3" method="POST" >
+                         <input type="text" disabled={true} name="freelancer" value={this.props.freelancer} style={{display:"none"}}/>
+                         <input type="text" disabled={true} name="client" value={this.props.client} style={{display:"none"}} />
+                         <input type="text" disabled={true} name="projectID" value={this.props.projectID} style={{display:"none"}} />
+                         <input type="text" disabled={true} name="projectName" value={this.props.title} style={{display:"none"}} />
+                         <input type="text" disabled={true} name="price" value={this.props.price} style={{display:"none"}} />
+                         <input type="submit" className="btn btn-custom-3" value="Pay Freelancer" />
+                     </form>
+                    :<div>Payment Completed</div>}
                     <div className="card-footer">
                         <button type="button" className="btn btn-custom-1 mt-3" onClick={this.props.openProposal}>View Proposal</button>
                     </div>

@@ -198,8 +198,19 @@ export default class DrawerJob extends React.Component {
                 .then(project => {
                 if(project.data().status === "hiring"){
                 batch.update(firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal), {status:"accepted"})
-                batch.update(firebase.firestore().collection("projects").doc(idProject), {status:"In Development"})
-           
+                batch.update(firebase.firestore().collection("projects").doc(idProject), {status:"In Development", contract:{
+                    involved:[doc.data().user,firebase.auth().currentUser.uid ],
+                    client:firebase.auth().currentUser.uid,
+                    freelancer:doc.data().user,
+                    price:doc.data().price,
+                    deadline:doc.data().deadline,
+                    created:firebase.firestore.Timestamp.now(),
+                    presentation:doc.data().presentation,
+                    description:project.data().description,
+                    status:"in process"
+                }})
+            
+                
                 batch.commit()
                 .then(async () => {
                     this.addToast("Proposal Accepted");
@@ -444,14 +455,16 @@ export default class DrawerJob extends React.Component {
                     if(document.data().status =="accepted"){
                         isOwner = true;
                         contract = {
-                            client:project[0].author,
-                            freelancer:document.data().user,
-                            description:project[0].description,
-                            price:document.data().price,
-                            deadline:document.data().deadline,
-                            start:document.data().updated,
+                            client:project[0].contract.client,
+                            freelancer:project[0].contract.freelancer,
+                            description:project[0].contract.description,
+                            price:project[0].contract.price,
+                            deadline:project[0].contract.deadline,
+                            start:project[0].contract.created,
                             idProposal:document.data().id,
-                            idProject:project[0].id
+                            idProject:project[0].id,
+                            status:project[0].contract.status,
+                            title:project[0].title
                         }
                         
                     }
@@ -534,14 +547,16 @@ export default class DrawerJob extends React.Component {
                         proposals.push(proposal.data());
                         if(proposals[index].status === "accepted"){
                             contract = {
-                                client:project[0].author,
-                                freelancer:proposals[index].user,
-                                description:project[0].description,
-                                price:proposals[index].price,
-                                deadline:proposals[index].deadline,
-                                start:proposals[index].updated,
-                                idProposal:proposals[index].id,
-                                idProject:project[0].id
+                                client:project[0].contract.client,
+                                freelancer:project[0].contract.freelancer,
+                                description:project[0].contract.description,
+                                price:project[0].contract.price,
+                                deadline:project[0].contract.deadline,
+                                start:project[0].contract.created,
+                                idProposal:proposal.data().id,
+                                idProject:project[0].id,
+                                status:project[0].contract.status,
+                                title:project[0].title
                             }
                         }
                         index++
@@ -865,7 +880,7 @@ export default class DrawerJob extends React.Component {
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                       {this.state.contract !== ""?
-                     <ContractModule freelancer={this.state.contract.freelancer} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
+                     <ContractModule freelancer={this.state.contract.freelancer} title={this.state.contract.title} projectID={this.state.contract.idProject} status={this.state.contract.status} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
                     <div className="container-fluid">
                         {this.state.proposals.length > 0?this.state.proposals.map((proposal,i) => {
                         return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
