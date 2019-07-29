@@ -2,6 +2,9 @@ import React from "react";
 import "./contractModule.css";
 import firebase from "../../../../firebaseSetUp";
 import UserBox from "../../profile/userBox";
+import Braintree from "../../../../utils/braintree";
+
+
 
 export default class ContractModule extends React.Component {
     constructor(props){
@@ -17,8 +20,7 @@ export default class ContractModule extends React.Component {
 
     componentDidMount(){
         this._mounted = true;
-  
-
+       // paypal.Buttons().render('#paypal-button-container');
     }
 
     render(){
@@ -49,6 +51,7 @@ export default class ContractModule extends React.Component {
                             <h6>{this.props.deadline.toDate().toDateString()}</h6>
                         </div>
                     </div>
+                    <Braintree/>
                     <div className="card-footer">
                         <button type="button" className="btn btn-custom-1 mt-3" onClick={this.props.openProposal}>View Proposal</button>
                     </div>

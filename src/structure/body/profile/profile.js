@@ -461,19 +461,12 @@ export default class Profile extends React.Component {
                         },
                         
                         {
-                            type:"dropdown",
+                            type:"link",
                             text:"Payments",
                             href:"",
+                            state:"",
                             icon:"payment",
-                            onClick:() => {},
-                            dropdownItems:[
-                                {
-                                    href:"#",
-                                    key:1,
-                                    onClick:() => {},
-                                    text:"test"
-                                }
-                            ],
+                            onClick:() => {this.props.handleStates(5)},
                             key:4
                         }
                     ]

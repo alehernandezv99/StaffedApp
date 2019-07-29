@@ -1,5 +1,5 @@
 
-module.exports =  class KeywordGeneration {
+export default class KeywordGeneration {
     static createKeywords(name){
         const arrName= [];
         let curName= "";

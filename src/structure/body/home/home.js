@@ -13,11 +13,10 @@ import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
 import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
+
 import "./home.css";
 
-//Filter By skills icon
-import icon1 from "../../../res/Graphics/search_icon_exclusive.png";
-import icon2 from "../../../res/Graphics/search_icon_inclusive.png";
+
 
 export default class Home extends React.Component {
     constructor(props){
@@ -452,6 +451,8 @@ export default class Home extends React.Component {
     }
 
     reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit) => {
+      
+
         if(acumDeficit === undefined){
              this.setState({
                 projects:[]
@@ -813,19 +814,11 @@ export default class Home extends React.Component {
                         },
                         
                         {
-                            type:"dropdown",
+                            type:"link",
                             text:"Payments",
                             href:"",
                             icon:"payment",
-                            onClick:() => {},
-                            dropdownItems:[
-                                {
-                                    href:"#",
-                                    key:1,
-                                    onClick:() => {},
-                                    text:"test"
-                                }
-                            ],
+                            onClick:() => {this.props.handleStates(5)},
                             key:4
                         }
                     ]

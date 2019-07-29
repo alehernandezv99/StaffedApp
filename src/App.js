@@ -17,6 +17,7 @@ const Home = lazy(() => import("./structure/body/home"));
 const MyProjects = lazy(() => import("./structure/body/myProjects"));
 const Profile = lazy(() => import("./structure/body/profile"));
 const SearchStaff = lazy(() => import("./structure/body/searchStaff"));
+const Payments = lazy(() => import("./structure/body/payments"));
 
 class App extends React.Component {
   constructor(props){
@@ -24,7 +25,7 @@ class App extends React.Component {
     this.handleStates = this.handleStates.bind(this);
 
     this.state = {
-      currentPage:[true,false,false,false,false]
+      currentPage:[true,false,false,false,false,false]
     }
   }
 
@@ -76,6 +77,7 @@ class App extends React.Component {
         {this.state.currentPage[2] === true?<MyProjects handleStates={this.handleStates} />:null}
         {(this.state.currentPage[3].data?this.state.currentPage[3].state:this.state.currentPage[3]) === true?<Profile handleStates={this.handleStates} userId={this.state.currentPage[3].data}/>:null}
         {this.state.currentPage[4] === true?<SearchStaff handleStates={this.handleStates}/>:null}
+        {this.state.currentPage[5] === true?<Payments handleStates={this.handleStates} />:null}
       </Suspense>
       <Footer />
     </div>

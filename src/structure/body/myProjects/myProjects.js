@@ -486,19 +486,12 @@ export default class MyProjects extends React.Component {
                             key:3
                         },
                         {
-                            type:"dropdown",
+                            type:"link",
                             text:"Payments",
                             href:"",
                             state:"",
                             icon:"payment",
-                            dropdownItems:[
-                                {
-                                    href:"#",
-                                    key:1,
-                                    text:"test",
-                                    state:"",
-                                }
-                            ],
+                            onClick:() => {this.props.handleStates(5)},
                             key:4
                         }
                     ]
