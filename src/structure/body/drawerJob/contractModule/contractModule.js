@@ -9,7 +9,8 @@ export default class ContractModule extends React.Component {
     constructor(props){
         super(props);
         this.state ={
-            freelancer:"",
+            status:"",
+            owner:false
         }
     }
 
@@ -19,7 +20,32 @@ export default class ContractModule extends React.Component {
 
     componentDidMount(){
         this._mounted = true;
-       // paypal.Buttons().render('#paypal-button-container');
+
+      firebase.firestore().collection("projects").doc(this.props.projectID).onSnapshot(project => {
+       firebase.firestore().collection("transactions").where("projectID","==",this.props.projectID).get()
+       .then(snapshot => {
+           let amount = 0
+           snapshot.forEach(doc => {
+               console.log(doc.data());
+                amount += Number(doc.data().transactions[0].amount.total)
+           })
+
+           if(amount === Number(this.props.price)){
+               this.setState({
+                   status:"billed",
+               })
+           }
+       })
+    })
+
+       firebase.firestore().collection("users").doc(this.props.client).get()
+       .then((doc) => {
+           if(doc.data().uid === firebase.auth().currentUser.uid){
+               this.setState({
+                   owner:true
+               })
+           }
+       })
     }
 
     render(){
@@ -50,16 +76,17 @@ export default class ContractModule extends React.Component {
                             <h6>{this.props.deadline.toDate().toDateString()}</h6>
                         </div>
                     </div>
-                    {this.props.status === "in process"?
+                    {this.props.status === "in process" && this.state.status === "" && this.state.owner === true?
                      <form action={`https://staffed-app.herokuapp.com/pay`} target="_blank" className="m-3" method="POST" >
-                         <input type="text" disabled={true} name="freelancer" value={this.props.freelancer} style={{display:"none"}}/>
-                         <input type="text" disabled={true} name="client" value={this.props.client} style={{display:"none"}} />
-                         <input type="text" disabled={true} name="projectID" value={this.props.projectID} style={{display:"none"}} />
-                         <input type="text" disabled={true} name="projectName" value={this.props.title} style={{display:"none"}} />
-                         <input type="text" disabled={true} name="price" value={this.props.price} style={{display:"none"}} />
+                         <input type="text" name="freelancer" value={this.props.freelancer} style={{display:"none"}}/>
+                         <input type="text" name="client" value={this.props.client} style={{display:"none"}} />
+                         <input type="text"  name="projectID" value={this.props.projectID} style={{display:"none"}} />
+                         <input type="text"  name="projectName" value={this.props.title} style={{display:"none"}} />
+                         <input type="text" name="price" value={this.props.price} style={{display:"none"}} />
                          <input type="submit" className="btn btn-custom-3" value="Pay Freelancer" />
                      </form>
-                    :<div>Payment Completed</div>}
+                    :null}
+                    {this.state.status === "billed"?<div className="m-3"><i className="material-icons align-middle">done</i> <span>Payment Complete</span></div>:null}
                     <div className="card-footer">
                         <button type="button" className="btn btn-custom-1 mt-3" onClick={this.props.openProposal}>View Proposal</button>
                     </div>

@@ -18,6 +18,7 @@ export default class Payments extends React.Component {
             paypalAccount:"",
             transactions:[],
             isLoading:false,
+            balance:null,
             pageSize:{
                 min:6,
                 max:12,
@@ -88,7 +89,15 @@ export default class Payments extends React.Component {
                   this.addToast("Please Verify Your Email")
               }
                 this.fetchUser(user.uid)
-
+                fetch(`https://staffed-app.herokuapp.com/balance?id=${user.uid}`)
+                .then(res => {
+                    return res.json()
+                })
+                .then(result => {
+                    this.setState({
+                        balance:Number(result.balance) + "$"
+                    })
+                })
 
               
               // ...
@@ -208,13 +217,23 @@ export default class Payments extends React.Component {
                 />
                 {this.state.user === null?<PaymentsLoading />:
                 <div className="container-fluid p-5">
+                    <div className="portalContainer">
+
+                    </div>
                     <div className="row">
                         <div className="col-sm-4">
                             <UserBox size={"80px"} handleStates={this.props.handleStates} id={this.state.user[0].uid} />
                         </div>
                         <div className="col text-center">
+                        <div className="card text-center my-3 mx-4">
+                                    <div className="card-body">
+                                        <h4>BALANCE:</h4>
+                                        <h5>{this.state.balance?this.state.balance:"Loading..."}</h5>
+                                    </div>
+                                </div>
                             {this.state.user[0].paypalAccount === undefined?
                             <div>
+                                
                             <h4>Please Link Your Paypal Account</h4>
                             <div className="form-group px-5">
                                 <label>Email</label>
@@ -227,6 +246,7 @@ export default class Payments extends React.Component {
                             :<div>
                                 <h4>Paypal Account</h4>
                                 <input type="email" className="form-control" value={this.state.user[0].paypalAccount} disabled={true}/> 
+                                <button className="btn btn-custom-1 m-3"><i className="material-icons align-middle">archive</i> <span>Withdraw Funds</span></button>
                             </div>}
                         </div>
                     </div>
