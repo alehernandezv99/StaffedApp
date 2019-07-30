@@ -104,7 +104,7 @@ export default class DrawerJob extends React.Component {
     sendMessage(message, userId, action){
         let data = {
             message:message,
-            action:action,
+            action:action?action:null,
             sent:firebase.firestore.Timestamp.now(),
             state:"unread",
             id:firebase.firestore().collection("users").doc(userId).collection("inbox").doc().id
@@ -582,7 +582,11 @@ export default class DrawerJob extends React.Component {
 
     componentDidMount(){
         this._mounted = true;
-       this.fetchProjectProps();
+
+        firebase.firestore().collection("projects").doc(this.props.id).onSnapshot(snapshot => {
+            this.fetchProjectProps();
+        })
+       
     }
 
      setValue = async (obj, prop, value,index,cb, objA, propA, coeficent)=> {

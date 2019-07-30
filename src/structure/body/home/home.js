@@ -847,7 +847,7 @@ export default class Home extends React.Component {
                                 }
                             },
                             dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.map((element,i) => {
-                               return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{this.handleInboxEvent(element.action)}}
+                               return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{element.action?this.handleInboxEvent(element.action):(()=>{})()}}
                                  }):[{
                                 href:"",
                                 text:"No notifications",

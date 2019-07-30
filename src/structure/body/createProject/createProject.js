@@ -32,6 +32,7 @@ export default class CreateProject extends React.Component{
           skills:[],
           toasts: [ /* IToastProps[] */ ],
           isLoading:false,
+          back:false
         }
         
 
@@ -193,6 +194,9 @@ componentWillUnmount(){
     if(pass === 0){
       $(from).slideUp();
       $(to).slideDown();
+      this.setState({
+        back:true
+      })
       return {
         status:true,
         messages:messages
@@ -311,7 +315,7 @@ componentWillUnmount(){
 
         firebase.firestore().collection("projects").doc(data.id).set(data)
       .then(async () => {
-    
+        this.toggleLoading();
           console.log("Project Created");
           this.addToast("Project Created");
           this.props.handleClose();
@@ -450,7 +454,7 @@ componentWillUnmount(){
 
                             </div>
                             <div className="card-footer">
-                              <button type="button" className="btn btn-custom-1" onClick={() => {this.gotToNextPage(".cp-section-2",".cp-section-1")}}>Back</button>
+                              <button style={{display:this.state.back=== true?"inline":"none"}} type="button" className="btn btn-custom-1" onClick={() => {this.gotToNextPage(".cp-section-2",".cp-section-1"); this.setState({back:false})}}>Back</button>
                                 <button type="button" className="btn btn-danger ml-3" onClick={() => {this.props.handleClose()}}>Cancel</button>
                             </div>
                             
