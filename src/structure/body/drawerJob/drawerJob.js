@@ -9,6 +9,7 @@ import ProposalModule from "./proposalModule";
 import ContractModule from "./contractModule";
 import AbsoluteLoading from "../../loading/absoluteLoading";
 import UserBox from "../profile/userBox";
+import LoadingSpinner from "../../loading/loadingSpinner";
 
 import { DatePicker, TimePrecision } from "@blueprintjs/datetime";
 import { isDate } from "util";
@@ -38,6 +39,7 @@ export default class DrawerJob extends React.Component {
             proposals:[],
             isSaved:false,
             hasChanged:false,
+            isLoading2:false
         }
 
         this.performTransaction = this.performTransaction.bind(this);
@@ -54,8 +56,15 @@ export default class DrawerJob extends React.Component {
     }
     }
 
+    toggleLoading2 = () =>{
+        this.setState(state => ({
+            isLoading2:!state.isLoading2
+        }))
+    }
+
     performTransaction(collection, prop, value, type, messageSucess, messageFailure,cb){
         this.toggleLoading();
+        this.toggleLoading2();
         firebase.firestore().collection(collection).doc(`${this.props.id}`).get()
         .then(doc => {
             let data = doc.data()[prop];
@@ -85,13 +94,15 @@ export default class DrawerJob extends React.Component {
             })
             .then((result) => {
                 this.addToast(messageSucess);
+                this.toggleLoading2();
                 this.toggleLoading()
-                cb()
+               // cb()
             })
             .catch(e => {
                 this.addToast(messageFailure);
                 this.toggleLoading();
-                cb();
+                this.toggleLoading2()
+               // cb();
             })
         })
     }
@@ -185,7 +196,7 @@ export default class DrawerJob extends React.Component {
     }
 
     acceptProposal = (idProject, idProposal) => {
-
+        this.toggleLoading2()
         if(window.confirm("Sure you want to accept this proposal")){
         this.toggleLoading();
 
@@ -218,23 +229,26 @@ export default class DrawerJob extends React.Component {
                     
                         this.sendMessage(`The owner of the project "${this.state.project[0].title}" accepted you the proposal `,userId.data().user,{type:"view contract" ,id:idProject})
                         this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the proposal`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
-                    
+                    this.toggleLoading2()
                     this.toggleLoading();
                 })
                 .catch(e => {
                     this.addToast(e.message);
+                    this.toggleLoading2()
                     this.toggleLoading()
                 })
             }
             })
             }else {
                 this.addToast("Proposal does not exist");
+                this.toggleLoading2()
                 this.toggleLoading();
             }
             
         })
         .catch(e => {
             this.addToast(e.message);
+            this.toggleLoading2()
             this.toggleLoading();
         })
     }
@@ -319,7 +333,7 @@ export default class DrawerJob extends React.Component {
     }
 
     submitProposal(){
-
+        this.toggleLoading2();
         if(window.confirm("Sure you want to apply for this project?")){
         let objectProposals = this.state.proposal;
         let check = 0;
@@ -390,7 +404,7 @@ export default class DrawerJob extends React.Component {
                     authorId.forEach(user => {
                         this.sendMessage(`The user ${firebase.auth().currentUser.email} has made you a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.props.id, id2:data.id})
                     })
-                    
+                    this.toggleLoading2()
                     this.props.handleClose();
 
                    })
@@ -400,6 +414,7 @@ export default class DrawerJob extends React.Component {
         })
         .catch(e => {
             this.addToast(e.message)
+            this.toggleLoading2()
         })
    
 
@@ -644,10 +659,12 @@ export default class DrawerJob extends React.Component {
                 
                 {this.state.isLoading === true?<AbsoluteLoading />:null} 
             <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+            {this.state.isLoading2?<LoadingSpinner />:null}
                 {this.state.project.length ===0?<DrawerJobLoading />:
                 <div className={Classes.DRAWER_BODY}>
                 <div id="dj-section-1">
                 <div className={`row ${Classes.DIALOG_BODY}`}>
+                    
                     <div className="col-sm-8">
                         <div className="card">
                         <div className="text-center card-header">

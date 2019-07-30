@@ -5,6 +5,7 @@ import checkCriteria from "../../../../utils/checkCriteria";
 import firebase from "../../../../firebaseSetUp";
 import $ from "jquery";
 import autocomplete from "../../../../utils/autocomplete";
+import LoadingSpinner from "../../../loading/loadingSpinner"
 
 export default class SignUpDrawer extends React.Component {
     constructor(props){
@@ -33,8 +34,6 @@ export default class SignUpDrawer extends React.Component {
         })
       }
       }
-
-
 
 
     componentDidMount() {
@@ -94,9 +93,11 @@ export default class SignUpDrawer extends React.Component {
 
     render(){
         return(
+          
             <Drawer portalContainer={document.getElementById("portalContainer")} onClose={this.props.handleClose} title={""} isOpen={this.props.isOpen}>
             <div className={Classes.DRAWER_BODY}>
             <div className={`${Classes.DIALOG_BODY}`}>
+              {this.props.isLoading?<LoadingSpinner />:null}
             <div className="modal-content">
                             <div className="modal-header">
                                 <h4 className="modal-title text-center">Sign Up</h4>

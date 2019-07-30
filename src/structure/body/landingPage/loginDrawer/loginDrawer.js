@@ -1,6 +1,7 @@
 import React from "react";
 import "./loginDrawer.css";
 import { Button, Position, Classes, Slider, Drawer, DateInput} from "@blueprintjs/core";
+import LoadingSpinner from "../../../loading/loadingSpinner";
 
 export default class LoginDrawer extends React.Component {
     constructor(props){
@@ -34,6 +35,7 @@ export default class LoginDrawer extends React.Component {
             <Drawer portalContainer={document.getElementById("portalContainer")}  onClose={this.props.handleClose} title={""} isOpen={this.props.isOpen}>
                 <div className={Classes.DRAWER_BODY}>
                 <div className={`${Classes.DIALOG_BODY}`}>
+                    {this.props.isLoading?<LoadingSpinner/>:null}
                 <div className="card">
 
 <div className="card-header">

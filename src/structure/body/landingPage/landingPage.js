@@ -411,8 +411,8 @@ export default class LandingPage extends React.Component {
             </div>
 
             <div className="container-fluid" id="portalContainer">
-                <LoginDrawer handleAuth={this.handleAuth} isOpen={this.state.loginDrawer.isOpen} handleClose={this.state.loginDrawer.handleClose} openPanel={() => {this.state.loginDrawer.handleClose(); this.state.signUpDrawer.handleOpen()}}/>
-                <SignUpDrawer addToast={this.addToast} skills={this.state.skills} setStates={this.setStates} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
+                <LoginDrawer isLoading={this.state.isLoading} handleAuth={this.handleAuth} isOpen={this.state.loginDrawer.isOpen} handleClose={this.state.loginDrawer.handleClose} openPanel={() => {this.state.loginDrawer.handleClose(); this.state.signUpDrawer.handleOpen()}}/>
+                <SignUpDrawer isLoading={this.state.isLoading} addToast={this.addToast} skills={this.state.skills} setStates={this.setStates} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
 
             </div>
             </div>
