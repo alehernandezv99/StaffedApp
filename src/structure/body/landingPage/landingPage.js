@@ -110,8 +110,6 @@ export default class LandingPage extends React.Component {
         .then(() => {
             cb1();
             this.props.handleStates(1);
-            $(".modal-backdrop").hide();
-            window.document.body.style.overflowY = "visible";
         })
         .catch(e => {
             this.addToast(e.message);
@@ -127,13 +125,20 @@ export default class LandingPage extends React.Component {
         .then(doc => {
             if(!doc.exists){
                 if(this._mounted){
-                this.setData(collection, id, data, cb1, cb2)
+                firebase.auth().currentUser.sendEmailVerification()
+                .then(() => {
+                        this.setData(collection, id, data, cb1, cb2)
+                })
+                .catch(e => {
+                    this.addToast(e.message);
+                })
+                
                 }
             }else {
+               
                 cb1();
                 this.props.handleStates(1);
-                $(".modal-backdrop").hide();
-                window.document.body.style.overflowY = "visible";
+                
             }
         })
     }

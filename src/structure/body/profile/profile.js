@@ -31,6 +31,7 @@ export default class Profile extends React.Component {
                 expertise:[],
                 contact:[],
                 editable:false,
+                order:[1,2,3,4,5,6]
             },
             drawerJob:{
                 projectID:"",
@@ -330,6 +331,7 @@ export default class Profile extends React.Component {
                     skills:[],
                     expertise:[],
                     contact:[],
+                    order:[1,2,3,4,5,6]
                 }).then(() => {
                     firebase.firestore().collection("CVs").doc(id).get()
                     .then(data => {
@@ -587,23 +589,30 @@ export default class Profile extends React.Component {
                 </div>
                 <div className="container-fluid">
                     <div id="accordion">
-                    <div className="card mt-3">
-                        <div className="card-header">
-                           <a className="card-link" data-toggle="collapse" href="#experience"> Experience</a>
-                            </div>
-                      <div className="collapse show" data-parent="#accordion" id="experience">
-                       {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
-                           return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => {this.deleteContent("experience",i); }} title={element.title} text={element.text}/>
+                        {this.state.CV.order.map(element => {
+                            if(element === 1){
+                                return (
+                                    <div className="card mt-3" key={element}>
+                                    <div className="card-header">
+                                       <a className="card-link" data-toggle="collapse" href="#experience"> Experience</a>
+                                        </div>
+                                  <div className="collapse show" data-parent="#accordion" id="experience">
+                                   {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
+                                       return (
+                                           <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => {this.deleteContent("experience",i); }} title={element.title} text={element.text}/>
+            
+                                   )
+                                       }):null}
+                                   {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"experience");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                                </div>
+            
+                                </div> 
+                                )
+                            }
 
-                       )
-                           }):null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"experience");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
-                    </div>
-
-                    </div>
-
-                    <div className="card mt-3">
+                            if(element === 2){
+                                return (
+                                    <div className="card mt-3" key={element}>
                         <div className="card-header">
                            <a className="card-link" data-toggle="collapse" href="#education"> Education</a>
                             </div>
@@ -618,71 +627,90 @@ export default class Profile extends React.Component {
                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"education");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
                     </div>
+                                )
+                            }
 
-                    <div className="card mt-3">
-                        <div className="card-header">
-                        <a className="card-link" data-toggle="collapse" href="#portfolio"> Portfolio</a>
-                        </div>
+                            if(element === 3){
+                              return(  <div className="card mt-3" key={element}>
+                                  <div className="card-header">
+                                    <a className="card-link" data-toggle="collapse" href="#portfolio"> Portfolio</a>
+                                  </div>
 
-                        <div className="collapse show" id="portfolio">
-                        {this.state.CV.portfolio.length > 0?this.state.CV.portfolio.map((element,i) => {
-                           return (
+                                <div className="collapse show" id="portfolio">
+                                   {this.state.CV.portfolio.length > 0?this.state.CV.portfolio.map((element,i) => {
+                                    return (
                                <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {this.deleteContent("portfolio",i); }} title={element.title} text={element.text}/>
 
-                       )
-                           }):null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"portfolio");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
-                        </div>
-                    </div>
+                               )
+                              }):null}
+                               {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"portfolio");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                             </div>
+                            </div>
+                              )
+                            }
 
-                    <div className="card mt-3">
-                        <div className="card-header">
-                        <a className="card-link" data-toggle="collapse" href="#skills"> Skills</a>
-                        </div>
+                            if(element === 4){
+                                return (
+                                    <div className="card mt-3" key={element}>
+                                     <div className="card-header">
+                                       <a className="card-link" data-toggle="collapse" href="#skills"> Skills</a>
+                                     </div>
 
-                        <div className="collapse show"  id="skills">
-                        {this.state.CV.skills.length > 0?this.state.CV.skills.map((element,i) => {
-                           return (
+                                      <div className="collapse show"  id="skills">
+                                       {this.state.CV.skills.length > 0?this.state.CV.skills.map((element,i) => {
+                                     return (
                                <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"skills",i,element.title,element.text)}} delete={() => {this.deleteContent("skills",i); }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"skills");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
-                        </div>
-                    </div>
+                                   {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"skills");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                                   </div>
+                               </div>
+                                )
+                            }
 
-                    <div className="card mt-3">
-                        <div className="card-header">
-                        <a className="card-link" data-toggle="collapse" href="#expertise"> Expertise</a>
-                        </div>
+                            if(element === 5){
+                                return (
+                                    <div className="card mt-3" key={element}>
+                                      <div className="card-header">
+                                        <a className="card-link" data-toggle="collapse" href="#expertise"> Expertise</a>
+                                      </div>
 
-                        <div className="collapse show"  id="expertise">
-                        {this.state.CV.expertise.length > 0?this.state.CV.expertise.map((element,i) => {
-                           return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {this.deleteContent("expertise",i); }} title={element.title} text={element.text}/>
+                                    <div className="collapse show"  id="expertise">
+                                       {this.state.CV.expertise.length > 0?this.state.CV.expertise.map((element,i) => {
+                                      return (
+                                      <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {this.deleteContent("expertise",i); }} title={element.title} text={element.text}/>
 
-                       )
-                           }):null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"expertise");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
-                        </div>
-                    </div>
+                                       )
+                                    }):null}
+                                   {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"expertise");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                                  </div>
+                                 </div>
+                                )
+                            }
 
-                    <div className="card mt-3 mb-3">
-                        <div className="card-header">
-                        <a className="card-link" data-toggle="collapse" href="#contact"> Contact</a>
-                        </div>
+                            if(element === 6){
+                                return (
+                                    <div className="card mt-3 mb-3" key={element}>
+                                      <div className="card-header">
+                                        <a className="card-link" data-toggle="collapse" href="#contact"> Contact</a>
+                                     </div>
 
-                        <div className="collapse show" id="contact">
-                        {this.state.CV.contact.length > 0?this.state.CV.contact.map((element,i) => {
-                           return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {this.deleteContent("contact",i); }} title={element.title} text={element.text}/>
+                                    <div className="collapse show" id="contact">
+                                       {this.state.CV.contact.length > 0?this.state.CV.contact.map((element,i) => {
+                                      return (
+                                        <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {this.deleteContent("contact",i); }} title={element.title} text={element.text}/>
 
-                       )
-                           }):null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"contact");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
-                        </div>
+                                        )
+                                       }):null}
+                                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"contact");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                                        </div>
                         
-                </div>
+                                   </div>
+                                )
+                            }
+                        })}
+                    
                 </div>
             </div>
             </div>

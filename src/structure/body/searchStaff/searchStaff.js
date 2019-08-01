@@ -449,6 +449,13 @@ export default class SearchStaff extends React.Component {
                   </div>
                     <div className="row">
                         <div className="col-sm-3">
+                        <div className="form-group">
+                        <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
+                                    let pageSize = state.pageSize;
+                                    pageSize.value = e;
+                                    return ({pageSize:pageSize});
+                                });}}  />
+                        </div>
                           <ul className="nav flex-column">
                           <li className="nav-item">
                            <a className="nav-link active" href="#">Search CVs</a>
@@ -465,11 +472,7 @@ export default class SearchStaff extends React.Component {
                             <button className="btn btn-custom-1" type="button" onClick={() => {this.specificSearch(this.state.queryString)}}>Search</button> 
                          </div>
                         </div>
-                        <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
-                                    let pageSize = state.pageSize;
-                                    pageSize.value = e;
-                                    return ({pageSize:pageSize});
-                                });}}  />
+                        
                         </div>
                                 {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             

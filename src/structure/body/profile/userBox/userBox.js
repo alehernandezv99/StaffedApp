@@ -1,6 +1,7 @@
 import React from "react";
 import "./userBox.css";
 import firebase from "../../../../firebaseSetUp";
+import profile1 from "../../../../res/Graphics/img_avatar1.png"
 
 export default class UserBox extends React.Component{
     constructor(props){
@@ -73,11 +74,13 @@ export default class UserBox extends React.Component{
                 {this.state.user === null?<div className="spinner-border"></div>:
             <div className="user-box">
                 <div style={{
-                    backgroundImage:`url(${this.state.user.photoURL?this.state.user.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
+                    backgroundImage:`url(${this.state.user.photoURL?this.state.user.photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"})`,
                     backgroundPosition:"center",
                     backgroundRepeat:"no-repeat",
                     backgroundSize:"cover",
                     width:this.props.size,
+                    minWidth:this.props.size,
+                    maxHeight:this.props.size,
                     height:this.props.size,
                     borderRadius:"50%"
                 }}></div>

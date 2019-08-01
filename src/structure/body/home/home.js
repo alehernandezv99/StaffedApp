@@ -411,7 +411,7 @@ export default class Home extends React.Component {
         .orderBy("created","desc")
         .get()
         .then(snapshot => {
-
+    
             if(snapshot.empty){
                 if(this._mounted){
                     this.setState({
@@ -443,7 +443,8 @@ export default class Home extends React.Component {
 
                 if(this._mounted){
                     this.setState({
-                        projects:arr
+                        projects:arr,
+                        size:size
                     })
                 }
             })
@@ -890,14 +891,20 @@ export default class Home extends React.Component {
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
-                    <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                    <CreateProject reloadProjects={() => {
+                        if(this.state.searchBar === false){
+                            this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)
+                        }else {
+                            this.specificSearch(this.state.queryString)
+                        }
+                    }} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                   </div>
 
                         <div className="col">
                             <div className="form-group">
                                 <div className="text-center mb-3">Page Size</div>
                               
-                                <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
+                                <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}   onChange={(e) => {this.setState(state => {
                                     let pageSize = state.pageSize;
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});

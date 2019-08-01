@@ -431,6 +431,7 @@ export default class DrawerJob extends React.Component {
             for(let i = 0; i < messages.length; i++){
                 this.addToast(messages[i]);
             }
+            this.toggleLoading2()
         }
 
     }
@@ -736,6 +737,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                         }
                         <div className="container-fluid mt-4">
+                        <h4>Created By</h4>
                             <UserBox id={this.state.project[0].author} addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} />
                         </div>
                         <div className="container-fluid mt-4">
@@ -754,7 +756,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                     <div className="card-body">
                       <div className="form-group">
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>Price <span className="light-text">($US Dollars)</span></h4>
                         </div>
@@ -765,7 +767,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                           </div>
 
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>StaffedApp Service Cost</h4>
                         </div>
@@ -774,7 +776,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                           </div>
 
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>You will Receive <span className="light-text">($US Dollars)</span></h4>
                         </div>
@@ -784,7 +786,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                           </div>
 
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>Deadline</h4>
                         </div>
@@ -792,7 +794,7 @@ export default class DrawerJob extends React.Component {
                         <DatePicker
                               minDate={new Date()}
                               maxDate={new Date(new Date().setMonth(new Date().getMonth()+4))}
-                             className={Classes.ELEVATION_1}
+                        
                              onChange={(newDate) => this.setValue("proposal","deadline",newDate,)}
                              value={this.state.proposal.deadline.value}
                            />
@@ -827,7 +829,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                     <div className="card-body">
                       <div className="form-group">
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>Price <span className="light-text">($US Dollars)</span></h4>
                         </div>
@@ -838,7 +840,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                           </div>
 
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>StaffedApp Service Cost</h4>
                         </div>
@@ -847,7 +849,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                           </div>
 
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>You Receive <span className="light-text">($US Dollars)</span></h4>
                         </div>
@@ -857,7 +859,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                           </div>
 
-                          <div className="row mt-3">
+                          <div className="row mt-4">
                         <div className="col-sm-5">
                           <h4>Deadline</h4>
                         </div>
@@ -865,7 +867,7 @@ export default class DrawerJob extends React.Component {
                         <DatePicker
                               minDate={new Date()}
                               maxDate={new Date(new Date().setMonth(new Date().getMonth()+4))}
-                             className={Classes.ELEVATION_1}
+                          
                              onChange={async(newDate) => { await this.setValue("proposalFetched","deadline",newDate,); this.checkChange(newDate, this.state.proposalFetched, true)}}
                              value={this.state.proposalFetched.deadline.value}
                            />

@@ -225,19 +225,7 @@ componentWillUnmount(){
 
 
     async setValue(obj, field, value, feedbackElement, element){
-      if(this.setted === undefined){
-        this.setted = true;
-        firebase.firestore().collection("skills").get()
-    .then(async snapshot => {
-      let skills = [];
-      snapshot.forEach(doc => {
-        skills.push(doc.data().name);
-      })
-
-      this.bindSkillInput();
-      autocomplete(document.getElementById("skills-input-1"), skills, this.addSkill);
-    })
-      }
+      
 
       if(this.state[obj][field]["criteria"]){
       if(this.checkCriteria(value, this.state[obj][field]["criteria"],field).check){
@@ -319,6 +307,7 @@ componentWillUnmount(){
           console.log("Project Created");
           this.addToast("Project Created");
           this.props.handleClose();
+          this.props.reloadProjects?this.props.reloadProjects():(()=>{})()
       })
       .catch(e => {
         this.toggleLoading();
@@ -360,21 +349,21 @@ componentWillUnmount(){
                             <div className="card-body">
                             <form className="cp-section-1" >
                               <div className="form-group mt-2">
-                                <label>Title</label>
+                                <label>* Title</label>
                                 <input type="text" placeholder="Title of the project" onChange={(e) => {
                                   this.setValue("formA","title",e.target.value,e.target.parentNode.childNodes[2], e.target)}} className="form-control"  required/>
                                   <div className="invalid-feedback">Valid.</div>
                                   <div className="valid-feedback">Please fill out this field.</div>
                               </div>
                               <div className="form-group">
-                                 <label>Description</label>
+                                 <label>* Description</label>
                                 <textarea className="form-control"  onChange={(e) => {
                                   this.setValue("formA","description",e.target.value,e.target.parentNode.childNodes[2], e.target)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                                 <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
                               </div>
                               <div className="form-group mt-2">
-                                <label>Category</label>
+                                <label>* Category</label>
                                 <div>
                                   {this.state.categories.length > 0 ?
                                 <select onChange={(e) => {this.setValue("formA","category",e.target.options[e.target.selectedIndex].value);}} className="custom-select-sm mb-1">
@@ -389,7 +378,7 @@ componentWillUnmount(){
                               </div>
 
                               <div className="form-group mt-2">
-                                <label>Sub Category</label>
+                                <label>* Sub Category</label>
                                 <div>
                                   {this.state.subCategories.length > 0 ?
                                 <select onChange={(e) => {this.setValue("formA","subCategory",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
@@ -404,14 +393,29 @@ componentWillUnmount(){
                               </div>
 
                               <div className="form-group mt-2" ref={el => this.skills = el} id="skills">
-                                <label >Skills Required</label>
+                                <label >* Skills</label>
                                 <div>
                                 {this.state.formA.skills.value.map((skill, index) => {
                                   return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
                                 })}
                                 </div>
                                 <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-input-1" className="form-control" required/>
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" id="skills-input-1" className="form-control" onChange={e => {
+                                  if(this.setted === undefined){
+                                    this.setted = true;
+                                    this.bindSkillInput();
+                                    firebase.firestore().collection("skills").get()
+                                .then(async snapshot => {
+                                  let skills = [];
+                                  snapshot.forEach(doc => {
+                                    skills.push(doc.data().name);
+                                  })
+                            
+                                  
+                                  autocomplete(document.getElementById("skills-input-1"), skills, this.addSkill);
+                                })
+                                  }
+                                }} required/>
                                 </div>
                                 
                               </div>
