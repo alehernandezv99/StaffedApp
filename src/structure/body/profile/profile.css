@@ -9,4 +9,10 @@
     color:white !important;
 }
 
+.btns-change-order {
+    position: absolute;
+    top:50%;
+    right:5px;
+    transform: translate(0,-50%)
+}
 

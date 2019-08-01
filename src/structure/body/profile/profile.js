@@ -362,6 +362,45 @@ export default class Profile extends React.Component {
         })
     }
 
+    switchPosition = (type, index) =>{
+        if(type === "up"){
+            if((index + 1) <= (this.state.CV.order.length - 1)){
+                let helpVar = 0;
+                let newArr = this.state.CV.order.slice(0);
+                helpVar = newArr[index];
+                newArr[index] = newArr[index + 1];
+                newArr[index + 1] = helpVar;
+
+               firebase.firestore().collection("CVs").doc(this.state.CV.id).update({order:newArr})
+               .then(() => {
+                   this.loadCv();
+               })
+               .catch(e => {
+                   console.log(e.message)
+               })
+            }
+        }else if(type === "down"){
+            if((index -1) >= 0){
+                let helpVar = 0;
+                let newArr = this.state.CV.order.slice(0);
+                helpVar = newArr[index];
+                newArr[index] = newArr[index - 1];
+                newArr[index - 1] = helpVar;
+
+                this.setState(state => {
+                    let base = state.CV;
+                    base.order = newArr;
+
+                    firebase.firestore().collection("CVs").doc(this.state.CV.id).update({order:newArr})
+                    .then(() => {
+                        this.loadCv()
+                    })
+                    .catch(e => console.log(e.message));
+                })
+            }
+        }
+    }
+
 
     componentDidMount(){
 
@@ -589,12 +628,16 @@ export default class Profile extends React.Component {
                 </div>
                 <div className="container-fluid">
                     <div id="accordion">
-                        {this.state.CV.order.map(element => {
+                        {this.state.CV.order.map((element,index) => {
                             if(element === 1){
                                 return (
                                     <div className="card mt-3" key={element}>
-                                    <div className="card-header">
+                                    <div className="card-header" style={{position:"relative"}}>
                                        <a className="card-link" data-toggle="collapse" href="#experience"> Experience</a>
+                                       <div className="btn-group btns-change-order">
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
+                                      </div>
                                         </div>
                                   <div className="collapse show" data-parent="#accordion" id="experience">
                                    {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
@@ -613,8 +656,12 @@ export default class Profile extends React.Component {
                             if(element === 2){
                                 return (
                                     <div className="card mt-3" key={element}>
-                        <div className="card-header">
+                        <div className="card-header" style={{position:"relative"}}>
                            <a className="card-link" data-toggle="collapse" href="#education"> Education</a>
+                           <div className="btn-group btns-change-order">
+                                          <button type="button" className="btn btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
+                                      </div>
                             </div>
                         
                             <div className="collapse show" id="education">
@@ -632,8 +679,12 @@ export default class Profile extends React.Component {
 
                             if(element === 3){
                               return(  <div className="card mt-3" key={element}>
-                                  <div className="card-header">
+                                  <div className="card-header" style={{position:"relative"}}>
                                     <a className="card-link" data-toggle="collapse" href="#portfolio"> Portfolio</a>
+                                    <div className="btn-group btns-change-order">
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
+                                      </div>
                                   </div>
 
                                 <div className="collapse show" id="portfolio">
@@ -652,8 +703,12 @@ export default class Profile extends React.Component {
                             if(element === 4){
                                 return (
                                     <div className="card mt-3" key={element}>
-                                     <div className="card-header">
+                                     <div className="card-header" style={{position:"relative"}}>
                                        <a className="card-link" data-toggle="collapse" href="#skills"> Skills</a>
+                                       <div className="btn-group btns-change-order">
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
+                                          <button type="button" className="btn btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
+                                      </div>
                                      </div>
 
                                       <div className="collapse show"  id="skills">
@@ -672,8 +727,12 @@ export default class Profile extends React.Component {
                             if(element === 5){
                                 return (
                                     <div className="card mt-3" key={element}>
-                                      <div className="card-header">
+                                      <div className="card-header" style={{position:"relative"}}>
                                         <a className="card-link" data-toggle="collapse" href="#expertise"> Expertise</a>
+                                        <div className="btn-group btns-change-order">
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
+                                      </div>
                                       </div>
 
                                     <div className="collapse show"  id="expertise">
@@ -692,8 +751,12 @@ export default class Profile extends React.Component {
                             if(element === 6){
                                 return (
                                     <div className="card mt-3 mb-3" key={element}>
-                                      <div className="card-header">
+                                      <div className="card-header" style={{position:"relative"}}>
                                         <a className="card-link" data-toggle="collapse" href="#contact"> Contact</a>
+                                        <div className="btn-group btns-change-order">
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
+                                      </div>
                                      </div>
 
                                     <div className="collapse show" id="contact">

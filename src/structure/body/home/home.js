@@ -29,6 +29,44 @@ export default class Home extends React.Component {
         this.markAsRead = this.markAsRead.bind(this);
 
         this.state = {
+            chat:{
+                messageList:[
+                    {
+                        author: 'them',
+                        type: 'text',
+                        data: {
+                          text: 'some text'
+                        }
+                      },
+                      {
+                        author: 'them',
+                        type: 'text',
+                        data: {
+                          text: 'some text'
+                        }
+                      }                    
+                      
+                    ],
+                    isOpen:false,
+                    handleOpen:() => {
+                        this.setState(state => {
+                            let base = state.chat;
+                            base.isOpen = true
+                            return {
+                                chat:base
+                            }
+                        })
+                    },
+                    handleClose:() => {
+                        this.setState(state => {
+                            let base = state.chat;
+                            base.isOpen = false;
+                            return {
+                                chat:base
+                            }
+                        })
+                    }
+            },
             user:null,
             toasts: [ /* IToastProps[] */ ],
             projects:[],
@@ -150,6 +188,15 @@ export default class Home extends React.Component {
             toaster:(ref) => {this.toaster = ref},
         }
     }
+
+    _onMessageWasSent(message) {
+        this.setState(state => {
+            let base = state.chat;
+            base.messageList = [...this.state.chat.messageList, message]
+          
+          return {  chat:base }
+        })
+      }
 
 
     async markAsRead(){
@@ -777,6 +824,8 @@ export default class Home extends React.Component {
     render(){
         return(
             <div>
+                <div style={{zIndex:"9999999",position:"relative"}}>
+      </div>
                 {this.state.isLoading === true? <LoadingSpinner />:null }
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
@@ -1110,6 +1159,8 @@ export default class Home extends React.Component {
                         </div>
                     </div>
                     }
+ 
+              
                 </div>
                 
             </div>
