@@ -1,6 +1,7 @@
 import React from "react";
 import "./chat.css";
 import firebase from "../../../firebaseSetUp";
+import $ from "jquery";
 
 //Chat components
 import ConversationContainer from "../../chat-components/conversationContainer";
@@ -19,15 +20,34 @@ export default class Chat extends React.Component {
     }
 
     openChat = (id) => {
+        let factor = 0
+        factor += 380;
+
+        for(let i = 0 ; i< this.state.openChats.length; i++){
+            factor += 340
+        }
+
+        if($(window).width() - factor >= 340){
         if(this.state.openChats.length < 3){
             if(!this.state.openChats.includes(id)){
-            this.setState(state => {
-                let openChats = state.openChats;
-                openChats.push(id);
-                return {
-                    openChats:openChats
-                }
-            })
+                firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).update({openChats:firebase.firestore.FieldValue.arrayUnion({id:id,factor:factor})})
+                .then(() => {
+
+                })
+                .catch(e => {
+                    this.props.addToast("Something Goes Wrong :(");
+                })
+                    this.setState(state => {
+                        let openChats = state.openChats;
+                        openChats.push({
+                            id:id,
+                            factor:factor
+                        });
+                        return {
+                            openChats:openChats
+                        }
+                    })
+                
         }
         }else {
             this.setState(state => {
@@ -39,6 +59,9 @@ export default class Chat extends React.Component {
                 }
             })
         }
+    }else {
+        this.props.addToast("Cannot Open More Chats");
+    }
     }
 
     getParticipantsData  =(id, index) => {
@@ -98,9 +121,23 @@ export default class Chat extends React.Component {
                 conversations:chats
             })
         })
+
+        firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
+        .then(doc => {
+            let openChats = doc.data().openChats;
+            if(openChats !== undefined){
+            
+                if(openChats.length > 0){
+            this.setState({
+                openChats:openChats
+            })
+        }
+        }
+        })
     }
 
    handleClose =(i) => {
+       
        this.setState(state => {
            let openChats = [...state.openChats]
            openChats.splice(i,1);
@@ -109,11 +146,68 @@ export default class Chat extends React.Component {
                openChats:openChats
            }
        })
+
+       firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
+       .then(user => {
+           let openChats = user.data().openChats;
+           openChats.splice(i,1)
+
+           firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).update({openChats:openChats})
+           .then(() => {
+
+           })
+           .catch(e => {
+
+           })
+       })
    }
 
     render(){
         return(
             <div>
+                {(() => {
+                    if(this.props.payload){
+                        
+                    if(this.props.payload){
+                        let factor = 0
+                        factor += 380;
+                        let perfectIndex = null;
+                        let currentWidth = $(window).width();
+                      for(let i = 0 ; i< this.state.openChats.length; i++){
+                       factor += 340;
+                       if(factor + 340 > currentWidth){
+                           perfectIndex = i
+                       }
+                    }
+                       
+                       if(perfectIndex === null){
+                           if(this._mounted){
+                           this.setState(state => {
+                               let base = [...state.openChats];
+                               base.push({
+                                   id:this.props.payload,
+                                   factor:factor
+                               })
+                               return {
+                                   openChats:base
+                               }
+                           })
+                        }
+                       }else {
+                           if(this._mounted){
+                           this.setState(state => {
+                               let base = [...state.openChats];
+                               base.splice(perfectIndex,1);
+                               return {
+                                    openChats:base
+                               }
+                           })
+                           }
+                       }
+                       this.props.resetPayload()
+                }
+            }
+                })()}
                 <ConversationContainer>
                     {this.state.conversations.map(e => {
                         return (
@@ -126,7 +220,7 @@ export default class Chat extends React.Component {
                     {this.state.openChats.map((e,i) => {
                         return (
                         <div style={{position:"relative"}}>
-                        <MessengerModule id={e} key={i} handleClose={() => {this.handleClose(i)}}/>
+                        <MessengerModule factor={e.factor} id={e.id} key={i} handleClose={() => {this.handleClose(i)}}/>
                         </div>
                         )
                     })}

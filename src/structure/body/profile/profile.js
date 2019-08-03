@@ -21,6 +21,9 @@ export default class Profile extends React.Component {
         super(props);
         this.state = {
             user:null,
+            chat:{
+                payload:null
+            },
             toasts: [ /* IToastProps[] */ ],
             CV:{
                 description:[],
@@ -454,6 +457,30 @@ export default class Profile extends React.Component {
 
     }
 
+    resetPayload = () => {
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.chat;
+                base.payload = null;
+
+                return {
+                    chat:base
+                }
+            })
+        }
+    }
+
+    providePayloadToChat = (id) => {
+        this.setState(state => {
+            let base = state.chat
+            base.payload = id;
+
+            return {
+                chat:base
+            }
+        })
+    }
+
     componentWillUnmount(){
         this._mounted = false;
 
@@ -572,7 +599,7 @@ export default class Profile extends React.Component {
                 />
                <div id="portalContainer" className="text-left">
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                   </div>
@@ -585,7 +612,7 @@ export default class Profile extends React.Component {
                     {this.state.user === null? <ProfileLoading />:
                     <div>
                         <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat />
+                    <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                 <div className="container-fluid text-center" id="top">
                     <div className="container mt-2">
@@ -603,7 +630,7 @@ export default class Profile extends React.Component {
 
                         
                        {this.state.CV.editable === true? <div className="dropdown right-corner-btn">
-                              <button type="button" className="dropdown-toggle" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
+                              <button type="button" className="dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
                                 <div className="dropdown-menu dropdown-menu-right">
                                 <button className="dropdown-item" onClick={() => {this.state.uploadImg.handleOpen()}}>Upload</button>
                               </div>

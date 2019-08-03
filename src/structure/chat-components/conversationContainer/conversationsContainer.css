@@ -1,7 +1,12 @@
 .conversation-footer{
-    padding: 5px !important;
+    padding: 2px !important;
 }
 
 .conversation-header {
     min-width: 200px;
+}
+
+.conversation-body {
+    padding:2px !important;
+    max-height: 340px !important;
 }

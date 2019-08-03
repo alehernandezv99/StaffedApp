@@ -137,22 +137,38 @@ export default class MessengerModule extends React.Component{
     }
 
     handleSendMessage = ()=> {
+        if(this.state.message !== ""){
         firebase.firestore().collection("chat").doc(this.props.id).update({messages:firebase.firestore.FieldValue.arrayUnion({
             message:this.state.message,
             sent:firebase.firestore.Timestamp.now(),
             author:firebase.auth().currentUser.uid
-        })})
+        }), lastMessage:this.state.message})
         .then(() => {
             console.log("Message successfully sent")
+            this.setState({
+                message:""
+            })
         })
         .catch(e => {
 
         })
     }
+    }
 
     setId = (id) => {
         this.id = id
+
+        $(this.id).keypress((event) =>{
+	
+            var keycode = (event.keyCode ? event.keyCode : event.which);
+            if(keycode == '13'){
+                this.handleSendMessage()
+            }
+        
+        });
     }
+
+    
 
 
     render(){
@@ -165,7 +181,7 @@ export default class MessengerModule extends React.Component{
             }
         })
         return(
-            <ChatWrapper photoURL={user.photoURL} name={user.name} focusInput={this.setScrollTop} setId={this.setId}  onChangeInput={this.handleChangeInput} input={this.state.message} onSend={this.handleSendMessage} chatName={this.state.chatName?this.state.chatName:"Loading..."} handleClose={this.props.handleClose}>
+            <ChatWrapper factor={this.props.factor} photoURL={user.photoURL} name={user.name} focusInput={this.setScrollTop} setId={this.setId}  onChangeInput={this.handleChangeInput} input={this.state.message} onSend={this.handleSendMessage} chatName={this.state.chatName?this.state.chatName:"Loading..."} handleClose={this.props.handleClose}>
                 {this.state.groups.map((e,i) => {
                   return(  <MessageModule author={this.state.participants[e.author].displayName?this.state.participants[e.author].displayName:this.state.participants[e.author].email} photoURL={this.state.participants[e.author]?this.state.participants[e.author].photoURL?this.state.participants[e.author].photoURL:null:null} isOwn={e.isOwn} messages={e.messages} key={i} />)
                 })}

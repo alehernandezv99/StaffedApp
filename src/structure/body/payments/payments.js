@@ -20,6 +20,9 @@ export default class Payments extends React.Component {
 
         this.state ={
             user:null,
+            chat:{
+                payload:null
+            },
             toasts: [ /* IToastProps[] */ ],
             paypalAccount:"",
             transactions:[],
@@ -302,6 +305,30 @@ export default class Payments extends React.Component {
           });
     }
 
+    resetPayload = () => {
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.chat;
+                base.payload = null;
+
+                return {
+                    chat:base
+                }
+            })
+        }
+    }
+
+    providePayloadToChat = (id) => {
+        this.setState(state => {
+            let base = state.chat
+            base.payload = id;
+
+            return {
+                chat:base
+            }
+        })
+    }
+
     render(){
         return(<div>
             {this.state.isLoading?<LoadingSpinner />:null}
@@ -411,12 +438,12 @@ export default class Payments extends React.Component {
                 {this.state.user === null?<PaymentsLoading />:
                 <div className="container-fluid p-5">
                     <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat />
+                    <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                     <div id="portalContainer">
                        {this.state.balance !== null? <WithdrawModule fetchBalance={this.fetchBalance} addToast={this.addToast} balance={this.state.balance} isOpen={this.state.withdraw.isOpen} handleClose={this.state.withdraw.handleClose}/>:null}
                        {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                     </div>

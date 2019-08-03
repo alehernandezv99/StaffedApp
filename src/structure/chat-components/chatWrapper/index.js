@@ -29,7 +29,7 @@ export default class ChatWrapper extends React.Component{
 
     render(){
         return(
-            <div className="card chat-wrapper" >
+            <div className="card chat-wrapper" style={{right:this.props.factor}}>
                 
                 <div className="card-header chat-wrapper-header text-center" onClick={this.handleClick} style={{position:"relative"}}>
                   <div className="media" >

@@ -6,7 +6,7 @@ const style ={
     position:"fixed",
     bottom:"0",
     right:"20px",
-    maxWidth:"400px",
+    maxWidth:"340px",
 }
 
 export default class ConversationsContainer extends React.Component{
@@ -23,8 +23,8 @@ export default class ConversationsContainer extends React.Component{
         return(
             <div className="card" style={style}>
                 <div className="card-header text-center conversation-header" onClick={this.handleCLick}>Chats</div>
-                <div className="card-body" id="conversation-body">{this.props.children}</div>
-                <div className="card-footer " id="conversation-footer">
+                <div className="card-body conversation-body" id="conversation-body">{this.props.children}</div>
+                <div className="card-footer conversation-footer" id="conversation-footer">
                     <div className="form-group">
                         <input type="text" placeholder="Search Chats" className="form-control" />
                     </div>

@@ -196,10 +196,10 @@ export default class DrawerJob extends React.Component {
     }
 
     acceptProposal = (idProject, idProposal) => {
-        this.toggleLoading2()
+        
         if(window.confirm("Sure you want to accept this proposal")){
         this.toggleLoading();
-
+        this.toggleLoading2()
         let batch = firebase.firestore().batch();
         
         firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
@@ -231,6 +231,7 @@ export default class DrawerJob extends React.Component {
                         this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the proposal`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
                     this.toggleLoading2()
                     this.toggleLoading();
+                    this.startInterview(idProject,idProposal);
                 })
                 .catch(e => {
                     this.addToast(e.message);
@@ -251,6 +252,9 @@ export default class DrawerJob extends React.Component {
             this.toggleLoading2()
             this.toggleLoading();
         })
+    }else {
+        this.toggleLoading();
+        this.toggleLoading2();
     }
     }
 
@@ -334,6 +338,7 @@ export default class DrawerJob extends React.Component {
 
     startInterview = (projectID, proposalID) => {
         this.toggleLoading2()
+
         firebase.firestore().collection("projects").doc(projectID).get()
         .then(project => {
             let projectID = project.id;
@@ -342,6 +347,10 @@ export default class DrawerJob extends React.Component {
 
             firebase.firestore().collection("projects").doc(projectID).collection("proposals").doc(proposalID).get()
             .then(proposal => {
+                firebase.firestore().collection("chat").where("participants","array-contains",proposal.data().user).where("projectID","==",projectID).get()
+                .then(snap => {
+
+                    if(snap.empty){
                 let batch = firebase.firestore().batch();
                 let anotherParticipant = proposal.data().user;
                 let documentID = firebase.firestore().collection("chat").doc().id
@@ -368,11 +377,27 @@ export default class DrawerJob extends React.Component {
                     this.addToast("You Started a Interview")
                     this.toggleLoading2()
                     this.props.handleClose();
+                    snap.forEach(chat => {
+                        this.props.providePayloadToChat(chat.data().id)
+                    })
                 })
                 .catch(e => {
                     this.addToast("Something goes wrong :(, Try Again")
                     this.toggleLoading2()
                 })
+            }else {
+                this.toggleLoading2();
+                this.props.handleClose();
+                snap.forEach(chat => {
+                    this.props.providePayloadToChat(chat.data().id)
+                })
+            }
+
+            })
+            .catch(e => {
+
+            })
+            
                 
             })
         })

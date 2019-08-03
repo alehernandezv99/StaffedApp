@@ -16,3 +16,6 @@
     transform: translate(0,-50%)
 }
 
+.remove-caret::after { content: none !important }
+
+
