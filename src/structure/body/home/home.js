@@ -14,6 +14,9 @@ import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
 import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
 
+//Chat 
+import Chat from "../chat";
+
 import "./home.css";
 
 
@@ -824,8 +827,7 @@ export default class Home extends React.Component {
     render(){
         return(
             <div>
-                <div style={{zIndex:"9999999",position:"relative"}}>
-      </div>
+                
                 {this.state.isLoading === true? <LoadingSpinner />:null }
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
@@ -935,7 +937,9 @@ export default class Home extends React.Component {
                     {this.state.user === null? <HomeLoading />:
                     
                     <div className="row text-center">
-
+                        <div style={{zIndex:"9999999",position:"relative"}}>
+                    <Chat />
+                       </div>
                  <div id="portalContainer" className="text-left">
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}

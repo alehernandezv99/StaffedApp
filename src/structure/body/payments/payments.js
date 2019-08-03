@@ -12,6 +12,7 @@ import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import CreateProject from "../createProject";
 import TransactionRow from "./transactionRow";
+import Chat from "../chat";
 
 export default class Payments extends React.Component {
     constructor(props){
@@ -409,6 +410,9 @@ export default class Payments extends React.Component {
                 />
                 {this.state.user === null?<PaymentsLoading />:
                 <div className="container-fluid p-5">
+                    <div style={{zIndex:"9999999",position:"relative"}}>
+                    <Chat />
+                       </div>
                     <div id="portalContainer">
                        {this.state.balance !== null? <WithdrawModule fetchBalance={this.fetchBalance} addToast={this.addToast} balance={this.state.balance} isOpen={this.state.withdraw.isOpen} handleClose={this.state.withdraw.handleClose}/>:null}
                        {this.state.drawerJob.projectID === ""?null:

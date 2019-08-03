@@ -1,0 +1,23 @@
+.message-sent {
+    animation-name: showMessageSent;
+    animation-duration: 0.5s;
+    animation-iteration-count: 1;
+}
+
+@keyframes showMessageSent {
+    0%{opacity:0}
+    100%{opacity: 1;}
+}
+
+.message-isOwn {
+    background-color:rgb(58,123,213) !important;
+    padding:5px;
+    color:white;
+    border-radius: 4px;
+}
+
+.message-normal {
+    background-color: lightgray !important;
+    border-radius: 4px;
+    padding: 5px;
+}

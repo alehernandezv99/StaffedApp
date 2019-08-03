@@ -12,6 +12,7 @@ import logo from "../../../res/Graphics/main_logo.png";
 import CVContainer from "./CVContainer";
 import ProposalsViewer from "../proposalViewer";
 import DrawerJob from "../drawerJob";
+import Chat from "../chat";
 
 
 
@@ -441,6 +442,9 @@ export default class SearchStaff extends React.Component {
                 {this.state.user === null?<SearchStaffLoading/>:
                 
                 <div className="container-fluid pt-4 pb-4" id="top">
+                    <div style={{zIndex:"9999999",position:"relative"}}>
+                    <Chat />
+                       </div>
                    <div id="portalContainer" className="text-left">
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}

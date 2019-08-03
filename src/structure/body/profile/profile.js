@@ -14,7 +14,7 @@ import ProfileLoading from "../../loading/profileLoading";
 import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import $ from "jquery"
-import { throwStatement } from "@babel/types";
+import Chat from "../chat";
 
 export default class Profile extends React.Component {
     constructor(props){
@@ -584,6 +584,9 @@ export default class Profile extends React.Component {
                 <div>
                     {this.state.user === null? <ProfileLoading />:
                     <div>
+                        <div style={{zIndex:"9999999",position:"relative"}}>
+                    <Chat />
+                       </div>
                 <div className="container-fluid text-center" id="top">
                     <div className="container mt-2">
                         <div className="container-fluid" style={{position:"relative"}}>

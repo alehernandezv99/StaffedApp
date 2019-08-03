@@ -332,6 +332,56 @@ export default class DrawerJob extends React.Component {
         })()
     }
 
+    startInterview = (projectID, proposalID) => {
+        this.toggleLoading2()
+        firebase.firestore().collection("projects").doc(projectID).get()
+        .then(project => {
+            let projectID = project.id;
+            let projectName = project.data().title;
+            let projectOwner = project.data().author;
+
+            firebase.firestore().collection("projects").doc(projectID).collection("proposals").doc(proposalID).get()
+            .then(proposal => {
+                let batch = firebase.firestore().batch();
+                let anotherParticipant = proposal.data().user;
+                let documentID = firebase.firestore().collection("chat").doc().id
+                batch.set(firebase.firestore().collection("chat").doc(documentID),{
+                    participants:[projectOwner,anotherParticipant],
+                    projectID:projectID,
+                    projectName:projectName,
+                    projectOwner:projectOwner,
+                    created:firebase.firestore.Timestamp.now(),
+                    updated:firebase.firestore.Timestamp.now(),
+                    messages:[{
+                        author:projectOwner,
+                        message:"The interview Started",
+                        sent:firebase.firestore.Timestamp.now()
+                    }],
+                    id:documentID,
+                    lastMessage:"The interview Started"
+                })
+
+                batch.update(firebase.firestore().collection("users").doc(anotherParticipant),{activeCandidancies:firebase.firestore.FieldValue.arrayUnion(projectID)})
+
+                batch.commit()
+                .then(() => {
+                    this.addToast("You Started a Interview")
+                    this.toggleLoading2()
+                    this.props.handleClose();
+                })
+                .catch(e => {
+                    this.addToast("Something goes wrong :(, Try Again")
+                    this.toggleLoading2()
+                })
+                
+            })
+        })
+        .catch(e => {
+            this.addToast("Something goes wrong :(, Try Again");
+            this.toggleLoading2()
+        })
+    }
+
     submitProposal(){
         this.toggleLoading2();
         if(window.confirm("Sure you want to apply for this project?")){
@@ -865,7 +915,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                         <div className="col">
                         <DatePicker
-                              minDate={new Date()}
+                              minDate={this.state.proposalFetched.deadline.value}
                               maxDate={new Date(new Date().setMonth(new Date().getMonth()+4))}
                           
                              onChange={async(newDate) => { await this.setValue("proposalFetched","deadline",newDate,); this.checkChange(newDate, this.state.proposalFetched, true)}}
@@ -906,7 +956,7 @@ export default class DrawerJob extends React.Component {
                      <ContractModule freelancer={this.state.contract.freelancer} title={this.state.contract.title} projectID={this.state.contract.idProject} status={this.state.contract.status} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
                     <div className="container-fluid">
                         {this.state.proposals.length > 0?this.state.proposals.map((proposal,i) => {
-                        return <ProposalModule acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
+                        return <ProposalModule startInterview={() => {this.startInterview(this.props.id,proposal.id)}} acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
                     })
                     :<div className="container-fluid text-center">
                         <h4>No Proposals</h4>

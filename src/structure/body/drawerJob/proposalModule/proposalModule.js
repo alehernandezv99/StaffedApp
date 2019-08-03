@@ -1,6 +1,7 @@
 import React from "react";
 import "./proposalModule.css";
 import firebase from "../../../../firebaseSetUp";
+import UserBox from "../../profile/userBox";
 
 export default class ProposalModule extends React.Component {
     constructor(props){
@@ -74,22 +75,7 @@ export default class ProposalModule extends React.Component {
                 <div className="card-body">
                 <div className="form-group mt-2">
                     {this.state.user === ""?<div className="spinner-border"></div>:
-                     <div className="row">
-                         <div className="col-sm-2">
-                         <div style={{backgroundImage:`url(${this.state.user.photoURL?this.state.user.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
-                                    backgroundPosition:"center",
-                                    backgroundSize:"cover",
-                                    backgroundRepeat:"no-repeat",
-                                    width:"50px",
-                                    height:"50px",
-                                    marginLeft:"50%",
-                                    transform:"translate(-50%,0)"
-                                }} className="rounded-circle" ></div>
-                        </div>
-                        <div className="col" style={{display:"flex",alignItems:"center"}}>
-                    <h6>{this.state.user.displayName?this.state.user.displayName:this.state.user.email}</h6>
-                    </div>
-                    </div>
+                     <UserBox id={this.state.user.uid} />
                     }
                 </div>
                 <div className="form-group">
@@ -113,7 +99,8 @@ export default class ProposalModule extends React.Component {
                    
                    :<div><p>{this.props.presentation}</p></div>
                     }
-                    <button type="buton" className="btn btn-custom-1 btn-sm mt-3" onClick={this.props.acceptProposal}>Accept</button>
+                    <button type="button" className="btn btn-custom-1 btn-sm mt-3" onClick={this.props.acceptProposal}>Accept</button>
+                    <button type="button" className="btn btn-custom-1 btn-sm mt-3 ml-2" onClick={this.props.startInterview}>Interview</button>
                 </div>
                 </div>
                 <div className="hour-posted">Posted On {this.props.date}</div>

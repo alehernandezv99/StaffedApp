@@ -12,6 +12,7 @@ import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import LoadingSpinner from "../../loading/loadingSpinner"
 import JobModule from "../home/jobModule";
+import Chat from "../chat";
 import $ from "jquery";
 
 export default class MyProjects extends React.Component {
@@ -560,7 +561,9 @@ export default class MyProjects extends React.Component {
                 {this.state.user === null?<MyProjectLoading />:
                 
                  <div className=" row text-center">
-
+                     <div style={{zIndex:"9999999",position:"relative"}}>
+                    <Chat />
+                       </div>
                   <div id="portalContainer" className="text-left">
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}

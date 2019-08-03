@@ -1,0 +1,32 @@
+.chat-wrapper {
+    position: fixed;
+    bottom: 0;
+    right:400px;
+    z-index: 9999;
+    max-width: 340px;
+} 
+
+.chat-wrapper-body{
+    max-height: 300px;
+    overflow: auto;
+}
+
+.chat-wrapper-footer {
+    padding: 5px !important;
+}
+
+.btn-close{
+    position: absolute;
+    top:3px;
+    right:3px;
+}
+
+.special-icon {
+    font-size:18px;
+}
+
+.chat-wrapper-header {
+    cursor: pointer;
+    min-width: 340px;
+    padding:0px !important;
+}
