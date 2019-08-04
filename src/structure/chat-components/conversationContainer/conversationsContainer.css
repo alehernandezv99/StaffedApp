@@ -9,4 +9,6 @@
 .conversation-body {
     padding:2px !important;
     max-height: 340px !important;
+    overflow-y: auto;
+    overflow-x: hidden
 }

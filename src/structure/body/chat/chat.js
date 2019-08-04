@@ -15,8 +15,12 @@ export default class Chat extends React.Component {
 
         this.state = {
             conversations:[],
-            openChats:[]
+            openChats:[],
+            chatIsOpen:false,
+            unread:0,
         }
+
+        this.unread = 0
     }
 
     openChat = (id) => {
@@ -39,9 +43,11 @@ export default class Chat extends React.Component {
                 })
                     this.setState(state => {
                         let openChats = state.openChats;
+                    
                         openChats.push({
                             id:id,
-                            factor:factor
+                            factor:factor,
+                            isOpen:true,
                         });
                         return {
                             openChats:openChats
@@ -72,8 +78,7 @@ export default class Chat extends React.Component {
             let participants = doc.data().participants;
 
             for(let i = 0; i< participants.length; i++){
-                    firebase.firestore().collection("users").doc(participants[i]).get()
-                    .then(user => {
+                    firebase.firestore().collection("users").doc(participants[i]).onSnapshot(user => {
                        
                         if(this._mounted){
                             if(firebase.auth().currentUser.uid !== participants[i]){
@@ -83,7 +88,7 @@ export default class Chat extends React.Component {
                             let objTarget = newArr[index]
                             objTarget.name = firebase.auth().currentUser.uid === participants[i]?null:user.data().displayName?user.data().displayName:user.data().email
                             objTarget.photoURL = firebase.auth().currentUser.uid === participants[i]?null:user.data().photoURL;
-                    
+                            objTarget.isOnline = user.data().isOnline
                             newArr[index] = objTarget
                             
                             return {
@@ -93,9 +98,7 @@ export default class Chat extends React.Component {
                     } 
                     } 
                     })
-                    .catch(e => {
-                        console.log(e.message);
-                    })
+                  
                 }
                
         })
@@ -110,15 +113,29 @@ export default class Chat extends React.Component {
         firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","asc").onSnapshot(async snapshot => {
             let chats =[]
             let index= 0
+            this.unread = 0
            snapshot.forEach(chat => {
               this.getParticipantsData(chat.id, index);
-         
+                let messages = chat.data().messages;
+                let unreadMessages = 0
+                for(let i = 0; i < messages.length; i++){
+                    if(messages[i].status){
+                        if(messages[i].author !== firebase.auth().currentUser.uid){
+                            if(messages[i].status === "unread"){
+                                unreadMessages++
+                            }
+                        }
+                    }
+                }
+                this.unread += unreadMessages;
+
                 chats.push(chat.data())
                 index++
             })
             
             this.setState({
-                conversations:chats
+                conversations:chats,
+                unread:this.unread
             })
         })
 
@@ -126,12 +143,18 @@ export default class Chat extends React.Component {
         .then(doc => {
             let openChats = doc.data().openChats;
             if(openChats !== undefined){
-            
                 if(openChats.length > 0){
+                    for(let i = 0; i<openChats.length; i++){
+                        if(openChats[i].isOpen === undefined){
+                            openChats[i].isOpen = true
+                        }
+                    }
+                if(this._mounted){
             this.setState({
                 openChats:openChats
-            })
+            })}
         }
+
         }
         })
     }
@@ -162,6 +185,20 @@ export default class Chat extends React.Component {
        })
    }
 
+   handleClickFromMessengerModule = (i) => {
+      
+       if(this._mounted){
+           this.setState(state => {
+               let openChats = state.openChats;
+               openChats[i].isOpen = !openChats[i].isOpen
+               console.log(openChats)
+               return{
+                   openChats:openChats
+               }
+           })
+       }
+   }
+
     render(){
         return(
             <div>
@@ -186,7 +223,8 @@ export default class Chat extends React.Component {
                                let base = [...state.openChats];
                                base.push({
                                    id:this.props.payload,
-                                   factor:factor
+                                   factor:factor,
+                                   isOpen:true
                                })
                                return {
                                    openChats:base
@@ -197,7 +235,12 @@ export default class Chat extends React.Component {
                            if(this._mounted){
                            this.setState(state => {
                                let base = [...state.openChats];
-                               base.splice(perfectIndex,1);
+                               base.pop()
+                               base.push({
+                                id:this.props.payload,
+                                factor:factor,
+                                isOpen:true
+                            })
                                return {
                                     openChats:base
                                }
@@ -208,19 +251,37 @@ export default class Chat extends React.Component {
                 }
             }
                 })()}
-                <ConversationContainer>
-                    {this.state.conversations.map(e => {
+                <ConversationContainer unread={this.state.unread} isOpen={this.state.chatIsOpen} handleClick={() => {
+                    this.setState(state =>{
+
+                        return {
+                        chatIsOpen:!state.chatIsOpen
+                        }
+                    })
+                }}>
+                    {this.state.conversations.map((e,i) => {
+                        let messages = e.messages;
+                        let unread =0
+                        for(let i = 0; i< messages.length; i++){
+                            if(messages[i].author !== firebase.auth().currentUser.uid){
+                                if(messages[i].status === "unread"){
+                                    unread++
+                                }
+                            }
+                        
+                        }
                         return (
-                            <ConversationItem name={e.name?e.name:null} photoURL={e.photoURL?e.photoURL:null} date={e.updated.toDate().toDateString()} chatName={e.projectName} lastMessage={e.lastMessage} handleClick={() => {this.openChat(e.id)}} />
+                            <ConversationItem unread={unread} isOnline={e.isOnline} name={e.name?e.name:null} photoURL={e.photoURL?e.photoURL:null} date={e.updated.toDate().toDateString()} chatName={e.projectName} lastMessage={e.lastMessage} handleClick={() => {this.openChat(e.id)}} />
                         )
                     })}
                     {this.state.conversations.length === 0?<div>No Conversations</div>:null}
                 </ConversationContainer>
                 <div className="basic-flex">
                     {this.state.openChats.map((e,i) => {
+                        console.log(e.isOpen)
                         return (
                         <div style={{position:"relative"}}>
-                        <MessengerModule factor={e.factor} id={e.id} key={i} handleClose={() => {this.handleClose(i)}}/>
+                        <MessengerModule handleClick={() => {this.handleClickFromMessengerModule(i)}} isOpen={e.isOpen} factor={e.factor} id={e.id} key={i} handleClose={() => {this.handleClose(i)}}/>
                         </div>
                         )
                     })}

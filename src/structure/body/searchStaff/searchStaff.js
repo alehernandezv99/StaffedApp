@@ -270,10 +270,14 @@ export default class SearchStaff extends React.Component {
               // User is signed in.
               this.updateUser(user.uid)
 
+              this.uid = user.uid
               // ...
             } else {
               // User is signed out.
+              
               this.props.handleStates(0)
+
+              
               // ...
             }
           });

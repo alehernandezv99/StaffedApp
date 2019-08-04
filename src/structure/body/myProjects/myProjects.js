@@ -400,7 +400,7 @@ export default class MyProjects extends React.Component {
         this._mounted = true;
         firebase.auth().onAuthStateChanged(async(user) => {
             if (user) {
-                
+                this.uid = user.uid
               // User is signed in.
              
              this.updateUser(user.uid)
@@ -409,6 +409,7 @@ export default class MyProjects extends React.Component {
               // ...
             } else {
               // User is signed out.
+             
               this.props.handleStates(0);
               // ...
             }

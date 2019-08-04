@@ -7,3 +7,9 @@
 .conversation-item:hover {
     box-shadow: 0 5px 5px 0 rgba(0,0,0,0.2);
 }
+
+.status-absolute {
+    position: absolute;
+    bottom:2px;
+    right:2px;
+}

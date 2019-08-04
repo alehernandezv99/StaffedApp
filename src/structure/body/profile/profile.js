@@ -446,10 +446,11 @@ export default class Profile extends React.Component {
               this.loadCv();
               this.loadInbox(user.uid);
 
-              
+              this.uid = user.uid
               // ...
             } else {
               // User is signed out.
+              
               this.props.handleStates(0)
               // ...
             }
@@ -646,7 +647,7 @@ export default class Profile extends React.Component {
                             <p ref={ref => {this.text = ref}}>{this.state.CV.description[0].text}</p>
 
                             {this.state.CV.editable === true?<div className="dropdown right-corner-btn">
-                              <button type="button" className="dropdown-toggle" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
+                              <button type="button" className="dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
                                 <div className="dropdown-menu dropdown-menu-right">
                                 <button className="dropdown-item" onClick={() => {this.openEditPanel("update",this.state.CV.id,"description",0,this.title.textContent,this.text.textContent)}}>Edit</button>
                                 <button className="dropdown-item" onClick={() => {this.deleteContent("description",0); }}>Delete</button>
@@ -664,10 +665,13 @@ export default class Profile extends React.Component {
                                     <div className="card mt-3" key={element}>
                                     <div className="card-header" style={{position:"relative"}}>
                                        <a className="card-link" data-toggle="collapse" href="#experience"> Experience</a>
+
+                                       {this.state.CV.editable === true?
                                        <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
                                       </div>
+                                       :null}
                                         </div>
                                   <div className="collapse show" data-parent="#accordion" id="experience">
                                    {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
@@ -688,10 +692,13 @@ export default class Profile extends React.Component {
                                     <div className="card mt-3" key={element}>
                         <div className="card-header" style={{position:"relative"}}>
                            <a className="card-link" data-toggle="collapse" href="#education"> Education</a>
+
+                           {this.state.CV.editable === true?
                            <div className="btn-group btns-change-order">
                                           <button type="button" className="btn btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
                                       </div>
+                        :null}
                             </div>
                         
                             <div className="collapse show" id="education">
@@ -711,10 +718,13 @@ export default class Profile extends React.Component {
                               return(  <div className="card mt-3" key={element}>
                                   <div className="card-header" style={{position:"relative"}}>
                                     <a className="card-link" data-toggle="collapse" href="#portfolio"> Portfolio</a>
+
+                                    {this.state.CV.editable === true?
                                     <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
                                       </div>
+                                    :null}
                                   </div>
 
                                 <div className="collapse show" id="portfolio">
@@ -735,10 +745,13 @@ export default class Profile extends React.Component {
                                     <div className="card mt-3" key={element}>
                                      <div className="card-header" style={{position:"relative"}}>
                                        <a className="card-link" data-toggle="collapse" href="#skills"> Skills</a>
+
+                                       {this.state.CV.editable === true?
                                        <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
                                       </div>
+                                       :null}
                                      </div>
 
                                       <div className="collapse show"  id="skills">
@@ -759,10 +772,13 @@ export default class Profile extends React.Component {
                                     <div className="card mt-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>
                                         <a className="card-link" data-toggle="collapse" href="#expertise"> Expertise</a>
+
+                                        {this.state.CV.editable === true?
                                         <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
                                       </div>
+                                        :null}
                                       </div>
 
                                     <div className="collapse show"  id="expertise">
@@ -783,10 +799,13 @@ export default class Profile extends React.Component {
                                     <div className="card mt-3 mb-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>
                                         <a className="card-link" data-toggle="collapse" href="#contact"> Contact</a>
+
+                                        {this.state.CV.editable === true?
                                         <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
                                       </div>
+                                        :null}
                                      </div>
 
                                     <div className="collapse show" id="contact">

@@ -15,14 +15,30 @@ export default class ConversationsContainer extends React.Component{
     }
 
     handleCLick= () => {
-        $("#conversation-body").slideToggle("fast");
-        $("#conversation-footer").slideToggle("fast")
+        this.props.handleClick();
+       // $("#conversation-body").slideToggle("fast");
+      //  $("#conversation-footer").slideToggle("fast")
+    }
+
+    componentDidMount(){
+       
     }
 
     render(){
         return(
             <div className="card" style={style}>
-                <div className="card-header text-center conversation-header" onClick={this.handleCLick}>Chats</div>
+                {(() => {
+                     if(this.props.isOpen){
+                        $("#conversation-body").slideDown("fast");
+                    $("#conversation-footer").slideDown("fast")
+                    }else {
+                        $("#conversation-body").slideUp("fast");
+                    $("#conversation-footer").slideUp("fast")
+                    }
+                })()}
+                <div className={`card-header text-center conversation-header ${this.props.unread > 0 && !this.props.isOpen?"bg-switching":""}`} onClick={this.handleCLick}>Chats
+                {this.props.unread >0?  <div className="unread-static"><span className="badge badge-pill badge-primary">{this.props.unread}</span></div>:null}
+                </div>
                 <div className="card-body conversation-body" id="conversation-body">{this.props.children}</div>
                 <div className="card-footer conversation-footer" id="conversation-footer">
                     <div className="form-group">

@@ -288,6 +288,7 @@ export default class Payments extends React.Component {
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
+                this.uid = user.uid
               // User is signed in.
               if(user.emailVerified === false){
                   this.addToast("Please Verify Your Email")
@@ -299,6 +300,7 @@ export default class Payments extends React.Component {
               // ...
             } else {
               // User is signed out.
+            
               this.props.handleStates(0)
               // ...
             }

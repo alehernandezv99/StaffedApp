@@ -193,7 +193,9 @@ export default class LandingPage extends React.Component {
           });
 
         firebase.auth().onAuthStateChanged((user) => {
+            
             if (user) {
+               
               // User is signed in.
               var displayName = user.displayName;
               var email = user.email;
@@ -214,8 +216,10 @@ export default class LandingPage extends React.Component {
                   proposals:[],
                   activeCandidancies:[],
                   cards:40,
-                  country:this.state.signUpData.country
+                  country:this.state.signUpData.country,
+                  isOnline:true
               }
+              
 
               this.verifyData("users", user.uid, data, this.toggleLoading, this.deleteCurrentUser);
               

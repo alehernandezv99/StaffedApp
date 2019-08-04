@@ -11,27 +11,37 @@ admin.initializeApp({
 });
 
 
-exports.calculateSize = functions.https.onRequest(async(req, res) => {
+exports.onUserStatusChanged = functions.database
+.ref("/status/{userId}")  //Reference to the firebase realtime database key
+.onUpdate((change,context) => {
+    const usersRef = admin.firestore().collection("users")
+    
+    return change.after.ref.once("value")
+    .then(statusSnapshot =>{return statusSnapshot.val()})
+    .then(async status => {
+        //Check if the value is offline
+        if(status === "offline"){
+            try {
+           await usersRef
+                 .doc(context.params.userId)
+                     .update({isOnline:false})
+                     
+            }catch(e){
+                return console.error(e)
+            }
 
-    try {
-        let data = req.query;
-    
-        console.log(data);
-        let ref = admin.firestore().collection(data["collection"]);
-    
-        ref = ref.where(data["array"],"array-contains",data["value"])
-        ref= ref.orderBy("created","desc");
-    
-        let result = await ref.get()
-    
-        let size = result.size;
-    
-       return res.status(200).send(size);
-    }catch(e) {
-        return console.log(e.message);
-    }
+        }else {
+            await usersRef
+            .doc(context.params.userId)
+                     .update({isOnline:true})
+        }
+        return console.log("All setted");
+
+    })
+    .catch(e => {
+       return console.error(e)
+    })
 })
-
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //

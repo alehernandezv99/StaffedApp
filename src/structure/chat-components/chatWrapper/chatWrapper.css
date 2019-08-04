@@ -29,3 +29,37 @@
     min-width: 340px;
     padding:0px !important;
 }
+
+.status-absolute-left-top {
+    position:"absolute";
+    top:4px;
+    left:5px;
+    width:10px;
+    height:10px;
+}
+
+.btn-minimize {
+    position: absolute;
+    top:5px;
+    left:4px;
+}
+
+.unread-static{
+    position: absolute;
+    right:100%;
+    bottom: 100%;
+    transform: translate(50%,50%)
+}
+
+.bg-switching {
+    background-color: rgb(58,123,213);
+    animation-name: switchColor;
+    animation-iteration-count: infinite;
+    animation-duration: 1s
+}
+
+@keyframes switchColor {
+    0%{background-color: rgb(58,123,213);}
+    50%{background-color: white}
+    100%{background-color: rgb(58,123,213);}
+}

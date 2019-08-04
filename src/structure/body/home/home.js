@@ -403,12 +403,15 @@ export default class Home extends React.Component {
               }
               this.updateUser(user.uid)
 
-
+              this.uid = user.uid
               
               // ...
             } else {
               // User is signed out.
               this.props.handleStates(0)
+              this.props.passLastID(this.uid)
+              
+
               // ...
             }
           });
