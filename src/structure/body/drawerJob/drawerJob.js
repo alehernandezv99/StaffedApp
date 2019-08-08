@@ -354,6 +354,7 @@ export default class DrawerJob extends React.Component {
                 let batch = firebase.firestore().batch();
                 let anotherParticipant = proposal.data().user;
                 let documentID = firebase.firestore().collection("chat").doc().id
+                let messageID = firebase.firestore().collection("chat").doc(documentID).collection("messages").doc().id
                 batch.set(firebase.firestore().collection("chat").doc(documentID),{
                     participants:[projectOwner,anotherParticipant],
                     projectID:projectID,
@@ -361,15 +362,14 @@ export default class DrawerJob extends React.Component {
                     projectOwner:projectOwner,
                     created:firebase.firestore.Timestamp.now(),
                     updated:firebase.firestore.Timestamp.now(),
-                    messages:[{
-                        author:projectOwner,
-                        message:"The interview Started",
-                        sent:firebase.firestore.Timestamp.now()
-                    }],
                     id:documentID,
                     lastMessage:"The interview Started"
                 })
-
+                batch.set(firebase.firestore().collection("chat").doc(documentID).collection("messages").doc(messageID), {
+                    author:projectOwner,
+                    message:"The interview Started",
+                    sent:firebase.firestore.Timestamp.now()
+                })
                 batch.update(firebase.firestore().collection("users").doc(anotherParticipant),{activeCandidancies:firebase.firestore.FieldValue.arrayUnion(projectID)})
 
                 batch.commit()

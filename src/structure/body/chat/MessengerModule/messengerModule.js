@@ -14,60 +14,113 @@ export default class MessengerModule extends React.Component{
             groups:[],
             messages:[],
             message:"",
-            unread:0
+            unread:0,
+            currentPage:0,
+            canLoad:false
             }
     }
 
+    loadMore = () => {
+        console.log(this.state.currentPage)
+        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").get().then(snapshot => {
+            let pages = Math.ceil(snapshot.size/30)
+
+        if((this.state.currentPage + 1 === pages)){
+            this.setState({
+                canLoad:false
+            })
+        }
+        if(this.state.currentPage <= pages){
+        let lastSeem = snapshot.docs[(30)*(this.state.currentPage) -(this.state.currentPage === 0?0:1)];
+
+        console.log(`the index is ${(30)*(this.state.currentPage) -(this.state.currentPage === 0?0:1)}`,)
+
+        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").startAfter(lastSeem).limit(30).get()
+        .then(async snap => {
+        
+           await this.calculateGroups(snap,true)
+            this.setScrollDown()
+        })
+        .catch(e => {
+            console.log(e)
+        })
+    }
+        })
+        .catch(e => {
+            console.log(e)
+        })
+    }
+
     getGroups =() => {
-        firebase.firestore().collection("chat").doc(this.props.id).onSnapshot(async doc => {
+        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").get().then(snapshot => {
+            if(snapshot.size > 30){
+                this.setState({
+                    canLoad:true
+                })
+            }
+        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").limit(30).onSnapshot(async snap => {
      
-            let messages = doc.data().messages;
+            this.calculateGroups(snap)
+        })
+        
+    })
+    .catch(e => {
+        console.log(e)
+    })
+
+    }
+
+
+    calculateGroups =async (snap, additional) => {
+        let messages = snap.docs
+        messages.reverse()
             let temporaryMessages = []
             let groups= [];
             let previousId ="";
             let temporaryGroup = {}
             let unread = 0;
             for(let i = 0; i < messages.length; i++){
-                if(messages[i].status === undefined){
-                    messages[i].status = "unread";
+               let currentMessage = messages[i].data();
+                if(currentMessage.status === undefined){
+                    currentMessage.status = "unread";
                 }
-                if(messages[i].status === "unread"){
-                    if(messages[i].author !== firebase.auth().currentUser.uid){
+                if(currentMessage.status === "unread"){
+                    if(currentMessage.author !== firebase.auth().currentUser.uid){
                     unread++
                     
                     }
                 }
-                if(messages[i].author !== previousId){
+                if(currentMessage.author !== previousId){
                     if(temporaryGroup.messages){
                         groups.push(temporaryGroup)
                         
                     }
                     temporaryGroup = {}
                     temporaryMessages = [];
-                    if(messages[i].author === firebase.auth().currentUser.uid){
-                        messages[i].isOwn = true;
+                    if(currentMessage.author === firebase.auth().currentUser.uid){
+                        currentMessage.isOwn = true;
                     }else{
-                        messages[i].isOwn=  false;
+                        currentMessage.isOwn=  false;
                     }
-                    temporaryMessages.push(messages[i])
+                    temporaryMessages.push(currentMessage)
                     temporaryGroup = {
-                        author:messages[i].author,
+                        author:currentMessage.author,
                         messages:temporaryMessages,
-                        isOwn:messages[i].author === firebase.auth().currentUser.uid?true:false
+                        isOwn:currentMessage.author === firebase.auth().currentUser.uid?true:false
                     };
                     if(i === (messages.length - 1)){
                     groups.push(temporaryGroup);
                     }
-                    previousId = messages[i].author
+                    previousId = currentMessage.author
                 }else {
-                    if(messages[i].author === firebase.auth().currentUser.uid){
-                        messages[i].isOwn = true;
+                    if(currentMessage.author === firebase.auth().currentUser.uid){
+                        currentMessage.isOwn = true;
                     }else{
-                        messages[i].isOwn=  false;
+                        currentMessage.isOwn=  false;
                     }
                     
                     if(temporaryGroup.messages){
-                        temporaryGroup.messages.push(messages[i])
+                        temporaryGroup.messages.push(currentMessage)
                     }
                     if(i === (messages.length - 1)){
                         groups.push(temporaryGroup);
@@ -75,11 +128,22 @@ export default class MessengerModule extends React.Component{
                 }
             }
             if(this._mounted){
+                if(!additional){
             await this.setState({
-                chatName:doc.data().projectName,
                 groups:groups,
                 unread:unread
             })
+        }else {
+            await this.setState(state => {
+                let oldGroups = state.groups;
+               let newGroups = groups.concat(oldGroups)
+    
+                return {
+                    groups:newGroups
+                }
+            })
+            this.setScrollDown()
+        }
 
             if(this.id){
                 $(this.id).ready(() => {
@@ -90,10 +154,14 @@ export default class MessengerModule extends React.Component{
         
             
         }
-        })
+    }
+
+    setScrollDown = () => {
+        $(this.id).scrollTop(0)
     }
 
     setScrollTop = () => {
+        console.log("called");
         $(this.id).scrollTop(999999999999);
     }
 
@@ -104,9 +172,11 @@ export default class MessengerModule extends React.Component{
 
             const start = async () => {
                 await asyncForEach(participants,async (id) => {
+                    
                     await firebase.firestore().collection("users").doc(id).get()
                     .then(user => {
                         if(this._mounted){
+                            console.log(user.data())
                         this.setState(state => {
                             let base = state.participants
                             base[user.id] = user.data()
@@ -140,15 +210,19 @@ export default class MessengerModule extends React.Component{
     listenMessages = () => {
         
         if(this.props.isOpen){
-            firebase.firestore().collection("chat").doc(this.props.id).get().then(chat => {
+            firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").limit(30).get().then(snap => {
                 
-                let messages = chat.data().messages;
+                let messages = snap.docs;
+                messages.reverse()
+                let batch = firebase.firestore().batch()
                 for(let i =0; i < messages.length; i++){
-                    if(messages[i].author !== firebase.auth().currentUser.uid){
-                    messages[i].status = "read"
+                    let currentMessage = messages[i].data()
+                    if(currentMessage.author !== firebase.auth().currentUser.uid){
+                        currentMessage.status = "read"
                     }
+                    batch.update(firebase.firestore().collection("chat").doc(this.props.id).collection("messages").doc(messages[i].id), currentMessage)
                 }
-                firebase.firestore().collection("chat").doc(this.props.id).update({messages:messages})
+                batch.commit()
                 .then(() => {
                     this.previous = this.props.isOpen
                 })
@@ -175,21 +249,25 @@ export default class MessengerModule extends React.Component{
 
     handleSendMessage = ()=> {
         if(this.state.message !== ""){
-        firebase.firestore().collection("chat").doc(this.props.id).update({messages:firebase.firestore.FieldValue.arrayUnion({
-            message:this.state.message,
-            sent:firebase.firestore.Timestamp.now(),
-            author:firebase.auth().currentUser.uid,
-            status:"unread"
-        }), lastMessage:this.state.message})
+            let batch = firebase.firestore().batch()
 
+            let messageID = firebase.firestore().collection("chat").doc(this.props.id).collection("messages").doc().id
+            batch.set(firebase.firestore().collection("chat").doc(this.props.id).collection("messages").doc(messageID), {
+                message:this.state.message,
+                sent:firebase.firestore.Timestamp.now(),
+                author:firebase.auth().currentUser.uid,
+                status:"unread"
+            })
+        batch.update(firebase.firestore().collection("chat").doc(this.props.id), {lastMessage:this.state.message})
+        batch.commit()
         .then(() => {
-            console.log("Message successfully sent")
+
             this.setState({
                 message:""
             })
         })
         .catch(e => {
-
+            console.log(e)
         })
     }
     }
@@ -235,7 +313,14 @@ export default class MessengerModule extends React.Component{
                 }
                 this.props.handleClick()
             }} isOpen={this.props.isOpen} isOnline={user.isOnline} setInputId={this.setInputId} factor={this.props.factor} photoURL={user.photoURL} name={user.name} focusInput={this.setScrollTop} setId={this.setId}  onChangeInput={this.handleChangeInput} input={this.state.message} onSend={this.handleSendMessage} chatName={this.state.chatName?this.state.chatName:"Loading..."} handleClose={this.props.handleClose}>
-              
+                {this.state.canLoad?<a href="" className="text-center" onClick={async e => 
+                {e.preventDefault(); 
+                    await this.setState(state => {
+                        return {
+                            currentPage:(state.currentPage + 1)
+                        }
+                    })
+                    this.loadMore()}}>See More</a>:null}
                 {this.state.groups.map((e,i) => {
                   return(  <MessageModule author={this.state.participants[e.author].displayName?this.state.participants[e.author].displayName:this.state.participants[e.author].email} photoURL={this.state.participants[e.author]?this.state.participants[e.author].photoURL?this.state.participants[e.author].photoURL:null:null} isOwn={e.isOwn} messages={e.messages} key={i} />)
                 })}

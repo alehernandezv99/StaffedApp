@@ -29,6 +29,8 @@ export default class Home extends React.Component {
         this.clearSkill = this.clearSkill.bind(this);
         this.checkCriteria = checkCriteria;
         this.reloadProjects = this.reloadProjects.bind(this);
+        this.reloadProjectsServer = this.reloadProjectsServer.bind(this);
+        this.reloadProjectsUnionServer = this.reloadProjectsUnionServer.bind(this)
         this.markAsRead = this.markAsRead.bind(this);
 
         this.state = {
@@ -52,7 +54,8 @@ export default class Home extends React.Component {
             },
             inbox:{
                 count:0,
-                elements:[]
+                elements:[],
+                currentIndex:0
             },
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
@@ -192,9 +195,9 @@ export default class Home extends React.Component {
 
     triggerSearch =() => {
         if(this.state.skills.exclusive === false){
-            this.reloadProjectsFixed(this.state.pageSize.value,"skills",this.state.skills.skillsSelected.value)
+            this.reloadProjectsUnionServer(this.state.pageSize.value,"skills",this.state.skills.skillsSelected.value)
         }else {
-            this.reloadProjects(this.state.pageSize.value, "skillsExclusive",this.state.skills.skillsSelected.value)
+            this.reloadProjectsServer(this.state.pageSize.value, "skillsExclusive",this.state.skills.skillsSelected.value)
         }
     }
 
@@ -260,9 +263,9 @@ export default class Home extends React.Component {
         })
 
         if(this.state.skills.exclusive === false){
-            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+            this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
             }else {
-                this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
             }
       }
 
@@ -288,9 +291,9 @@ export default class Home extends React.Component {
         })
 
         if(this.state.skills.exclusive === false){
-        this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+        this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
         }else {
-            this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+            this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
         }
       }else {
         this.addToast("You cannot select two repeated skills")
@@ -643,6 +646,96 @@ export default class Home extends React.Component {
         })
     }
 
+    reloadProjectsUnionServer(limit,field,arr,page){
+
+        this.setState({
+            projects:[]
+     
+         })
+ 
+         let body = {};
+ 
+         let form_data = new URLSearchParams();
+         body.limit = limit;
+         body.field = field;
+         body.arr = arr
+         body.page = page;
+         body.budget = this.state.budget;
+         body.proposals = this.state.proposals;
+         body.pageSize = this.state.pageSize.value;
+         body.country = this.state.country
+         Object.keys(body).forEach(key => {
+             form_data.append(key, body[key])
+         })
+         fetch("https://staffed-app.herokuapp.com/getSizeReloadProjectsUnion", {
+             method:"POST",
+             body:form_data,
+             headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              }
+             })
+         .then(response => {
+             return response.json()
+         }).then(snapshot => {
+            this.setState({
+                projects:snapshot.projects,
+                size:snapshot.size
+            })
+         })
+         .catch(e => {
+             this.setState({
+                 projects:[],
+                 size:0
+             })
+         })
+         
+    }
+
+    reloadProjectsServer(limit,field, arr, page){
+      
+        this.setState({
+           projects:[]
+    
+        })
+
+        let body = {};
+
+        let form_data = new URLSearchParams();
+        body.limit = limit;
+        body.field = field;
+        body.arr = arr
+        body.page = page;
+        body.budget = this.state.budget;
+        body.proposals = this.state.proposals;
+        body.pageSize = this.state.pageSize.value;
+        body.country = this.state.country
+        Object.keys(body).forEach(key => {
+            form_data.append(key, body[key])
+        })
+        fetch("https://staffed-app.herokuapp.com/getSizeReloadProjects", {
+            method:"POST",
+            body:form_data,
+            headers: {
+               'Content-Type': 'application/x-www-form-urlencoded',
+             }
+            })
+        .then(response => {
+            return response.json()
+        }).then(snapshot => {
+           this.setState({
+               projects:snapshot.projects,
+               size:snapshot.size
+           })
+        })
+        .catch(e => {
+            this.setState({
+                projects:[],
+                size:0
+            })
+        })
+    
+    }
+
    reloadProjects(limit,field, arr, page){
       
         this.setState({
@@ -752,7 +845,7 @@ export default class Home extends React.Component {
        
         firebase.firestore().collection("users").doc(id).get()
         .then(async doc => {
-           firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
+           firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").limit(6).onSnapshot(messages => {
                
             let count = 0
             let elements = [];
@@ -779,9 +872,9 @@ export default class Home extends React.Component {
                 skills.skillsSelected.value = skillsUser;
                 let objOfSkills = {};
                 if(state.skills.exclusive === false){
-                this.reloadProjectsFixed(this.state.pageSize.value,"skills", skillsUser); 
+                this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", skillsUser); 
                 }else {
-                    this.reloadProjects(this.state.pageSize.value,"skillsExclusive", skillsUser); 
+                    this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", skillsUser); 
                 }
                 return {
                 user:[doc.data()],
@@ -892,7 +985,7 @@ export default class Home extends React.Component {
                                 this.markAsRead()
                                 }
                             },
-                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.map((element,i) => {
+                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.concat([{message:"See More"}]).map((element,i) => {
                                return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{element.action?this.handleInboxEvent(element.action):(()=>{})()}}
                                  }):[{
                                 href:"",
@@ -940,7 +1033,7 @@ export default class Home extends React.Component {
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     <CreateProject reloadProjects={() => {
                         if(this.state.searchBar === false){
-                            this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)
+                            this.state.skills.exclusive === false? this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)
                         }else {
                             this.specificSearch(this.state.queryString)
                         }
@@ -956,7 +1049,7 @@ export default class Home extends React.Component {
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});
 
-                                });this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)}}  />
+                                });this.state.skills.exclusive === false? this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)}}  />
         
                             </div>
                             <h4 className="text-center mb-3">Filters</h4>
@@ -968,9 +1061,9 @@ export default class Home extends React.Component {
                                          let base = state.skills;
                                          base.exclusive = !base.exclusive; 
                                          if(base.exclusive === false){
-                                            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+                                            this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
                                             }else {
-                                                this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                                                this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
                                             }
                                          return {
                                              skills:base
@@ -1128,7 +1221,7 @@ export default class Home extends React.Component {
                                      return pages
                                  })().map((data, i) => {
                                      if(this.state.searchBar === false){
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i):this.reloadProjects(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value, i) }} href="#">{i}</a></li>
+                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.skills.exclusive === false? this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i):this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value, i) }} href="#">{i}</a></li>
                                      }else {
                                         return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specificSearch(this.state.queryString,i)}} href="#">{i}</a></li>
                                      }

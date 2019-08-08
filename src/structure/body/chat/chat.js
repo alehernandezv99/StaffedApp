@@ -113,30 +113,41 @@ export default class Chat extends React.Component {
         firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","asc").onSnapshot(async snapshot => {
             let chats =[]
             let index= 0
+            let count = 0
             this.unread = 0
            snapshot.forEach(chat => {
-              this.getParticipantsData(chat.id, index);
-                let messages = chat.data().messages;
+            this.getParticipantsData(chat.id, index);
+            index++
+            firebase.firestore().collection("chat").doc(chat.id).collection("messages").orderBy("sent","desc").onSnapshot(snap =>{
+              
+                let messages = snap.docs;
                 let unreadMessages = 0
                 for(let i = 0; i < messages.length; i++){
-                    if(messages[i].status){
-                        if(messages[i].author !== firebase.auth().currentUser.uid){
-                            if(messages[i].status === "unread"){
+                    let currentMessage = messages[i].data()
+                    if(currentMessage.status){
+                        if(currentMessage.author !== firebase.auth().currentUser.uid){
+                            if(currentMessage.status === "unread"){
                                 unreadMessages++
                             }
                         }
                     }
                 }
                 this.unread += unreadMessages;
-
-                chats.push(chat.data())
-                index++
+                let currentChat = chat.data()
+                currentChat.messages = messages.map(e => e.data());
+                chats.push(currentChat)
+                count++
+                if(count === snapshot.size){
+                    this.setState({
+                        conversations:chats,
+                        unread:this.unread
+                    })
+                }
+                
+           })
             })
             
-            this.setState({
-                conversations:chats,
-                unread:this.unread
-            })
+            
         })
 
         firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
@@ -191,7 +202,7 @@ export default class Chat extends React.Component {
            this.setState(state => {
                let openChats = state.openChats;
                openChats[i].isOpen = !openChats[i].isOpen
-               console.log(openChats)
+ 
                return{
                    openChats:openChats
                }
@@ -278,7 +289,7 @@ export default class Chat extends React.Component {
                 </ConversationContainer>
                 <div className="basic-flex">
                     {this.state.openChats.map((e,i) => {
-                        console.log(e.isOpen)
+              
                         return (
                         <div style={{position:"relative"}}>
                         <MessengerModule handleClick={() => {this.handleClickFromMessengerModule(i)}} isOpen={e.isOpen} factor={e.factor} id={e.id} key={i} handleClose={() => {this.handleClose(i)}}/>
