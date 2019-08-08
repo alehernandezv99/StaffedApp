@@ -13,6 +13,7 @@ import ProposalsViewer from "../proposalViewer";
 import LoadingSpinner from "../../loading/loadingSpinner"
 import JobModule from "../home/jobModule";
 import Chat from "../chat";
+import InboxMessages from "../InboxMessages";
 import $ from "jquery";
 
 export default class MyProjects extends React.Component {
@@ -45,6 +46,25 @@ export default class MyProjects extends React.Component {
             },
             projects:[],
             size:null,
+            inboxDrawer:{
+                isOpen:false,
+                handleOpen:() => {this.setState(state => {
+                    let base = state.inboxDrawer
+                    base.isOpen = true
+                    return {
+                        inboxDrawer:base
+                    }
+                })},
+                handleClose:() => {
+                    this.setState(state => {
+                        let base = state.inboxDrawer;
+                        base.isOpen = false
+                        return {
+                            inboxDrawer:base
+                        }
+                    })
+                }
+            },
             drawerJob:{
                 projectID:"",
                 action:"",
@@ -198,6 +218,8 @@ export default class MyProjects extends React.Component {
 
                 return ({proposalsViewer:base});
             })
+        }else if(action.type === "see more"){
+            this.state.inboxDrawer.handleOpen()
         }
     }
     }
@@ -547,7 +569,7 @@ export default class MyProjects extends React.Component {
                                 this.markAsRead()
                                 }
                             },
-                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.map((element,i) => {
+                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.concat([{message:"See More", action:{type:"see more"}}]).map((element,i) => {
                                return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{element.action?this.handleInboxEvent(element.action):(()=>{})()}}
                                  }):[{
                                 href:"",
@@ -593,6 +615,7 @@ export default class MyProjects extends React.Component {
                     <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                   <div id="portalContainer" className="text-left">
+                  <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}

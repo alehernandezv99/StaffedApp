@@ -1,3 +1,11 @@
 .bg-gray {
     background-color:lightgray;
 }
+.see-more-transactions {
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.see-more-transactions:hover {
+    opacity: 0.6;
+}

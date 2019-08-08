@@ -53,8 +53,9 @@ export default class TransactionRow extends React.Component{
     render(){
         return(
             <tr>
-                <td>{new Date(this.props.date).toDateString()}</td>
-                <td>{this.state.type === ""?null:this.state.type ==="payment"?<div>The client {<a href="#" onClick={e =>{ e.preventDefault(); this.props.handleStates(3,this.state.client.id)}} >{this.state.client.name}</a>} has pay you {this.state.price} for the project {<a href="" onClick={e => {e.preventDefault(); this.props.openProject(this.state.project.id)}}>{this.state.project.name}</a>}</div>:<div>You make withdraw of {this.state.price} to your paypal account {this.state.freelancer.paypalAccount}</div>}</td>
+                <td>{this.props.date}</td>
+                <td>{this.state.type === ""?null:this.state.type ==="payment"?<div>The client {<a href="#" onClick={e =>{ e.preventDefault(); this.props.handleStates(3,this.state.client.id)}} >{this.state.client.name}</a>} has pay you for the project {<a href="" onClick={e => {e.preventDefault(); this.props.openProject(this.state.project.id)}}>{this.state.project.name}</a>}</div>:<div>You make withdraw to your paypal account {this.state.freelancer.paypalAccount}</div>}</td>
+                <td>{this.state.price}$</td>
             </tr>
         )
     }

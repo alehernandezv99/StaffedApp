@@ -1,0 +1,8 @@
+.message-block {
+    transition:0.3s;
+    cursor:pointer
+}
+
+.message-block:hover {
+    opacity: 0.6 !important;
+}

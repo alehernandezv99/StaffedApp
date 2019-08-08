@@ -11,8 +11,11 @@ import {Toast, Toaster, Classes,Position, Divider} from "@blueprintjs/core";
 import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import CreateProject from "../createProject";
+import InboxMessages from "../InboxMessages";
 import TransactionRow from "./transactionRow";
+import TransactionDrawer from "./transactionDrawer";
 import Chat from "../chat";
+
 
 export default class Payments extends React.Component {
     constructor(props){
@@ -28,10 +31,51 @@ export default class Payments extends React.Component {
             transactions:[],
             isLoading:false,
             balance:null,
+            transactions:[],
             pageSize:{
                 min:6,
                 max:12,
                 value:6
+            },
+            transactionDrawer:{
+                isOpen:false,
+                handleClose:() => {
+                    this.setState(state => {
+                        let base = state.transactionDrawer;
+                        base.isOpen = false;
+                        return {
+                            transactionDrawer:base
+                        }
+                    })
+                },
+                handleOpen:() => {
+                    this.setState(state => {
+                        let base = state.transactionDrawer;
+                        base.isOpen = true;
+                        return {
+                            transactionDrawer:base
+                        }
+                    })
+                }
+            },
+            inboxDrawer:{
+                isOpen:false,
+                handleOpen:() => {this.setState(state => {
+                    let base = state.inboxDrawer
+                    base.isOpen = true
+                    return {
+                        inboxDrawer:base
+                    }
+                })},
+                handleClose:() => {
+                    this.setState(state => {
+                        let base = state.inboxDrawer;
+                        base.isOpen = false
+                        return {
+                            inboxDrawer:base
+                        }
+                    })
+                }
             },
             disabled:true,
             withdraw:{
@@ -262,6 +306,8 @@ export default class Payments extends React.Component {
 
                 return ({proposalsViewer:base});
             })
+        }else if(action.type === "see more"){
+            this.state.inboxDrawer.handleOpen()
         }
     }
     }
@@ -283,6 +329,23 @@ export default class Payments extends React.Component {
                 })
     }
 
+    fetchTransactions = () => {
+        firebase.firestore().collection("transactions").where("freelancer","==",firebase.auth().currentUser.uid).orderBy("created","desc").get()
+        .then(snap => {
+            if(!snap.empty){
+                let transactions = [];
+
+                snap.forEach(doc => {
+                    transactions.push(doc.data());
+                })
+
+                this.setState({
+                    transactions:transactions
+                })
+            }
+        })
+    }
+
     componentDidMount(){
         this._mounted = true;
 
@@ -295,6 +358,7 @@ export default class Payments extends React.Component {
               }
                 this.fetchUser(user.uid)
             this.fetchBalance(user)
+            this.fetchTransactions()
 
               
               // ...
@@ -404,7 +468,7 @@ export default class Payments extends React.Component {
                                 this.markAsRead()
                                 }
                             },
-                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.map((element,i) => {
+                            dropdownItems:this.state.inbox.elements.length > 0?this.state.inbox.elements.concat([{message:"See More", action:{type:"see more"}}]).map((element,i) => {
                                return  {href:"",text:element.message,key:(i + Math.random()),onClick:()=>{element.action?this.handleInboxEvent(element.action):(()=>{})()}}
                                  }):[{
                                 href:"",
@@ -443,6 +507,8 @@ export default class Payments extends React.Component {
                     <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                     <div id="portalContainer">
+                    <TransactionDrawer isOpen={this.state.transactionDrawer.isOpen} handleClose={() => {this.state.transactionDrawer.handleClose()}} />
+                    <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                        {this.state.balance !== null? <WithdrawModule fetchBalance={this.fetchBalance} addToast={this.addToast} balance={this.state.balance} isOpen={this.state.withdraw.isOpen} handleClose={this.state.withdraw.handleClose}/>:null}
                        {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
@@ -509,7 +575,18 @@ export default class Payments extends React.Component {
                             </tr>
                         </thead>
                         <tbody>
-                            {this.state.transactions.length ===0?<tr><td colSpan={3}>No Transactions</td></tr>:null}
+                            {this.state.transactions.length ===0?<tr><td colSpan={3}>No Transactions</td></tr>:this.state.transactions.map((e,i) => {
+                                let type = e.batch_header?"withdraw":"payment";
+                                let freelancer = type=== "payment"?e.freelancer:e.freelancer;
+                                let client = type === "payment"?e.client:null;
+                                let projectID = type === "payment"?e.projectID:null;
+                                let price = type === "payment"?e.transactions[0].amount.total:0;
+                                let date = e.created.toDate().toDateString()
+                                return (
+                                    <TransactionRow key={i} date={date} price={price} type={type} freelancer={freelancer} client={client} projectID={projectID} />
+                                )
+                            })}
+                            <tr><td colSpan={3} className="text-center see-more-transactions" onClick={(e) => {this.state.transactionDrawer.handleOpen()}}>See More</td></tr>
                         </tbody>
                     </table>
                 </div>

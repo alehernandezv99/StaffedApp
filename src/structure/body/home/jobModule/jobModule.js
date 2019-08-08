@@ -54,7 +54,7 @@ export default class JobModule extends React.Component {
 
     render(){
         return(
-            <div className="job-module text-center mt-3" style={{position:"relative"}}>
+            <div className="job-module text-center mt-3" style={{position:"relative",paddingTop:"10px"}}>
                     <h4><a onClick={this.props.onClick}>{this.props.title}</a></h4>
                 <div className="job-module-block text-left mt-3">
                     <p>{this.props.description}</p>
