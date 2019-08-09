@@ -18,11 +18,13 @@ export default class StaffCreator extends React.Component{
                 skills:[],
                 expertise:[],
                 contact:[],
-                editable:false,
+                editable:true,
                 order:[1,2,3,4,5,6]
             }
         }
     }
+
+    
 
 
     render(){
@@ -111,7 +113,20 @@ export default class StaffCreator extends React.Component{
 
                        )
                            }):null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"education");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                       {this.state.CV.editable === true?
+                        <div> <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"education");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>
+                        <div className="container">
+                            <div className="form-group" id="education-form">
+                               <label>Title</label> 
+                               <input type="text" className="form-control" />
+                            </div>
+                            <div className="form-group">
+                               <label>Education</label> 
+                               <input type="text" className="form-control" />
+                            </div>
+                        </div>
+                        </div>
+                         : null}
                         </div>
                     </div>
                                 )
