@@ -16,6 +16,22 @@
     transform: translate(0,-50%)
 }
 
+.cv-container {
+    background-color:transparent !important;
+    color:inherit !important;
+}
+
 .remove-caret::after { content: none !important }
 
+
+.remove-bottom-rounded {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important
+}
+
+.cards-container {
+    display:flex;
+    flex-wrap: wrap;
+    padding:15px !important;
+}
 

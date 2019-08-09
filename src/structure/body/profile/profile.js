@@ -14,6 +14,8 @@ import ProfileLoading from "../../loading/profileLoading";
 import DrawerJob from "../drawerJob";
 import ProposalsViewer from "../proposalViewer";
 import InboxMessages from "../InboxMessages";
+import AddCardElement from "./addCardElement";
+import StaffCreator from "./staffCreator";
 import $ from "jquery"
 import Chat from "../chat";
 
@@ -36,6 +38,32 @@ export default class Profile extends React.Component {
                 contact:[],
                 editable:false,
                 order:[1,2,3,4,5,6]
+            },
+            companyCV:null,
+            staffCreator:{
+                isOpen:false,
+                handleClose:() =>{
+                    this.setState(state => {
+                        let base = state.staffCreator;
+                        base.isOpen = false;
+
+                        return {
+                            staffCreator:base
+                        }
+                        
+                    })
+                },
+
+                handleOpen:() => {
+                    this.setState(state => {
+                        let base = state.staffCreator;
+                        base.isOpen = true;
+
+                        return {
+                            staffCreator:base
+                        }
+                    })
+                }
             },
             inboxDrawer:{
                 isOpen:false,
@@ -339,13 +367,14 @@ export default class Profile extends React.Component {
         .then(async doc => {
            await this.setState({user:doc.data()});
 
-            firebase.firestore().collection("CVs").where("uid","==",this.props.userId).get()
+            firebase.firestore().collection("CVs").where("uid","==",this.props.userId).where("type","==","personal").get()
         .then(snapshot => {
             if(snapshot.empty){
                 if(this.props.userId === firebase.auth().currentUser.uid){
                     let id = firebase.firestore().collection("CVs").doc().id
                 firebase.firestore().collection("CVs").doc(id).set({
                     id:id,
+                    type:"personal",
                     uid:this.props.userId,
                     uemail:doc.data().email,
                     username:doc.data().displayName?doc.data().displayName:"",
@@ -356,7 +385,8 @@ export default class Profile extends React.Component {
                     skills:[],
                     expertise:[],
                     contact:[],
-                    order:[1,2,3,4,5,6]
+                    order:[1,2,3,4,5,6],
+                    created:firebase.firestore.Timestamp.now()
                 }).then(() => {
                     firebase.firestore().collection("CVs").doc(id).get()
                     .then(data => {
@@ -382,6 +412,7 @@ export default class Profile extends React.Component {
                         this.setState({CV:base});
                         }
                 })
+                this.searchCompanyCV()
             }
         })
         })
@@ -510,6 +541,57 @@ export default class Profile extends React.Component {
         $("a").off("click");
     }
 
+    addCompanyCV = () => {
+        this.toggleLoading();
+        if(this.props.userId === firebase.auth().currentUser.uid){
+        firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","company").get()
+        .then(snap => {
+            if(snap.empty){
+                let id = firebase.firestore().collection("CVs").doc().id;
+
+                firebase.firestore().collection("CVs").doc(id).set({
+                    type:"company",
+                    staff:[],
+                    uid:firebase.auth().currentUser.uid,
+                    uemail:firebase.auth().currentUser.email,
+                    id:id,
+                    created:firebase.firestore.Timestamp.now()
+                })
+                .then(() => {
+                    this.toggleLoading()
+                    this.searchCompanyCV()
+                })
+                .catch(e => {
+                    this.addToast("ohoh something went wrong :(");
+                    this.toggleLoading()
+                })
+            }else {
+                this.toggleLoading()
+            }
+        })
+        .catch(e => {
+            this.addToast("ohoh something went wrong :(");
+            this.toggleLoading()
+        })
+    }
+    }
+
+    searchCompanyCV = () => {
+        firebase.firestore().collection("CVs").where("uid","==",this.props.userId).where("type","==","company").get()
+        .then(snapshot => {
+            if(!snapshot.empty){
+                snapshot.forEach(cv => {
+                    this.setState({
+                        companyCV:cv.data()
+                    })
+                })
+            }
+        })
+        .catch(e => {
+            this.addToast("ohoh something went wrong :(");
+        })
+    }
+
     render() {
         return(
             
@@ -621,6 +703,7 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
+                {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid))?<StaffCreator isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
                <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
@@ -680,7 +763,27 @@ export default class Profile extends React.Component {
                             :this.state.CV.editable === true?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
                         
                 </div>
-                <div className="container-fluid">
+
+                <ul className="nav nav-tabs mt-3">
+                    <li className="nav-item ml-auto ">
+                       <a className="nav-link active remove-bottom-rounded" data-toggle="tab" href="#home"><i className="material-icons align-middle">person</i> Personal</a>
+                    </li>
+                    {this.state.companyCV === null?
+                    <li className="nav-item mr-auto dropdown">
+                         <a className="nav-link dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">add</i></a>
+                          
+                         <div className="dropdown-menu dropdown-menu-right">
+                           <a className="dropdown-item" href="#" onClick={() => {this.addCompanyCV()}}>Create Company CV</a>
+                         </div>
+                    </li>:
+                      <li className="nav-item mr-auto">
+                      <a className="nav-link remove-bottom-rounded" data-toggle="tab" href="#menu1"><i className="material-icons align-middle">group</i> Company</a>
+                 </li>}
+                    </ul>
+
+                <div className="tab-content">
+                    <div className="tab-pane container cv-container active" id="home">
+                    <div className="container-fluid">
                     <div id="accordion">
                         {this.state.CV.order.map((element,index) => {
                             if(element === 1){
@@ -847,7 +950,29 @@ export default class Profile extends React.Component {
                         })}
                     
                 </div>
-            </div>
+              </div>
+                    </div>
+                    {this.state.companyCV !== null?
+                    <div className="tab-pane container cv-container fade" id="menu1">
+                        <div className="cards-container">
+                            {this.state.companyCV.staff.concat(<AddCardElement />).map((e,i) => {
+                                if( i !== (this.state.companyCV.staff.length)){
+                                    return (
+                                       <div key={i}>
+                                    </div>
+                                    )
+                                }else {
+                                    return (
+                                        <AddCardElement onClick={() => {this.state.staffCreator.handleOpen()}} key={i} />
+                                    )
+                                }
+                            } )}
+                        </div>
+                    </div>
+                    :null}
+                </div>
+
+                
             </div>
             }
             </div>
