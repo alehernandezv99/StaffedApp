@@ -3,6 +3,7 @@ import "./staffCreator.css";
 import { Button, Position, Classes, Slider, Drawer, DateInput} from "@blueprintjs/core";
 import CVcontent from "../CVcontent";
 import firebase from "../../../../firebaseSetUp";
+import checkCriteria from "../../../../utils/checkCriteria";
 import $ from "jquery";
 
 export default class StaffCreator extends React.Component{
@@ -10,8 +11,10 @@ export default class StaffCreator extends React.Component{
         super(props);
 
         this.state = {
-            image:null,
+            saved:false,
+            progress:null,
             CV:{
+                id:"",
                 description:[],
                 experience:[],
                 education:[],
@@ -20,7 +23,8 @@ export default class StaffCreator extends React.Component{
                 expertise:[],
                 contact:[],
                 editable:true,
-                order:[1,2,3,4,5,6]
+                order:[1,2,3,4,5,6],
+                photoURL:null
             },
             inputs:{
                 description:{
@@ -85,7 +89,7 @@ export default class StaffCreator extends React.Component{
         })
     }
 
-    changeInputValue = (field, type, value) => {
+    changeInputValue = (field, type, value, errMessage, element) => {
         if(this._mounted){
             this.setState(state => {
                 let base = state.inputs;
@@ -94,6 +98,21 @@ export default class StaffCreator extends React.Component{
                 base3 = value
                 base2[type] = base3;
                 base[field] = base2;
+            
+               if(field === "description"){
+                   let message = checkCriteria(value,{minLength:3},type).message
+                   if(!checkCriteria(value,{minLength:3, type:"text"},"type").check){
+                   
+                       errMessage.style.display = "block";
+                       errMessage.textContent = message;
+                       element.classList.add("invalid-input-field")
+
+                   }else {
+                       errMessage.style.display = "none";
+                       element.classList.remove("invalid-input-field");
+                     
+                   }
+               }
 
                 return {
                     inputs:base
@@ -102,23 +121,124 @@ export default class StaffCreator extends React.Component{
         }
     }
 
+    upload= (e) => {
+        this.setState({
+            progress:0
+        })
+        let file = e.target.files[0];
+        let storageRef = firebase.storage().ref()
+        var uploadTask = storageRef.child(`users/${firebase.auth().currentUser.uid}/CV/company/${this.state.CV.id}/mainPic.jpg`).put(file)
+        
+        uploadTask.on('state_changed', (snapshot) =>{
+            // Observe state change events such as progress, pause, and resume
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+         
+            this.setState({
+                progress:progress
+            })
+        
+          }, (error) => {
+            // Handle unsuccessful uploads
+            this.setState({
+                progress:null
+            })
+            alert("The operation cannot be completed");
+          }, ()  =>{
+              this.setState({
+                  progress:null
+              })
+            // Handle successful uploads on complete
+            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+              this.setState(state => {
+                  let base = state.CV;
+                  base.photoURL = downloadURL;
+                  return {
+                      CV:base
+                  }
+              })
+            });
+          });
+    }
+
+    deleteReference =() => {
+        let storageRef = firebase.storage().ref()
+        var uploadTask = storageRef.child(`users/${firebase.auth().currentUser.uid}/CV/company/${this.state.CV.id}/mainPic.jpg`)
+        uploadTask.delete()
+        .then(() => {
+
+        })
+        .catch(e => {
+            this.props.addToast("Ohoh something went wrong")
+        })
+    }
+
     componentDidMount() {
-        this._mounted = true
+        this._mounted = true;
+
+        let id = firebase.firestore().collection("CVs").doc().id;
+        this.setState(state => {
+            let base = state.CV;
+            base.id = id;
+
+            return {
+                CV:base
+            }
+        })
     }
 
     componentWillUnmount(){
         this._mounted = false;
     }
 
+    createStaff = () => {
+        let check = 0;
+        let messages = []
+        if(!checkCriteria(this.state.inputs.description.title, {minLength:3, type:"text"},"title")){
+            check = 1
+            messages.push(checkCriteria(this.state.inputs.description.title, {minLength:4, type:"text"},"title").message)
+        }
+        if(!checkCriteria(this.state.inputs.description.description, {minLength:3, text:"text",},"description").check){
+            check = 1;
+            messages.push(checkCriteria(this.state.inputs.description.description, {minLength:3, text:"text",},"description").message)
+        }
+
+        if(check === 0){
+            firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","company").get()
+            .then(snapshot => {
+                if(!snapshot.empty){
+                    let id = "";
+                    let staff = []
+                    snapshot.forEach(doc => {
+                        id= doc.id
+                        staff = doc.data().staff;
+                    })
+                    staff.push(this.state.CV)
+                    firebase.firestore().collection("CVs").doc(id).update({staff:staff})
+                    .then(() => {
+                        this.props.addToast("Staff Added");
+                    })
+                    .catch(e => {
+                        this.props.addToast("ohoh something went wrong :(");
+                    })
+                }
+            })
+            .catch(e => {
+                this.props.addToast("ohoh something went wrong :(");
+            })
+        }
+    }
+
     render(){
         return (
-            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={() => {this.state.saved?(()=> {})():this.deleteReference(); this.props.handleClose()}} title={""} size={"75%"} isOpen={this.props.isOpen}>
             <div className={Classes.DRAWER_BODY}>
               <div className={`${Classes.DIALOG_BODY}`}>
               <div className="container mt-2">
                         <div className="container-fluid" style={{position:"relative"}}>
                    
-                                    <div style={{backgroundImage:`url(${this.state.image?this.state.image:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
+                                    <div style={{backgroundImage:`url(${this.state.CV.photoURL?this.state.CV.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
                                     backgroundPosition:"center",
                                     backgroundSize:"cover",
                                     backgroundRepeat:"no-repeat",
@@ -131,19 +251,30 @@ export default class StaffCreator extends React.Component{
                         
                      <div className="dropdown right-corner-btn">
                               <button type="button" className="dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
-                                <div className="dropdown-menu dropdown-menu-right">
-                                <button className="dropdown-item" onClick={() => {this.state.uploadImg.handleOpen()}}>Upload</button>
+                                <div className="dropdown-menu dropdown-menu-right" style={{width:"300px"}}>
+                                    <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="customFile" onChange={e => {e.persist(); this.upload(e)}}/>
+                                    <label className="custom-file-label" >Choose file</label>
+                                </div>
                               </div>
                              </div>
+
+                             {this.state.progress?
+                             <div className="progress mt-4">
+                               <div className="progress-bar" style={{width:`${this.state.progress}%`}}></div>
+                            </div>:null
+                             }
                         </div>
                     </div>
                     <div className="form-group">
                         <label>Profession</label>
-                        <input type="text" className="form-control" />
+                        <input type="text" value={this.state.inputs.description.title} className="form-control" onChange={(e) => {this.changeInputValue("description","title",e.target.value, e.target.parentNode.childNodes[2],e.target)}}/>
+                        <div className="invalid-feedback" >test</div>
                     </div>
                     <div className="form-group">
                         <label>Description</label>
-                        <textarea className="form-control"></textarea>
+                        <textarea className="form-control" value={this.state.inputs.description.description} onChange={(e) => {this.changeInputValue("description","description",e.target.value, e.target.parentNode.childNodes[2],e.target)}}></textarea>
+                        <div className="invalid-feedback">test</div>
                     </div>
 
                     <div id="accordion">
@@ -176,11 +307,11 @@ export default class StaffCreator extends React.Component{
                                             <input type="text" value={this.state.inputs.experience.title} onChange={(e) => {this.changeInputValue("experience","title",e.target.value)}} className="form-control" />
                                          </div>
                                          <div className="form-group">
-                                            <label>Education</label> 
+                                            <label>Experience</label> 
                                             <textarea value={this.state.inputs.experience.description} onChange={(e) => {this.changeInputValue("experience","description",e.target.value)}} className="form-control" ></textarea>
                                          </div>
                                          <div className="form-group">
-                                             <button type="button" onClick={() => {this.addElement("experience",{title:this.state.inputs.experience.title,text:this.state.inputs.experience.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
+                                             <button type="button" onClick={() => {this.addElement("experience",{title:this.state.inputs.experience.title,text:this.state.inputs.experience.description})}} className="btn btn-custom-1"><i className="material-icons align-middle">add</i> Add</button>
                                          </div>
                                      </div>
                                      </div>
@@ -224,7 +355,7 @@ export default class StaffCreator extends React.Component{
                                <textarea value={this.state.inputs.education.description} onChange={(e) => {this.changeInputValue("education","description",e.target.value)}} className="form-control" ></textarea>
                             </div>
                             <div className="form-group">
-                                <button type="button" className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
+                                <button type="button" onClick={() => {this.addElement("education",{title:this.state.inputs.education.title,text:this.state.inputs.education.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
                             </div>
                         </div>
                         </div>
@@ -262,11 +393,11 @@ export default class StaffCreator extends React.Component{
                                       <input type="text" value={this.state.inputs.portfolio.title} onChange={(e) => {this.changeInputValue("portfolio","title",e.target.value)}} className="form-control" />
                                    </div>
                                    <div className="form-group">
-                                      <label>Education</label> 
+                                      <label>Portfolio</label> 
                                       <textarea value={this.state.inputs.portfolio.description} onChange={(e) => {this.changeInputValue("portfolio","description",e.target.value)}} className="form-control" ></textarea>
                                    </div>
                                    <div className="form-group">
-                                       <button type="button" className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
+                                       <button type="button" onClick={() => {this.addElement("portfolio",{title:this.state.inputs.portfolio.title,text:this.state.inputs.portfolio.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
                                    </div>
                                </div>
                                </div>
@@ -305,11 +436,11 @@ export default class StaffCreator extends React.Component{
                                           <input type="text" value={this.state.inputs.skills.title} onChange={(e) => {this.changeInputValue("skills","title",e.target.value)}} className="form-control" />
                                        </div>
                                        <div className="form-group">
-                                          <label>Education</label> 
+                                          <label>Skills</label> 
                                           <textarea value={this.state.inputs.skills.description} onChange={(e) => {this.changeInputValue("skills","description",e.target.value)}} className="form-control" ></textarea>
                                        </div>
                                        <div className="form-group">
-                                           <button type="button" className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
+                                           <button type="button" onClick={() => {this.addElement("skills",{title:this.state.inputs.skills.title,text:this.state.inputs.skills.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
                                        </div>
                                    </div>
                                    </div>
@@ -348,11 +479,11 @@ export default class StaffCreator extends React.Component{
                                            <input type="text" value={this.state.inputs.expertise.title} onChange={(e) => {this.changeInputValue("expertise","title",e.target.value)}} className="form-control" />
                                         </div>
                                         <div className="form-group">
-                                           <label>Education</label> 
+                                           <label>Expertise</label> 
                                            <textarea value={this.state.inputs.expertise.description} onChange={(e) => {this.changeInputValue("expertise","description",e.target.value)}} className="form-control" ></textarea>
                                         </div>
                                         <div className="form-group">
-                                            <button type="button" className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
+                                            <button type="button" onClick={() => {this.addElement("expertise",{title:this.state.inputs.expertise.title,text:this.state.inputs.expertise.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
                                         </div>
                                     </div>
                                     </div>
@@ -388,14 +519,14 @@ export default class StaffCreator extends React.Component{
                                         <div className="container" id="contact-form" style={{display:"none"}}>
                                             <div className="form-group" >
                                                <label>Title</label> 
-                                               <input type="text" value={this.state.inputs.contact.title}  onChange={() => {this.changeInputValue("contact","title")}} className="form-control" />
+                                               <input type="text" value={this.state.inputs.contact.title}  onChange={(e) => {this.changeInputValue("contact","title",e.target.value)}} className="form-control" />
                                             </div>
                                             <div className="form-group">
-                                               <label>Education</label> 
-                                               <textarea value={this.state.inputs.contact.description} onChange={() => {this.changeInputValue("contact","description")}} className="form-control" ></textarea>
+                                               <label>Contact</label> 
+                                               <textarea value={this.state.inputs.contact.description} onChange={(e) => {this.changeInputValue("contact","description",e.target.value)}} className="form-control" ></textarea>
                                             </div>
                                             <div className="form-group">
-                                                <button type="button" className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
+                                                <button type="button" onClick={() => {this.addElement("contact",{title:this.state.inputs.contact.title,text:this.state.inputs.contact.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
                                             </div>
                                         </div>
                                         </div>
