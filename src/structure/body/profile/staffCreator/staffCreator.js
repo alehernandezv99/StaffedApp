@@ -409,7 +409,7 @@ export default class StaffCreator extends React.Component{
     createStaff = () => {
         let check = 0;
         let messages = []
-        alert("Triggered");
+       
         if(!checkCriteria(this.state.inputs.description.title, {minLength:3, type:"text"},"title")){
             check = 1
             messages.push(checkCriteria(this.state.inputs.description.title, {minLength:4, type:"text"},"title").message)

@@ -18,6 +18,7 @@ import AddCardElement from "./addCardElement";
 import StaffCreator from "./staffCreator";
 import StaffCard from "./staffCard";
 import StaffViewer from "./staffViewer";
+import LoadingSpinner from "../../loading/loadingSpinner";
 import $ from "jquery"
 import Chat from "../chat";
 
@@ -717,7 +718,7 @@ export default class Profile extends React.Component {
         return(
             
             <div>
-                
+                {this.state.isLoading?<LoadingSpinner/>:null}
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
