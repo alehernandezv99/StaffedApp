@@ -9,7 +9,7 @@ export default class AddCardElement extends React.Component {
     render(){
         return(
             <div>
-            <button className="btn btn-custom-4" onClick = {this.props.onClick}>
+            <button className="btn btn-custom-4 m-3" onClick = {this.props.onClick}>
                 <i className="material-icons align-middle">add</i> Add Staff
             </button>
             </div>

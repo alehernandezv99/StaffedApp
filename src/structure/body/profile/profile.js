@@ -16,6 +16,8 @@ import ProposalsViewer from "../proposalViewer";
 import InboxMessages from "../InboxMessages";
 import AddCardElement from "./addCardElement";
 import StaffCreator from "./staffCreator";
+import StaffCard from "./staffCard";
+import StaffViewer from "./staffViewer";
 import $ from "jquery"
 import Chat from "../chat";
 
@@ -40,6 +42,61 @@ export default class Profile extends React.Component {
                 order:[1,2,3,4,5,6]
             },
             companyCV:null,
+            staffEdit:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.staffEdit;
+                            base.isOpen = true;
+
+                            return {
+                                staffEdit:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.staffEdit;
+                            base.isOpen = false;
+
+                            return {
+                                staffEdit:base
+                            }
+                        })
+                    }
+                }
+            },
+            staffViewer:{
+                isOpen:false,
+                data:null,
+                handleOpen:() => {
+                    if(this._mounted){
+                    this.setState(state => {
+                        let base = state.staffViewer;
+                        base.isOpen = true;
+
+                        return {
+                            staffViewer:base
+                        }
+                    })
+                }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.staffViewer;
+                            base.isOpen = false;
+                            base.data = null
+                            return {
+                                staffViewer:base
+                            }
+                        })
+                    }
+                }
+            },
             staffCreator:{
                 isOpen:false,
                 handleClose:() =>{
@@ -592,6 +649,20 @@ export default class Profile extends React.Component {
         })
     }
 
+    openStaff = async(index) => {
+        if(this._mounted){
+           await this.setState(state => {
+                let base = state.staffViewer;
+                base.data = this.state.companyCV.staff[index]
+
+                return {
+                    staffViewer:base
+                }
+            })
+            this.state.staffViewer.handleOpen();
+        }
+    }
+
     render() {
         return(
             
@@ -703,7 +774,8 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
-                {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid))?<StaffCreator isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
+                {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid))?<StaffCreator addToast={this.addToast} toggleLoading={this.toggleLoading} isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
+                {(this.state.companyCV !== null) && (this.state.staffViewer.data !== null)?<StaffViewer isOpen={this.state.staffViewer.isOpen} data={this.state.staffViewer.data} handleClose={this.state.staffViewer.handleClose} addToast={this.addToast} />:null}
                <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
@@ -958,8 +1030,7 @@ export default class Profile extends React.Component {
                             {this.state.companyCV.staff.concat(<AddCardElement />).map((e,i) => {
                                 if( i !== (this.state.companyCV.staff.length)){
                                     return (
-                                       <div key={i}>
-                                    </div>
+                                       <StaffCard photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} description={e.description[0].description} />
                                     )
                                 }else {
                                     return (

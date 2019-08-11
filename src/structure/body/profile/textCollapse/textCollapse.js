@@ -53,9 +53,10 @@ export default class TextCollapse extends React.Component {
                 <p>{this.props.text.split("").splice(0,this.props.maxWidth).join("")}
                 <span ref={ref => this.dots = ref}>...</span><span ref={ref => this.more = ref}>{this.props.text.split("").splice(this.props.maxWidth,this.props.text.length - this.props.maxWidth).join("")}</span></p>
                 
-               <button onClick={() => {
+               <a className="collapse-link"  onClick={(e) => {
+                   e.preventDefault();
                     this.myFunction(this.dots, this.more, this.myBtn)
-                   }} ref={ref =>this.myBtn = ref}>Read More</button>
+                   }} ref={ref =>this.myBtn = ref}>Read More</a>
                 
                </div>
                
