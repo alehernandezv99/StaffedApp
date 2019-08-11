@@ -304,6 +304,7 @@ export default class StaffCreator extends React.Component{
     }
 
     componentDidMount() {
+
         this._mounted = true;
 
         if(this.props.update === false){
@@ -326,7 +327,7 @@ export default class StaffCreator extends React.Component{
                     this.setState(state => {
                         let base = state.inputs;
                         base.description.title = doc.data().staff[this.props.index].description[0].title;
-                        base.description.description = doc.data().staff[this.props.index].description[0].text;
+                        base.description.description = doc.data().staff[this.props.index].description[0].description;
 
                         return {
                             CV:CV,
@@ -441,6 +442,7 @@ export default class StaffCreator extends React.Component{
                         this.props.addToast("Staff Added");
                         this.props.toggleLoading();
                         this.props.handleClose();
+                        this.props.refresh();
                     })
                     .catch(e => {
                         this.props.addToast("ohoh something went wrong :(");
@@ -465,6 +467,7 @@ export default class StaffCreator extends React.Component{
 
 
     updateStaff = () => {
+        
         let check = 0;
         let messages = []
         alert("Triggered");
@@ -481,7 +484,11 @@ export default class StaffCreator extends React.Component{
             this.setState(state => {
                 let base = state.CV;
                 let base2 = base.description;
-                base2.push(this.state.inputs.description) 
+                base2[0] = (this.state.inputs.description) 
+
+                return {
+                    CV:base
+                }
             })
             this.props.toggleLoading();
             firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","company").get()

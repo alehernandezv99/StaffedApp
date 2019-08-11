@@ -99,6 +99,8 @@ export default class Profile extends React.Component {
             },
             staffCreator:{
                 isOpen:false,
+                update:false,
+                index:null,
                 handleClose:() =>{
                     this.setState(state => {
                         let base = state.staffCreator;
@@ -111,10 +113,14 @@ export default class Profile extends React.Component {
                     })
                 },
 
-                handleOpen:() => {
+                handleOpen:(check) => {
                     this.setState(state => {
                         let base = state.staffCreator;
                         base.isOpen = true;
+
+                        if(check === false){
+                            base.update = false
+                        }
 
                         return {
                             staffCreator:base
@@ -649,6 +655,50 @@ export default class Profile extends React.Component {
         })
     }
 
+    editStaff = (i) => {
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.staffCreator;
+                base.update = true;
+                base.index = i
+                base.isOpen = true
+                return {
+                    staffCreator:base
+                }
+            })
+        }
+    }
+
+    removeStaff = (i) => {
+        this.toggleLoading();
+        firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","company").get()
+        .then(snap => {
+            if(!snap.empty){
+                snap.forEach(doc => {
+                    let staff = doc.data().staff;
+                    staff.splice(i,1);
+
+                    firebase.firestore().collection("CVs").doc(doc.id).update({staff:staff})
+                    .then(() => {
+                        this.addToast("The item was successfully deleted");
+                        this.toggleLoading();
+                        this.searchCompanyCV();
+                    })
+                    .catch(e => {
+                        this.addToast("ohoh something went wrong :(");
+                        this.toggleLoading();
+                    })
+                })
+            }else {
+                this.toggleLoading()
+            }
+        })
+        .catch(e => {
+            this.addToast("ohoh something went wrong :(");
+            this.toggleLoading()
+        })
+    }
+
     openStaff = async(index) => {
         if(this._mounted){
            await this.setState(state => {
@@ -774,7 +824,7 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
-                {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid))?<StaffCreator addToast={this.addToast} toggleLoading={this.toggleLoading} isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
+                {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid) && (this.state.staffCreator.isOpen))?<StaffCreator refresh={this.searchCompanyCV} update={this.state.staffCreator.update} index={this.state.staffCreator.index} addToast={this.addToast} toggleLoading={this.toggleLoading} isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
                 {(this.state.companyCV !== null) && (this.state.staffViewer.data !== null)?<StaffViewer isOpen={this.state.staffViewer.isOpen} data={this.state.staffViewer.data} handleClose={this.state.staffViewer.handleClose} addToast={this.addToast} />:null}
                <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
@@ -1030,11 +1080,11 @@ export default class Profile extends React.Component {
                             {this.state.companyCV.staff.concat(<AddCardElement />).map((e,i) => {
                                 if( i !== (this.state.companyCV.staff.length)){
                                     return (
-                                       <StaffCard photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} description={e.description[0].description} />
+                                       <StaffCard edit={() => {this.editStaff(i)}} delete = {() => {this.removeStaff(i)}} photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} description={e.description[0].description} />
                                     )
                                 }else {
                                     return (
-                                        <AddCardElement onClick={() => {this.state.staffCreator.handleOpen()}} key={i} />
+                                        <AddCardElement onClick={() => {this.state.staffCreator.handleOpen(false)}} key={i} />
                                     )
                                 }
                             } )}
