@@ -3,7 +3,57 @@ import "./staffEdit.css";
 
 export default class StaffEdit extends React.Component {
     constructor(props){
-        super(props)
+        super(props);
+
+        this.state = {
+            saved:false,
+            progress:null,
+            submitted:false,
+            CV:{
+                id:"",
+                description:[],
+                experience:[],
+                education:[],
+                portfolio:[],
+                skills:[],
+                expertise:[],
+                contact:[],
+                editable:true,
+                order:[1,2,3,4,5,6],
+                photoURL:null
+            },
+            inputs:{
+                description:{
+                    title:"",
+                    description:""
+                },
+                experience:{
+                    title:"",
+                    description:""
+                },
+                education:{
+                    title:"",
+                    description:""
+                },
+                portfolio:{
+                    title:"",
+                    description:""
+                },
+                skills:{
+                    title:"",
+                    description:""
+                },
+                expertise:{
+                    title:"",
+                    description:""
+                },
+                contact:{
+                    title:"",
+                    description:""
+                },
+
+            }
+        }
     }
 
     render(){

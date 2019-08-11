@@ -10,7 +10,7 @@ export default class StaffCard extends React.Component {
 
     render(){
         return(
-            <div className="card mx-3 staff-card" style={{position:"relative"}}>
+            <div className="card mx-3 mt-3 staff-card" style={{position:"relative"}}>
                 <div className="card-header">
                 <div style={{backgroundImage:`url(${this.props.photoURL?this.props.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
                                     backgroundPosition:"center",
