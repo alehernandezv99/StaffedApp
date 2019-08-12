@@ -19,18 +19,31 @@ import StaffCreator from "./staffCreator";
 import StaffCard from "./staffCard";
 import StaffViewer from "./staffViewer";
 import LoadingSpinner from "../../loading/loadingSpinner";
-import $ from "jquery"
+import $ from "jquery";
+import autocomplete from "../../../utils/autocomplete";
+import checkCriteria from "../../../utils/checkCriteria";
+import EditBtn from "./editBtn";
+
 import Chat from "../chat";
 
 export default class Profile extends React.Component {
     constructor(props){
         super(props);
+        this.addSkill = this.addSkill.bind(this);
+        this.clearSkill = this.clearSkill.bind(this);
+        this.checkCriteria = checkCriteria;
+
         this.state = {
             user:null,
             chat:{
                 payload:null
             },
             toasts: [ /* IToastProps[] */ ],
+            skills:{
+                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
+                skillsFetched:[],
+                isOpen:false
+            },
             CV:{
                 description:[],
                 experience:[],
@@ -297,6 +310,59 @@ export default class Profile extends React.Component {
         }
     }
 
+    bindSkillsInput = () => {
+        $('#skills-filter').keypress((event) => {
+            if(event.keyCode == 13){
+              if(event.target.value !== ""){
+             
+    
+                firebase.firestore().collection("skills").get()
+                .then(snapshot => {
+                  let skillsArr = [];
+                  snapshot.forEach(doc => {
+                    skillsArr.push(doc.data().name);
+                  })
+                   this.setState(state => {
+                let base = state.skills;
+                let skills = base.skillsSelected["value"];
+      
+                if((skills.includes(event.target.value) === false)){
+                  if(skillsArr.includes(event.target.value)){
+                    skills.push(event.target.value);
+                    let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+                     base.skillsSelected = skillsObj;
+
+                    this.skillInput.value = "";
+                    return({skills:base})
+                    
+                  }else {
+                    this.addToast(`The skill "${event.target.value}" is not registered`);
+                  }
+    
+                }else {
+                  this.addToast("You cannot select two repeated skills")
+                  return {}
+                }
+                })
+                
+               
+              })
+            
+          }
+          }
+          });
+
+          firebase.firestore().collection("skills").get()
+          .then(async snapshot => {
+            let skills = [];
+            snapshot.forEach(doc => {
+            skills.push(doc.data().name);
+    })
+
+          autocomplete(document.getElementById("skills-filter"), skills, this.addSkill);
+  })
+      }
+
     handleInboxEvent = (action) =>{
         if(this._mounted){
         if(action.type === "view contract"){
@@ -321,6 +387,49 @@ export default class Profile extends React.Component {
         }
     }
     }
+
+
+    async addSkill(skill){
+        if(!(this.state.skills.skillsSelected["value"].includes(skill))){
+          let skills = this.state.skills.skillsSelected["value"].slice();
+    
+          let criteria = this.state.skills.skillsSelected["criteria"];
+        await this.setState(state => {
+          let base = state.skills;
+          skills.push(skill);
+          if(this.checkCriteria(skills, criteria).check){
+          base.skillsSelected.value = skills;
+          if(this._mounted){
+          return({skills:base,});
+          }
+          }else {
+            this.addToast(this.checkCriteria(skills, criteria, "skills").message);
+            if(this._mounted){
+            return ({});
+            }
+          }
+        })
+
+       
+      }else {
+        this.addToast("You cannot select two repeated skills")
+      }
+      }
+
+
+      async clearSkill(index){
+        await this.setState(state => {
+           let skills = state.skills.skillsSelected.value;
+           skills.splice(index,1)
+           let base = state.skills;
+           let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+           base.skills = skillsObj;
+           if(this._mounted){
+           return({skills:base});
+           }
+         })
+ 
+       }
 
     addToast = (message) => {
         this.toaster.show({ message: message});
@@ -562,6 +671,7 @@ export default class Profile extends React.Component {
               }
               this.loadCv();
               this.loadInbox(user.uid);
+              this.fetchSkills();
 
               this.uid = user.uid
               // ...
@@ -573,6 +683,55 @@ export default class Profile extends React.Component {
             }
           });
 
+    }
+
+    updateSkills = () => {
+        this.toggleLoading();
+        firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).get()
+        .then(snap => {
+            let batch = firebase.firestore().batch();
+
+            snap.forEach(doc => {
+                batch.update(firebase.firestore().collection("CVs").doc(doc.id), {skills:this.state.skills.skillsSelected.value})
+            })
+
+            batch.commit()
+            .then(() => {
+                this.addToast("Skills Updated!");
+                this.toggleLoading()
+                this.fetchSkills();
+            })
+            .catch(e => {
+                this.addToast("ohoh something went wrong :(");
+                this.toggleLoading();
+            })
+        })
+        .catch(e => {
+            this.addToast("ohoh something went wrong");
+            this.toggleLoading();
+        })
+    }
+
+    fetchSkills = () => {
+        firebase.firestore().collection("CVs").where("uid","==",this.props.userId).where("type","==","personal").get()
+        .then(snap => {
+            let skills = []
+
+            snap.forEach(doc => {
+                skills = doc.data().skills;
+            })
+
+            if(this._mounted){
+            this.setState(state => {
+                let base = this.state.skills;
+                base.skillsSelected.value = skills;
+
+                return {
+                    skills:base
+                }
+            })
+        }
+        })
     }
 
     resetPayload = () => {
@@ -619,7 +778,8 @@ export default class Profile extends React.Component {
                     uid:firebase.auth().currentUser.uid,
                     uemail:firebase.auth().currentUser.email,
                     id:id,
-                    created:firebase.firestore.Timestamp.now()
+                    description:this.state.CV.description,
+                    created:firebase.firestore.Timestamp.now(),
                 })
                 .then(() => {
                     this.toggleLoading()
@@ -648,6 +808,10 @@ export default class Profile extends React.Component {
                     this.setState({
                         companyCV:cv.data()
                     })
+                })
+            }else {
+                this.setState({
+                    companyCV:0
                 })
             }
         })
@@ -842,7 +1006,7 @@ export default class Profile extends React.Component {
                     {this.state.user === null? <ProfileLoading />:
                     <div>
                         <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                 <div className="container-fluid text-center" id="top">
                     <div className="container mt-2">
@@ -884,24 +1048,82 @@ export default class Profile extends React.Component {
                              </div>:null}
                             </div>
                             :this.state.CV.editable === true?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
-                        
+
+
+                            <div className="container">
+                        <div className="form-group mb-4" style={{position:"relative"}}>
+                            <h4 className="text-center mb-2 mt-3">Skills</h4>
+                                <div >
+                                {this.state.skills.skillsSelected.value.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} {this.state.skills.isOpen?<i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => { this.clearSkill(index)}}>clear</i>:""}</button>
+                                })}
+                                <div>
+
+                                <div id="input-skills-profile" style={{display:"none"}}>
+                                <div className="autocomplete">
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onClick={(e) => {
+                                if(!this.setted){
+                                    this.bindSkillsInput()
+                                    this.setted = true;
+                                }
+                                }} id="skills-filter" className="form-control mx-auto" style={{width:"300px"}} required/>
+                                 
+                                 
+                                </div>
+                                <button type="button" className="btn btn-custom-1 btn-sm m-2" onClick={this.updateSkills}><i className="material-icons align-middle">create</i> Update</button>
+                                 <button type="button" className="btn btn-danger btn-sm m-2" onClick={() => {
+                                     $("#input-skills-profile").slideUp("fast");
+                                     this.setState(state => {
+                                         let base = state.skills;
+                                         base.isOpen = false;
+                                         return {
+                                             skills:base
+                                         }
+                                     })
+                                     }}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                </div>
+
+                                </div>
+ 
+                                </div>
+                                {this.state.CV.editable === true?
+                                <EditBtn btns={[{
+                                    text:"Add/Remove",
+                                    callback:()=> {
+                                        $("#input-skills-profile").slideDown("fast");
+                                        this.setState(state => {
+                                            let base = state.skills;
+                                            base.isOpen = true;
+
+                                            return {
+                                                skills:base
+                                            }
+                                        })
+                                    }
+                                }]} />
+                           :null }
+                              </div>
+                              </div>
                 </div>
 
                 <ul className="nav nav-tabs mt-3">
                     <li className="nav-item ml-auto ">
                        <a className="nav-link active remove-bottom-rounded" data-toggle="tab" href="#home"><i className="material-icons align-middle">person</i> Personal</a>
                     </li>
-                    {this.state.companyCV === null?
+                    {this.state.companyCV === 0?
+                    this.state.CV.editable === true?
                     <li className="nav-item mr-auto dropdown">
                          <a className="nav-link dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">add</i></a>
                           
                          <div className="dropdown-menu dropdown-menu-right">
                            <a className="dropdown-item" href="#" onClick={() => {this.addCompanyCV()}}>Create Company CV</a>
                          </div>
-                    </li>:
+                         
+                    </li>:<li className="nav-item mr-auto"></li>:
+                    ((this.state.companyCV !== 0) && (this.state.companyCV !== null))? 
                       <li className="nav-item mr-auto">
                       <a className="nav-link remove-bottom-rounded" data-toggle="tab" href="#menu1"><i className="material-icons align-middle">group</i> Company</a>
-                 </li>}
+                 </li>:<li className="nav-item mr-auto"></li>}
                     </ul>
 
                 <div className="tab-content">
@@ -989,34 +1211,8 @@ export default class Profile extends React.Component {
                               )
                             }
 
+
                             if(element === 4){
-                                return (
-                                    <div className="card mt-3" key={element}>
-                                     <div className="card-header" style={{position:"relative"}}>
-                                       <a className="card-link" data-toggle="collapse" href="#skills"> Skills</a>
-
-                                       {this.state.CV.editable === true?
-                                       <div className="btn-group btns-change-order">
-                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
-                                          <button type="button" className="btn btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
-                                      </div>
-                                       :null}
-                                     </div>
-
-                                      <div className="collapse show"  id="skills">
-                                       {this.state.CV.skills.length > 0?this.state.CV.skills.map((element,i) => {
-                                     return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"skills",i,element.title,element.text)}} delete={() => {this.deleteContent("skills",i); }} title={element.title} text={element.text}/>
-
-                       )
-                           }):null}
-                                   {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"skills");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
-                                   </div>
-                               </div>
-                                )
-                            }
-
-                            if(element === 5){
                                 return (
                                     <div className="card mt-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>
@@ -1043,7 +1239,7 @@ export default class Profile extends React.Component {
                                 )
                             }
 
-                            if(element === 6){
+                            if(element === 5){
                                 return (
                                     <div className="card mt-3 mb-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>
@@ -1075,13 +1271,13 @@ export default class Profile extends React.Component {
                 </div>
               </div>
                     </div>
-                    {this.state.companyCV !== null?
+                    {(this.state.companyCV !== null) && (this.state.companyCV !== 0)?
                     <div className="tab-pane container cv-container fade" id="menu1">
                         <div className="cards-container">
                             {this.state.companyCV.staff.concat(<AddCardElement />).map((e,i) => {
                                 if( i !== (this.state.companyCV.staff.length)){
                                     return (
-                                       <StaffCard edit={() => {this.editStaff(i)}} delete = {() => {this.removeStaff(i)}} photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} description={e.description[0].description} />
+                                       <StaffCard edit={() => {this.editStaff(i)}} skills={e.skills} delete = {() => {this.removeStaff(i)}} photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} name={e.name?e.name[0].title:null} description={e.description[0].description} />
                                     )
                                 }else {
                                     return (

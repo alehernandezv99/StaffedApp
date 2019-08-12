@@ -1,6 +1,7 @@
 .staff-card {
     transition: 0.3s;
     max-width: 300px;
+    min-width: 300px;
 }
 
 .staff-card:hover {

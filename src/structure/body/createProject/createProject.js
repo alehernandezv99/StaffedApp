@@ -286,6 +286,7 @@ componentWillUnmount(){
         status:"hiring",
         references:[],
         applicants:[],
+        invitations:[],
         created:firebase.firestore.Timestamp.now(),
         updated:firebase.firestore.Timestamp.now(),
         cards:2,

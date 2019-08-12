@@ -19,7 +19,7 @@
 .cv-container {
     background-color:transparent !important;
     color:inherit !important;
-}
+  }
 
 .remove-caret::after { content: none !important }
 
@@ -33,5 +33,6 @@
     display:flex;
     flex-wrap: wrap;
     padding:15px !important;
+    justify-content: center;
 }
 

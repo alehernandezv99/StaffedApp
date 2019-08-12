@@ -34,10 +34,19 @@ export default class StaffViewer extends React.Component {
                         </div>
                     </div>
                     <div className="form-group text-center mt-2">
+                      <h6>{this.props.data.name?this.props.data.name[0].title:null}</h6>
+                    </div>
+                    <div className="form-group text-center mt-2">
                         <h5>{this.props.data.description[0].title}</h5>
                     </div>
                     <div className="form-group text-center">
                         <h6>{this.props.data.description[0].description}</h6>
+                    </div>
+
+                    <div className="form-group text-center">
+                    {this.props.data.skills.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill}</button>
+                                })}
                     </div>
 
                     <div id="accordion">
@@ -104,28 +113,9 @@ export default class StaffViewer extends React.Component {
                               )
                             }
 
+                            
+
                             if(element === 4){
-                                return (
-                                    <div className="card mt-3" key={element}>
-                                     <div className="card-header" style={{position:"relative"}}>
-                                       <a className="card-link" data-toggle="collapse" href="#skills"> Skills</a>
-
-                                     </div>
-
-                                      <div className="collapse show"  id="skills">
-                                       {this.props.data.skills.length > 0?this.props.data.skills.map((element,i) => {
-                                     return (
-                               <CVcontent editable={false} key={i} title={element.title} text={element.text}/>
-
-                       )
-                           }):null}
-                                   
-                                   </div>
-                               </div>
-                                )
-                            }
-
-                            if(element === 5){
                                 return (
                                     <div className="card mt-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>
@@ -147,7 +137,7 @@ export default class StaffViewer extends React.Component {
                                 )
                             }
 
-                            if(element === 6){
+                            if(element === 5){
                                 return (
                                     <div className="card mt-3 mb-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>

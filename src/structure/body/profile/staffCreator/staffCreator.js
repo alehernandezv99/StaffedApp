@@ -5,17 +5,30 @@ import CVcontent from "../CVcontent";
 import firebase from "../../../../firebaseSetUp";
 import checkCriteria from "../../../../utils/checkCriteria";
 import $ from "jquery";
+import autocomplete from "../../../../utils/autocomplete";
+import KeywordsGeneration from "../../../../utils/keywordsGeneration";
+
+
 
 export default class StaffCreator extends React.Component{
     constructor(props){
         super(props);
 
+        this.checkCriteria = checkCriteria;
+        this.addSkill = this.addSkill.bind(this);
+        this.clearSkill = this.clearSkill.bind(this);
+
         this.state = {
             saved:false,
             progress:null,
             submitted:false,
+            skills:{
+                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
+                skillsFetched:[],
+            },
             CV:{
                 id:"",
+                name:[],
                 description:[],
                 experience:[],
                 education:[],
@@ -28,6 +41,9 @@ export default class StaffCreator extends React.Component{
                 photoURL:null
             },
             inputs:{
+                name:{
+                    title:""
+                },
                 description:{
                     title:"",
                     description:"",
@@ -136,6 +152,48 @@ export default class StaffCreator extends React.Component{
         }
     }
     }
+
+
+    async addSkill(skill){
+        if(!(this.state.skills.skillsSelected["value"].includes(skill))){
+          let skills = this.state.skills.skillsSelected["value"].slice();
+    
+          let criteria = this.state.skills.skillsSelected["criteria"];
+        await this.setState(state => {
+          let base = state.skills;
+          skills.push(skill);
+          if(this.checkCriteria(skills, criteria).check){
+          base.skillsSelected.value = skills;
+          if(this._mounted){
+          return({skills:base,});
+          }
+          }else {
+            this.props.addToast(this.checkCriteria(skills, criteria, "skills").message);
+            if(this._mounted){
+            return ({});
+            }
+          }
+        })
+
+       
+      }else {
+        this.props.addToast("You cannot select two repeated skills")
+      }
+      }
+
+      async clearSkill(index){
+        await this.setState(state => {
+           let skills = state.skills.skillsSelected.value;
+           skills.splice(index,1)
+           let base = state.skills;
+           let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+           base.skills = skillsObj;
+           if(this._mounted){
+           return({skills:base});
+           }
+         })
+ 
+       }
 
     addElement = (field, obj,) => {
         let check = 0;
@@ -312,7 +370,6 @@ export default class StaffCreator extends React.Component{
         this.setState(state => {
             let base = state.CV;
             base.id = id;
-
             return {
                 CV:base
             }
@@ -322,16 +379,19 @@ export default class StaffCreator extends React.Component{
         .then(snap => {
             snap.forEach(doc => {
                 let CV = doc.data().staff[this.props.index];
-
+                let skills = doc.data().skills;
                 if(this._mounted){
                     this.setState(state => {
                         let base = state.inputs;
                         base.description.title = doc.data().staff[this.props.index].description[0].title;
                         base.description.description = doc.data().staff[this.props.index].description[0].description;
-
+                        base.name.title = doc.data().staff[this.props.index].name[0].title;
+                        let base2 = state.skills;
+                        base2.skillsSelected.value = doc.data().staff[this.props.index].skills;
                         return {
                             CV:CV,
-                            inputs:base
+                            inputs:base,
+                            skills:base2
                         }
                     })
                 }
@@ -402,6 +462,59 @@ export default class StaffCreator extends React.Component{
         $(id).slideUp("fast")
     }
 
+    bindSkillsInput = () => {
+        $('#skills-filter-creator').keypress((event) => {
+            if(event.keyCode == 13){
+              if(event.target.value !== ""){
+             
+    
+                firebase.firestore().collection("skills").get()
+                .then(snapshot => {
+                  let skillsArr = [];
+                  snapshot.forEach(doc => {
+                    skillsArr.push(doc.data().name);
+                  })
+                   this.setState(state => {
+                let base = state.skills;
+                let skills = base.skillsSelected["value"];
+      
+                if((skills.includes(event.target.value) === false)){
+                  if(skillsArr.includes(event.target.value)){
+                    skills.push(event.target.value);
+                    let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+                     base.skillsSelected = skillsObj;
+
+                    this.skillInput.value = "";
+                    return({skills:base})
+                    
+                  }else {
+                    this.addToast(`The skill "${event.target.value}" is not registered`);
+                  }
+    
+                }else {
+                  this.addToast("You cannot select two repeated skills")
+                  return {}
+                }
+                })
+                
+               
+              })
+            
+          }
+          }
+          });
+
+          firebase.firestore().collection("skills").get()
+          .then(async snapshot => {
+            let skills = [];
+            snapshot.forEach(doc => {
+            skills.push(doc.data().name);
+    })
+
+          autocomplete(document.getElementById("skills-filter-creator"), skills, this.addSkill);
+  })
+      }
+
     componentWillUnmount(){
         this._mounted = false;
     }
@@ -418,12 +531,29 @@ export default class StaffCreator extends React.Component{
             check = 1;
             messages.push(checkCriteria(this.state.inputs.description.description, {minLength:3, text:"text",},"description").message)
         }
+        if(!checkCriteria(this.state.skills.skillsSelected.value, this.state.skills.skillsSelected.criteria,"skills").check){
+            check = 1;
+            messages.push(checkCriteria(this.state.skills.skillsSelected.value, this.state.skills.skillsSelected.criteria,"skills").message)
+        }
+        if(!checkCriteria(this.state.inputs.name.title, {minLength:3, text:"text"},"name").check){
+            check = 1;
+            messages.push(checkCriteria(this.state.inputs.name.title, {minLength:3, text:"text"}, "name").message)
+        }
 
         if(check === 0){
             this.setState(state => {
                 let base = state.CV;
                 let base2 = base.description;
-                base2.push(this.state.inputs.description) 
+                let base3 = base.name;
+                
+                base2[0] = (this.state.inputs.description) 
+                base3[0] = (this.state.inputs.name)
+                base.description = base2
+                base.name = base3
+
+                return {
+                    CV:base,
+                }
             })
             this.props.toggleLoading();
             firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","company").get()
@@ -436,7 +566,10 @@ export default class StaffCreator extends React.Component{
                         console.log(doc.data())
                         staff = doc.data().staff;
                     })
-                    staff.push(this.state.CV)
+                    let obj = this.state.CV;
+                    obj.skills = this.state.skills.skillsSelected.value;
+                    obj.keywords = KeywordsGeneration.generateKeywords(obj.name[0].title).concat(KeywordsGeneration.generateKeywords(obj.description[0].title)).concat([""])
+                    staff.push(obj)
                     firebase.firestore().collection("CVs").doc(id).update({staff:staff})
                     .then(() => {
                         this.props.addToast("Staff Added");
@@ -458,7 +591,7 @@ export default class StaffCreator extends React.Component{
                 this.props.toggleLoading();
             })
         }else {
-            alert("Something doesnt match")
+           
             for(let i =0; i < messages.length; i++){
                 this.props.addToast(messages[i]);
             }
@@ -470,7 +603,7 @@ export default class StaffCreator extends React.Component{
         
         let check = 0;
         let messages = []
-        alert("Triggered");
+    
         if(!checkCriteria(this.state.inputs.description.title, {minLength:3, type:"text"},"title")){
             check = 1
             messages.push(checkCriteria(this.state.inputs.description.title, {minLength:4, type:"text"},"title").message)
@@ -484,8 +617,13 @@ export default class StaffCreator extends React.Component{
             this.setState(state => {
                 let base = state.CV;
                 let base2 = base.description;
+                let base3 = base.name;
+                
                 base2[0] = (this.state.inputs.description) 
-
+                base3[0] = (this.state.inputs.name)
+                base.description = base2
+                base.name = base3
+                console.log(base.name)
                 return {
                     CV:base
                 }
@@ -501,7 +639,10 @@ export default class StaffCreator extends React.Component{
                         console.log(doc.data())
                         staff = doc.data().staff;
                     })
-                    staff[this.props.index] = this.state.CV
+                    let obj = this.state.CV;
+                    obj.skills = this.state.skills.skillsSelected.value;
+                    obj.keywords = KeywordsGeneration.generateKeywords(obj.name[0].title).concat(KeywordsGeneration.generateKeywords(obj.description[0].title)).concat([""])
+                    staff[this.props.index] = obj
                     firebase.firestore().collection("CVs").doc(id).update({staff:staff})
                     .then(() => {
                         this.props.addToast("Staff Updated");
@@ -567,6 +708,11 @@ export default class StaffCreator extends React.Component{
                         </div>
                     </div>
                     <div className="form-group">
+                        <label>Name</label>
+                        <input type="text" value={this.state.inputs.name.title} className="form-control" onChange={(e) =>{this.changeInputValue("name","title",e.target.value, e.target.parentNode.childNodes[2], e.target)}}/>
+                        <div className="invalid-feedback"></div>
+                    </div>
+                    <div className="form-group">
                         <label>Profession</label>
                         <input type="text" value={this.state.inputs.description.title} className="form-control" onChange={(e) => {this.changeInputValue("description","title",e.target.value, e.target.parentNode.childNodes[2],e.target)}}/>
                         <div className="invalid-feedback" >test</div>
@@ -576,6 +722,34 @@ export default class StaffCreator extends React.Component{
                         <textarea className="form-control" value={this.state.inputs.description.description} onChange={(e) => {this.changeInputValue("description","description",e.target.value, e.target.parentNode.childNodes[2],e.target)}}></textarea>
                         <div className="invalid-feedback">test</div>
                     </div>
+
+                    <div className="container">
+                        <div className="form-group mb-4 text-center">
+                            <h4 className="text-center mb-2 mt-3">Skills</h4>
+                                <div >
+                                {this.state.skills.skillsSelected.value.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill}<i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => { this.clearSkill(index)}}>clear</i></button>
+                                })}
+                              
+
+                               
+                                <div className="autocomplete">
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onClick={(e) => {
+                                if(!this.setted){
+                                    this.bindSkillsInput()
+                                    this.setted = true;
+                                }
+                                }} id="skills-filter-creator" className="form-control mx-auto" style={{width:"300px"}} required/>
+                                 
+                                 
+                                </div>
+                
+
+ 
+                                </div>
+
+                              </div>
+                              </div>
 
                     <div id="accordion">
                         {this.state.CV.order.map((element,index) => {
@@ -776,73 +950,9 @@ export default class StaffCreator extends React.Component{
                               )
                             }
 
+                            
+
                             if(element === 4){
-                                return (
-                                    <div className="card mt-3" key={element}>
-                                     <div className="card-header" style={{position:"relative"}}>
-                                       <a className="card-link" data-toggle="collapse" href="#skills"> Skills</a>
-
-                                       {this.state.CV.editable === true?
-                                       <div className="btn-group btns-change-order">
-                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
-                                          <button type="button" className="btn btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
-                                      </div>
-                                       :null}
-                                     </div>
-
-                                      <div className="collapse show"  id="skills">
-                                       {this.state.CV.skills.length > 0?this.state.CV.skills.map((element,i) => {
-                                     return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.editContent("skills",i,"#skills-form-edit")}} delete={() => {this.deleteContent("skills",i); }} title={element.title} text={element.text}/>
-
-                       )
-                           }):null}
-                                   {this.state.CV.editable === true? 
-                                   <div>
-
-                                    <div className="mt-2 container" id="skills-form-edit" style={{display:"none"}}>
-                                          <div className="form-group">
-                                              <label>Title</label>
-                                              <input onChange={(e)=> {this.changeInputEditValue("skills","title",e.target.value,e.target.parentNode.childNodes[2],e.target)}} className="form-control" type="text" value={this.state.inputsEdit.skills.title} />
-                                              <div className="invalid-feedback"></div>
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>Skills</label>
-                                            <textarea onChange={(e)=> {this.changeInputEditValue("skills","description",e.target.value,e.target.parentNode.childNodes[2],e.target)}} className="form-control" type="text" value={this.state.inputsEdit.skills.description} ></textarea>
-                                            <div className="invalid-feedback"></div>
-                                        </div>
-                                        <div className="form-group">
-                                            <button type="button" onClick={() =>{this.applyEditItem("skills", this.state.inputsEdit.skills.index,"#skills-form-edit")}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">create</i> Edit</button>
-                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#skills-form-edit")}}><i className="material-icons align-middle">remove</i> Cancel</button>
-                                        </div>
-                                        </div>
-
-                                   {this.state.inputs.skills.isOpen === false? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.toggleAddContent("#skills-form","down","skills")}}><i className="material-icons align-middle">add</i> <span>Add</span></button>:null}
-                                   <div className="container" id="skills-form" style={{display:"none"}}>
-                                       <div className="form-group mt-2" >
-                                          <label>Title</label> 
-                                          <input  type="text" value={this.state.inputs.skills.title} onChange={(e) => {this.changeInputValue("skills","title",e.target.value, e.target.parentNode.childNodes[2], e.target)}} className="form-control" />
-                                          <div className="invalid-feedback"></div>
-                                       </div>
-                                       <div className="form-group">
-                                          <label>Skills</label> 
-                                          <textarea value={this.state.inputs.skills.description} onChange={(e) => {this.changeInputValue("skills","description",e.target.value, e.target.parentNode.childNodes[2], e.target)}} className="form-control" ></textarea>
-                                          <div className="invalid-feedback"></div>
-                                       </div>
-                                       <div className="form-group">
-                                           <button type="button" onClick={() => {this.addElement("skills",{title:this.state.inputs.skills.title,text:this.state.inputs.skills.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
-                                           <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#skills-form","up","skills")}}><i className="material-icons align-middle">remove</i> Cancel</button>
-                                       </div>
-                                   </div>
-                                   </div>
-                                   : null}
-                                   </div>
-                               </div>
-                                )
-                            }
-
-                            if(element === 5){
                                 return (
                                     <div className="card mt-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>
@@ -908,7 +1018,7 @@ export default class StaffCreator extends React.Component{
                                 )
                             }
 
-                            if(element === 6){
+                            if(element === 5){
                                 return (
                                     <div className="card mt-3 mb-3" key={element}>
                                       <div className="card-header" style={{position:"relative"}}>

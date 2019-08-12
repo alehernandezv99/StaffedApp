@@ -14,7 +14,7 @@ import ProposalsViewer from "../proposalViewer";
 import DrawerJob from "../drawerJob";
 import InboxMessages from "../InboxMessages";
 import Chat from "../chat";
-
+import checkCriteria from "../../../utils/checkCriteria";
 
 
 
@@ -22,18 +22,27 @@ import Chat from "../chat";
 export default class SearchStaff extends React.Component {
     constructor(props){
         super(props);
+        this.checkCriteria = checkCriteria;
+        this.addSkill = this.addSkill.bind(this);
+        this.clearSkill = this.clearSkill.bind(this);
 
         this.state = {
             user:null,
             chat:{
                 payload:null
             },
+            size:null,
             toasts: [ /* IToastProps[] */ ],
             CVs:[],
             queryString:"",
             inbox:{
                 count:0,
                 elements:[]
+            },
+            skills:{
+                skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
+                skillsFetched:[],
+                exclusive:false,
             },
             inboxDrawer:{
                 isOpen:false,
@@ -219,15 +228,126 @@ export default class SearchStaff extends React.Component {
         })
     }
 
-    fetchCVs = (limit,page) => {
+    async addSkill(skill){
+        if(!(this.state.skills.skillsSelected["value"].includes(skill))){
+          let skills = this.state.skills.skillsSelected["value"].slice();
+    
+          let criteria = this.state.skills.skillsSelected["criteria"];
+        await this.setState(state => {
+          let base = state.skills;
+          skills.push(skill);
+          if(this.checkCriteria(skills, criteria).check){
+          base.skillsSelected.value = skills;
+          if(this._mounted){
+          return({skills:base, projects:[], projectsId:[]});
+          }
+          }else {
+            this.addToast(this.checkCriteria(skills, criteria, "skills").message);
+            if(this._mounted){
+            return ({});
+            }
+          }
+        })
+
+      }else {
+        this.addToast("You cannot select two repeated skills")
+      }
+      }
+
+      async clearSkill(index){
+        await this.setState(state => {
+           let skills = state.skills.skillsSelected.value;
+           skills.splice(index,1)
+           let base = state.skills;
+           let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+           base.skills = skillsObj;
+           if(this._mounted){
+           return({skills:base, projects:[], projectsId:[]});
+           }
+         })
+ 
+       }
+
+    bindSkillsInput = () => {
+        $('#skills-filter').keypress((event) => {
+            if(event.keyCode == 13){
+              if(event.target.value !== ""){
+             
+    
+                firebase.firestore().collection("skills").get()
+                .then(snapshot => {
+                  let skillsArr = [];
+                  snapshot.forEach(doc => {
+                    skillsArr.push(doc.data().name);
+                  })
+                   this.setState(state => {
+                let base = state.skills;
+                let skills = base.skillsSelected["value"];
+      
+                if((skills.includes(event.target.value) === false)){
+                  if(skillsArr.includes(event.target.value)){
+                    skills.push(event.target.value);
+                    let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
+                     base.skillsSelected = skillsObj;
+
+                    this.skillInput.value = "";
+                    return({skills:base})
+                    
+                  }else {
+                    this.addToast(`The skill "${event.target.value}" is not registered`);
+                  }
+    
+                }else {
+                  this.addToast("You cannot select two repeated skills")
+                  return {}
+                }
+                })
+                
+               
+              })
+            
+          }
+          }
+          });
+
+          firebase.firestore().collection("skills").get()
+          .then(async snapshot => {
+            let skills = [];
+            snapshot.forEach(doc => {
+            skills.push(doc.data().name);
+    })
+
+          autocomplete(document.getElementById("skills-filter"), skills, this.addSkill);
+  })
+      }
+
+    fetchCVs = (limit,page, type, ) => {
+        this.setState({
+            size:null,
+            CVs:[]
+        })
         this.specific = false;
-        firebase.firestore().collection("CVs").get()
+        let ref1 = firebase.firestore().collection("CVs")
+        if(type){
+            if(type ==="personal"){
+                ref1 = ref1.where("type","==","personal");
+            }else if(type === "company"){
+                ref1 = ref1.where("type","==","company")
+            }
+        }
+        ref1.get()
           .then(snap => {
               let size = snap.size;
               let lastSeem;
               let ref = firebase.firestore().collection("CVs");
               lastSeem = snap.docs[(limit*(page))-(page === 0?0:1)];
-
+              if(type){
+                  if(type ==="personal"){
+                      ref = ref.where("type","==","personal");
+                  }else if(type === "company"){
+                      ref = ref.where("type","==","company")
+                  }
+              }
               if(page){
                   ref = ref.startAfter(lastSeem).limit(limit)
               }else {
@@ -332,14 +452,34 @@ export default class SearchStaff extends React.Component {
     }
 
 
-    specificSearch = (string, page) => {
+    specificSearch = (string, page, type) => {
+        this.setState({
+            size:null,
+            CVs:[]
+        })
         this.specific = true;
-        let ref = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase()).get()
+        let ref = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase())
+        if(type){
+            if(type ==="personal"){
+                ref = ref.where("type","==","personal");
+            }else if(type === "company"){
+                ref = ref.where("type","==","company")
+            }
+        }
+        ref.get()
         .then(snap => {
             let size = snap.size;
             let lastSeem;
             lastSeem = snap.docs[(this.state.pageSize.value*(page))-(page === 0?0:1)]; 
             let ref2 = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase())
+
+            if(type){
+                if(type ==="personal"){
+                    ref2 = ref2.where("type","==","personal");
+                }else if(type === "company"){
+                    ref2 = ref2.where("type","==","company")
+                }
+            }
             if(page){
                 ref2 = ref2.startAfter(lastSeem).limit(this.state.pageSize.value);
             }else {
@@ -496,7 +636,7 @@ export default class SearchStaff extends React.Component {
                 
                 <div className="container-fluid pt-4 pb-4" id="top">
                     <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                    <div id="portalContainer" className="text-left">
                    <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
@@ -514,12 +654,44 @@ export default class SearchStaff extends React.Component {
                                     return ({pageSize:pageSize});
                                 });}}  />
                         </div>
-                          <ul className="nav flex-column">
-                          <li className="nav-item">
-                           <a className="nav-link active" href="#">Search CVs</a>
-                           </li>
-                          </ul>
+                        <div className="form-group mt-2 text-center">
+                        <div className="text-center">Skills</div>
+                            <div className="custom-control custom-switch" onClick={(e) => {
+                                 if(this._mounted){
+                                     this.setState(state => {
+                                         let base = state.skills;
+                                         base.exclusive = !base.exclusive; 
+                                         if(base.exclusive === false){
+                                           // this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+                                            }else {
+                                              //  this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                                            }
+                                         return {
+                                             skills:base
+                                         }
+                                     })
+                                 }
+                             }}>
+                             <input type="checkbox" className="custom-control-input" checked={this.state.skills.exclusive} onChange={()=>{}} />
+                             </div>
+
+                                {this.state.skills.skillsSelected.value.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
+                                })}
+                                <div>
+                                <div className="autocomplete">
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onChange={(e) => {
+                                if(!this.setted){
+                                    this.bindSkillsInput()
+                                    this.setted = true;
+                                }
+                                }} id="skills-filter" className="form-control" required/>
+                                </div>
+                                </div>
+
+                                </div>
                         </div>
+
                         <div className="col">
                         
                             <div className="container">
@@ -531,28 +703,93 @@ export default class SearchStaff extends React.Component {
                          </div>
                         </div>
                         
-                        </div>
-                                {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
-                            
-                                    return <CVContainer email={element.uemail} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username} id={element.uid} />
-                                }):<div className="">No Results</div>}
+                        </div> 
+                        <ul className="nav nav-tabs">
+                          <li className="nav-item ml-auto">
 
-{this.state.size === null?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             <a className="nav-link active bottom-rounded" data-toggle="tab" href="#home" onClick={() => {this.fetchCVs(this.state.pageSize.value,0)}}><i className="material-icons align-middle">all_inclusive</i> All</a>
+                         </li>
+                         <li className="nav-item">
+                           <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu1" onClick={() => {this.fetchCVs(this.state.pageSize.value,0,"personal")}}><i className="material-icons align-middle">person</i> Personal</a>
+                        </li>
+                        <li className="nav-item mr-auto">
+                            <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu2" onClick={() => {this.fetchCVs(this.state.pageSize.value,0,"company")}}><i className="material-icons align-middle">group</i> Company</a>
+                        </li>
+                       </ul>
+
+
+                         <div className="tab-content">
+                            <div className="tab-pane container active container-staff" id="home">
+                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
+                        
+                            return <CVContainer skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
+
+                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
+                            <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
                              {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
+                               (() => {
+                                 let pages = [];
+                                  for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                    pages.push("element")
+                                   }
+                                   return pages
                                  })().map((data, i) => {
-                                     
-                                        return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i)}} href="#">{i}</a></li>
-                                     
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                             
+                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i)}} href="#">{i}</a></li>
+                             
+                         })                                                                  }
+                     <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                   </ul>}
+                            </div>
+                            <div className="tab-pane container fade container-staff" id="menu1">
+                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
+                            
+                            return <CVContainer skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
+
+                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
+                            <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                               (() => {
+                                 let pages = [];
+                                  for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                    pages.push("element")
+                                   }
+                                   return pages
+                                 })().map((data, i) => {
+                             
+                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i,"personal")}} href="#">{i}</a></li>
+                             
+                         })                                                                  }
+                     <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                   </ul>}
+                            </div>
+                           <div className="tab-pane container fade container-staff" id="menu2">
+                           {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
+                            
+                            return <CVContainer skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
+
+                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
+                            <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
+                             {
+                               (() => {
+                                 let pages = [];
+                                  for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
+                                    pages.push("element")
+                                   }
+                                   return pages
+                                 })().map((data, i) => {
+                             
+                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i, "company")}} href="#">{i}</a></li>
+                             
+                         })                                                                  }
+                     <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
+                   </ul>}
+                           </div>
+                        </div>
+                                
                             </div>
                         </div>
                     </div>

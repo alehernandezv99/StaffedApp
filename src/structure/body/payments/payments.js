@@ -504,7 +504,7 @@ export default class Payments extends React.Component {
                 {this.state.user === null?<PaymentsLoading />:
                 <div className="container-fluid p-5">
                     <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                     <div id="portalContainer">
                     <TransactionDrawer isOpen={this.state.transactionDrawer.isOpen} handleClose={() => {this.state.transactionDrawer.handleClose()}} />

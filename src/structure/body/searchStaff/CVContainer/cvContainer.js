@@ -15,6 +15,7 @@ export default class CVContainer extends React.Component{
         this._mounted = false;
     }
     componentDidMount(){
+       
         this._mounted = true;
         firebase.firestore().collection("users").doc(this.props.id).get()
         .then((snapshot) => {
@@ -33,9 +34,22 @@ export default class CVContainer extends React.Component{
                 <div className="media-body">
                 <h4>{this.state.user === null?<div className="spinner-border mx-3" style={{fontWeight:"light"}}></div>:this.props.name}{" - "}{this.props.description !== undefined?this.props.description.title:""}</h4>
                 <TextCollapse text={this.props.description !== undefined?this.props.description.text:""} maxWidth={200} />
+
+                {this.props.skills?
+            
+            <div className="form-group">
+                    {this.props.skills.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 btn-sm">{skill}</button>
+                                })}
+                    </div>
+           :null }
                 </div>
+                
             </div>
             <div className="email-bottom-right">{this.props.email}</div>
+            <div className="type-top-right">{this.props.type}</div>
+
+            
         </div>)
     }
 }

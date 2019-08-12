@@ -1047,7 +1047,7 @@ export default class Home extends React.Component {
                     
                     <div className="row text-center">
                         <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                  <div id="portalContainer" className="text-left">
                      <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
@@ -1103,7 +1103,7 @@ export default class Home extends React.Component {
                                 })}
                                 <div>
                                 <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onClick={(e) => {
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onChange={(e) => {
                                 if(!this.setted){
                                     this.bindSkillsInput()
                                     this.setted = true;

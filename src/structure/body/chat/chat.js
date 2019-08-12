@@ -18,6 +18,7 @@ export default class Chat extends React.Component {
             openChats:[],
             chatIsOpen:false,
             unread:0,
+            isLoaded:false
         }
 
         this.unread = 0
@@ -110,64 +111,81 @@ export default class Chat extends React.Component {
 
     componentDidMount() {
         this._mounted = true;
-        firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","asc").onSnapshot(async snapshot => {
-            let chats =[]
-            let index= 0
-            let count = 0
-            this.unread = 0
-           snapshot.forEach(chat => {
-            this.getParticipantsData(chat.id, index);
-            index++
-            firebase.firestore().collection("chat").doc(chat.id).collection("messages").orderBy("sent","desc").onSnapshot(snap =>{
-              
-                let messages = snap.docs;
-                let unreadMessages = 0
-                for(let i = 0; i < messages.length; i++){
-                    let currentMessage = messages[i].data()
-                    if(currentMessage.status){
-                        if(currentMessage.author !== firebase.auth().currentUser.uid){
-                            if(currentMessage.status === "unread"){
-                                unreadMessages++
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              // User is signed in.
+            
+              firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","asc").onSnapshot(async snapshot => {
+                let chats =[]
+                let index= 0
+                let count = 0
+                this.unread = 0
+               snapshot.forEach(chat => {
+                this.getParticipantsData(chat.id, index);
+                index++
+                firebase.firestore().collection("chat").doc(chat.id).collection("messages").orderBy("sent","desc").onSnapshot(snap =>{
+                  
+                    let messages = snap.docs;
+                    let unreadMessages = 0
+                    for(let i = 0; i < messages.length; i++){
+                        let currentMessage = messages[i].data()
+                        if(currentMessage.status){
+                            if(currentMessage.author !== firebase.auth().currentUser.uid){
+                                if(currentMessage.status === "unread"){
+                                    unreadMessages++
+                                }
                             }
                         }
                     }
-                }
-                this.unread += unreadMessages;
-                let currentChat = chat.data()
-                currentChat.messages = messages.map(e => e.data());
-                chats.push(currentChat)
-                count++
-                if(count === snapshot.size){
-                    this.setState({
-                        conversations:chats,
-                        unread:this.unread
-                    })
-                }
-                
-           })
-            })
-            
-            
-        })
-
-        firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
-        .then(doc => {
-            let openChats = doc.data().openChats;
-            if(openChats !== undefined){
-                if(openChats.length > 0){
-                    for(let i = 0; i<openChats.length; i++){
-                        if(openChats[i].isOpen === undefined){
-                            openChats[i].isOpen = true
-                        }
+                    this.unread += unreadMessages;
+                    let currentChat = chat.data()
+                    currentChat.messages = messages.map(e => e.data());
+                    chats.push(currentChat)
+                    count++
+                    if(count === snapshot.size){
+                        this.setState({
+                            conversations:chats,
+                            unread:this.unread
+                        })
                     }
-                if(this._mounted){
-            this.setState({
-                openChats:openChats
-            })}
-        }
+                    
+               })
+                })
+                
+                
+            })
+    
+            firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
+            .then(doc => {
+                let openChats = doc.data().openChats;
+                if(openChats !== undefined){
+                    if(openChats.length > 0){
+                        for(let i = 0; i<openChats.length; i++){
+                            if(openChats[i].isOpen === undefined){
+                                openChats[i].isOpen = true
+                            }
+                        }
+                    if(this._mounted){
+                this.setState({
+                    openChats:openChats
+                })}
+            }
+    
+            }
+            })
+              
+              // ...
+            } else {
+              // User is signed out.
+              this.props.handleStates(0)
+              this.props.passLastID(this.uid)
+              
 
-        }
-        })
+              // ...
+            }
+          });
+        
     }
 
    handleClose =(i) => {

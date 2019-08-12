@@ -11,7 +11,7 @@ export default class StaffCard extends React.Component {
     render(){
         return(
             <div className="card mx-3 mt-3 staff-card" style={{position:"relative"}}>
-                <div className="card-header">
+                <div className="card-header text-center">
                 <div style={{backgroundImage:`url(${this.props.photoURL?this.props.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
                                     backgroundPosition:"center",
                                     backgroundSize:"cover",
@@ -21,7 +21,11 @@ export default class StaffCard extends React.Component {
                                     marginLeft:"50%",
                                     transform:"translate(-50%,0)"
                                 }} className="rounded-circle" ></div>
+                                <h6 className="mt-2">{this.props.name?this.props.name:null}</h6>
                                 <h5 className="text-center mt-2"><TextCollapse text={this.props.title} maxWidth={100}/></h5>
+                                {this.props.skills.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill}</button>
+                                })}
                 </div>
                 
                 <div className="card-body">

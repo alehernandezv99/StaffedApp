@@ -612,7 +612,7 @@ export default class MyProjects extends React.Component {
                 
                  <div className=" row text-center">
                      <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat addToast={this.addToast}  payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                   <div id="portalContainer" className="text-left">
                   <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
