@@ -43,7 +43,7 @@ export default class UserBox extends React.Component{
         })
     }else if(this.props.email){
 
-        alert(this.props.email)
+        
         firebase.firestore().collection("users").where("email","==",this.props.email).get()
         .then(snap => {
             if(snap.empty){

@@ -3,3 +3,8 @@
     font-size: 15px;
     font-weight: lighter !important;
 }
+
+.invitations-job-drawer {
+    display:flex;
+    flex-wrap: wrap;
+}

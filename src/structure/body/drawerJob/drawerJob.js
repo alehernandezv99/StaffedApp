@@ -24,6 +24,7 @@ export default class DrawerJob extends React.Component {
         this.state = {
             TODO:[],
             project:[],
+            inputInvitation:"",
             isOwner:false,
             id:"",
             isOpen:true,
@@ -729,6 +730,41 @@ export default class DrawerJob extends React.Component {
         cb()
         }
     }
+    inviteEmail = () => {
+        firebase.firestore().collection("projects").doc(this.props.id).get()
+        .then(doc => {
+            let invitations = doc.data().invitations?doc.data().invitations:[];
+            if(invitations.includes(this.state.inputInvitation)){
+            invitations.push(this.state.inputInvitation);
+
+            firebase.firestore().collection("users").where("email","==",this.state.inputInvitation).get()
+            .then(snap => {
+                if(snap.empty){
+                    this.addToast("The email is not registered in this platform");
+                }else {
+                    firebase.firestore().collection("projects").doc(this.props.id).update({invitations:invitations})
+                    .then(() => {
+                        this.addToast("User Invited")
+                    })
+                    .catch(e => {
+                        this.addToast("ohoh something went wrong :(");
+                    })
+                }
+            })
+            .catch(e => {
+                this.addToast("ohoh something went wrong")
+            })
+            
+            }else {
+                this.addToast("The Email is already Invited")
+            }
+
+            
+        })
+        .catch(e => {
+            this.addToast("ohoh something went wrong :(")
+        })
+    }
 
     render(){
         return(
@@ -856,6 +892,30 @@ export default class DrawerJob extends React.Component {
                     }
                 })()}</div>
                 </div>:null}
+                
+                <div>
+                <h4 className="text-center mt-2">Invitations</h4>
+
+                <div className="input-group mb-3 mt-3 mx-auto">
+                <input type="text" className="form-control" value={this.state.inputInvitation} onChange={(e) => {
+                    this.setState({
+                        inputInvitation:e.target.value
+                    })
+                }} placeholder="Enter Email" />
+                  <div className="input-group-append">
+                  <button className="btn btn-custom-1" type="button" onClick={() => {this.inviteEmail()}}><i className="material-icons align-middle" style={{fontSize:"15px"}}>add</i> Invite</button> 
+               </div>
+              </div>
+              {this.state.project[0].invitations?this.state.project[0].invitations.length > 0?
+               <div className="invitations-job-drawer">
+                {this.state.project[0].invitations.map((e,i) => {
+                  return ( <UserBox email={e} />)
+                })}
+                </div>
+                :null:null }
+              </div>
+               
+
                 </div>
                 <div id="dj-section-2" style={{display:"none"}}>
                   <div className={`${Classes.DIALOG_BODY}`}>

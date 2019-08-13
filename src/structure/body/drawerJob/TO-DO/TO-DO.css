@@ -25,3 +25,10 @@
     right:10px !important;
     transform: translate(0,-50%) !important;
 }
+
+.btns-change-order-todo {
+    position: absolute;
+    top:50%;
+    right:60px;
+    transform: translate(0,-50%)
+}

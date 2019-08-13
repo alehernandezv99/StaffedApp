@@ -118,6 +118,53 @@ export default class TODO extends React.Component{
         }
         }
     }
+
+    switchPosition = async(type, index) => {
+        if(this.state.editable){
+           await this.setState(state => {
+                let TODO = [...state.TODO];
+                if(type === "up"){
+                    if((index - 1) >= 0){
+                        let help ={};
+                        help = TODO[index - 1]
+                        TODO[index -1] = TODO[index]
+                        TODO[index] = help
+                    }
+                }else if(type === "down"){
+                    if(index + 1 < TODO.length){
+                        let help = {}
+                        help = TODO[index + 1];
+                        TODO[index + 1] = TODO[index];
+                        TODO[index] = help
+                    }
+                }
+
+                return {
+                    TODO:TODO
+                }
+            
+            })
+
+            firebase.firestore().collection("projects").doc(this.props.projectID).get()
+            .then(doc => {
+                let TODO = this.state.TODO
+                let invitations = doc.data().invitations?doc.data().invitations:[];
+            if(invitations.includes(firebase.auth().currentUser.email) || doc.data().author === firebase.auth().currentUser.uid){
+                firebase.firestore().collection("projects").doc(this.props.projectID).update({TODO:TODO})
+                .then(() => {
+
+                })
+                .catch(e => {
+                    this.props.addToast("ohoh something went wrong :(");
+                })
+            }
+            })
+            .catch(e => {
+                this.props.addToast("ohoh something went wrong :(");
+            })
+        }
+    }
+
     addElement = () => {
         if(this.state.editable){
             if(this.state.input !== ""){
@@ -168,9 +215,9 @@ export default class TODO extends React.Component{
                     <h4 className="text-center">TO-DO</h4>
                     {this.state.editable?
                     <div className="input-group mb-3 mt-3 mx-auto">
-                          <input type="text" className="form-control" value={this.state.input} onChange={(e) => {this.changeValue(e.target.value)}} placeholder="Search" />
+                          <input type="text" className="form-control" value={this.state.input} onChange={(e) => {this.changeValue(e.target.value)}} placeholder="Enter Task" />
                             <div className="input-group-append">
-                            <button className="btn btn-custom-1" type="submit" onClick={() => {this.addElement()}}><i className="material-icons align-middle" style={{fontSize:"15px"}}>add</i> Add</button> 
+                            <button className="btn btn-custom-1" type="button" onClick={() => {this.addElement()}}><i className="material-icons align-middle" style={{fontSize:"15px"}}>add</i> Add</button> 
                          </div>
                         </div>
                     :null}
@@ -179,6 +226,12 @@ export default class TODO extends React.Component{
                           <div className={`${e.state?"TODO-item-ready":"TODO-item"}  p-4 mt-2`}>
                               <i className="material-icons align-middle" onClick={() => {this.state.editable?this.toggleCheck(i):(() => {})()}}>{e.state?"check_box":"check_box_outline_blank"}</i>
                               <span className="ml-3">{e.text}</span>
+                              {this.state.editable?
+                              <div className="btn-group btns-change-order-todo">
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",i)}}>keyboard_arrow_up</i></button>
+                                          <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",i)}}>keyboard_arrow_down</i></button>
+                             </div>
+                              :null}
                               {this.state.editable? <button className=" btn btn-close" onClick={() => {this.removeItem(i)}}><i className="material-icons align-middle">close</i></button>:null}
                           </div>
                       )
