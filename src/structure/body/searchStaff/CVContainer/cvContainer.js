@@ -84,17 +84,16 @@ export default class CVContainer extends React.Component{
                     })
                 }
                 
-                    }
-                })}
+              
                 </div>
                 :null:null}
                  
-                 <a href="" onClick={(e)=>{e.preventDefault(); 
+                 {this.props.type === "company"?this.props.staff.length > 2?<a href="" onClick={(e)=>{e.preventDefault(); 
                 this.setState({
                     open:false
                 });
                 $(`#${this.id}`).slideToggle("fast");
-                }}>{this.state.open === true?"View Less":"View More"}</a>
+                }}>{this.state.open === true?"View Less":"View All"}</a>:null:null}
                 </div>
                 
                 

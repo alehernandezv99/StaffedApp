@@ -26,7 +26,7 @@ export default class ContractModule extends React.Component {
        .then(snapshot => {
            let amount = 0
            snapshot.forEach(doc => {
-               console.log(doc.data());
+ 
                 amount += Number(doc.data().transactions[0].amount.total)
            })
 

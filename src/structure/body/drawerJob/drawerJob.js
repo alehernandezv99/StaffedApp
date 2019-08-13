@@ -22,6 +22,7 @@ export default class DrawerJob extends React.Component {
         super(props);
 
         this.state = {
+            TODO:[],
             project:[],
             isOwner:false,
             id:"",
@@ -344,7 +345,6 @@ export default class DrawerJob extends React.Component {
             let projectID = project.id;
             let projectName = project.data().title;
             let projectOwner = project.data().author;
-
             firebase.firestore().collection("projects").doc(projectID).collection("proposals").doc(proposalID).get()
             .then(proposal => {
                 firebase.firestore().collection("chat").where("participants","array-contains",proposal.data().user).where("projectID","==",projectID).get()
@@ -521,6 +521,7 @@ export default class DrawerJob extends React.Component {
                  project.push(snapshot.data());
                  let quantity = 0;
                  let idAuthorProject = project[0].author
+                 let TODO = snapshot.data().TODO?snapshot.data().TODO:[];
                 // let userAuthor = await firebase.firestore().collection("users").doc(project[0].author).get();
                 //  let data = userAuthor.data();
                  //let author = data.displayName?data.displayName:data.email;
@@ -611,7 +612,7 @@ export default class DrawerJob extends React.Component {
  
               
                     if(this._mounted){
-                      this.setState({project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener, isOwner:isOwner, contract:contract, action:this.props.action});
+                      this.setState({TODO:TODO, project:project, proposalFetched:proposalFetched, isSaved:isSaved, proposalFetchedListener:this.proposalFetchedListener, isOwner:isOwner, contract:contract, action:this.props.action});
                     }
                 
                  
@@ -653,7 +654,7 @@ export default class DrawerJob extends React.Component {
                         index++
                     })
                     if(this._mounted){
-                    this.setState({project:project, isSaved:isSaved, isOwner:true, proposals:proposals ,contract:contract, action:this.props.action})
+                    this.setState({TODO:TODO, project:project, isSaved:isSaved, isOwner:true, proposals:proposals ,contract:contract, action:this.props.action})
                     }
                  })
 
@@ -819,8 +820,42 @@ export default class DrawerJob extends React.Component {
                         <h4><i className="material-icons">assistant_photo</i> <span>Country</span></h4>
                         <h6 className="mt-3">{this.state.project[0].country}</h6>
                         </div>
+                        <div className="form-group">
+                            <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={this.props.openTODO}><i className="material-icons align-middle">check_box</i> TO-DO</button>
+                        </div>
                     </div>
                 </div>
+                 <h4 className="text-center mt-2">Progress</h4>
+                {this.state.TODO !== undefined? <div className="progress mx-4">
+                   
+                   <div className="progress-bar" style={{width:(() => {
+                       if(this.state.TODO.length > 0){
+                           let checked = 0;
+                           for(let i = 0; i < this.state.TODO.length; i++){
+                               if(this.state.TODO[i].state === true){
+                                   checked ++;
+                               }
+                           }
+                       
+                           return String(`${Number(Math.round(checked/this.state.TODO.length*100))}%`)
+                       }else {
+                           return "0"
+                       }
+                   })()}}>{(() => {
+                    if(this.state.TODO.length > 0){
+                        let checked = 0;
+                        for(let i = 0; i < this.state.TODO.length; i++){
+                            if(this.state.TODO[i].state === true){
+                                checked ++;
+                            }
+                        }
+                        
+                        return String(`${Number(Math.round(checked/this.state.TODO.length*100))}%`)
+                    }else {
+                        return "0%"
+                    }
+                })()}</div>
+                </div>:null}
                 </div>
                 <div id="dj-section-2" style={{display:"none"}}>
                   <div className={`${Classes.DIALOG_BODY}`}>

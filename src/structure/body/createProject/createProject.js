@@ -287,6 +287,7 @@ componentWillUnmount(){
         references:[],
         applicants:[],
         invitations:[],
+        TODO:[],
         created:firebase.firestore.Timestamp.now(),
         updated:firebase.firestore.Timestamp.now(),
         cards:2,

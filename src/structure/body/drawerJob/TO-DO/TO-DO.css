@@ -1,0 +1,27 @@
+.TODO-item {
+    background-color:rgb(58,123,213);
+    color:white !important;
+    transition: 0.3s;
+    cursor:pointer;
+    position: relative
+}
+
+.TODO-item-ready {
+    background-color:lightgray ;
+    transition: 0.3s;
+    cursor:pointer;
+    position: relative
+}
+.TODO-item:hover {
+    box-shadow:0 5px 5px 0 rgba(0,0,0,0.2);
+}
+.TODO-item-ready:hover {
+    box-shadow:0 5px 5px 0 rgba(0,0,0,0.2);
+}
+
+.btn-close {
+    position: absolute;
+    top:50% !important;
+    right:10px !important;
+    transform: translate(0,-50%) !important;
+}
