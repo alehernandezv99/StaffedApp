@@ -15,6 +15,7 @@ import DrawerJob from "../drawerJob";
 import InboxMessages from "../InboxMessages";
 import Chat from "../chat";
 import checkCriteria from "../../../utils/checkCriteria";
+import StaffViewer from "../profile/staffViewer";
 
 
 
@@ -34,15 +35,45 @@ export default class SearchStaff extends React.Component {
             size:null,
             toasts: [ /* IToastProps[] */ ],
             CVs:[],
+            type:"",
             queryString:"",
             inbox:{
                 count:0,
                 elements:[]
             },
+            staffViewer:{
+                isOpen:false,
+                data:null,
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.staffViewer;
+                            base.isOpen = false;
+                            return {
+                                staffViewer:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.staffViewer;
+                            base.isOpen = true;
+
+                            return {
+                                staffViewer:base
+                            }
+                        })
+                    }
+                }
+            },
+            searchBar:false,
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
                 exclusive:false,
+                currentPage:0
             },
             inboxDrawer:{
                 isOpen:false,
@@ -252,6 +283,8 @@ export default class SearchStaff extends React.Component {
       }else {
         this.addToast("You cannot select two repeated skills")
       }
+
+      this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value)
       }
 
       async clearSkill(index){
@@ -265,7 +298,8 @@ export default class SearchStaff extends React.Component {
            return({skills:base, projects:[], projectsId:[]});
            }
          })
- 
+
+         this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value)
        }
 
     bindSkillsInput = () => {
@@ -319,6 +353,84 @@ export default class SearchStaff extends React.Component {
 
           autocomplete(document.getElementById("skills-filter"), skills, this.addSkill);
   })
+      }
+
+      fetchCVsUnion = (limit,type,arr,page) => {
+        if(this._mounted){
+            this.setState({
+                CVs:[],
+                size:null
+            })
+        }
+      let body = {}
+      let form_data = new URLSearchParams();
+      body.limit = limit;
+      body.type= type;
+      body.arr = arr
+      body.page = page;
+
+      Object.keys(body).forEach(key => {
+          form_data.append(key, body[key])
+      })
+
+      fetch("https://staffed-app.herokuapp.com/getCvsUnion", {
+          method:"POST",
+          body:form_data,
+          headers: {
+             'Content-Type': 'application/x-www-form-urlencoded',
+           }
+          })
+      .then(response => {
+          return response.json()
+      }).then(snapshot => {
+        
+        if(this._mounted){
+            this.setState({
+                CVs:snapshot.CVs,
+                size:snapshot.size
+            })
+        }
+      })
+      }
+    
+      fetchCVsExclusive = (limit,type,arr,page) => {
+          if(this._mounted){
+              this.setState({
+                  CVs:[],
+                  size:null
+              })
+          }
+        let body = {}
+        let form_data = new URLSearchParams();
+        body.limit = limit;
+        body.type= type;
+        body.arr = arr
+        body.page = page;
+
+        Object.keys(body).forEach(key => {
+            form_data.append(key, body[key])
+        })
+
+        fetch("https://staffed-app.herokuapp.com/getCvsExclusive", {
+            method:"POST",
+            body:form_data,
+            headers: {
+               'Content-Type': 'application/x-www-form-urlencoded',
+             }
+            })
+        .then(response => {
+            return response.json()
+        }).then(snapshot => {
+          
+          if(this._mounted){
+              this.setState({
+                  CVs:snapshot.CVs,
+                  size:snapshot.size
+              })
+          }
+        })
+
+
       }
 
     fetchCVs = (limit,page, type, ) => {
@@ -411,7 +523,11 @@ export default class SearchStaff extends React.Component {
             if (user) {
               // User is signed in.
               this.updateUser(user.uid)
-
+              if(this.state.skills.exclusive){
+                  this.fetchCVsExclusive(this.state.pageSize.value,"",this.state.skills.skillsSelected.value )
+              }else {
+                this.fetchCVsUnion(this.state.pageSize.value,"",this.state.skills.skillsSelected.value )
+              }
               this.uid = user.uid
               // ...
             } else {
@@ -424,7 +540,7 @@ export default class SearchStaff extends React.Component {
             }
           });
 
-          this.fetchCVs(this.state.pageSize.value,0);
+          
     
     }
 
@@ -451,13 +567,47 @@ export default class SearchStaff extends React.Component {
 
     }
 
+    specificSearchFixed= (string, page,type) => {
+        let body = {}
+        let form_data = new URLSearchParams();
+        body.limit = this.state.pageSize.value;
+        body.type= type;
+        body.string = string;
+        body.page = page;
+
+        Object.keys(body).forEach(key => {
+            form_data.append(key, body[key])
+        })
+
+        fetch("https://staffed-app.herokuapp.com/specificSearchCVs", {
+            method:"POST",
+            body:form_data,
+            headers: {
+               'Content-Type': 'application/x-www-form-urlencoded',
+             }
+            })
+        .then(response => {
+            return response.json()
+        }).then(snapshot => {
+          
+          if(this._mounted){
+              this.setState({
+                  CVs:snapshot.CVs,
+                  size:snapshot.size
+              })
+          }
+        })
+
+    }
+
 
     specificSearch = (string, page, type) => {
         this.setState({
             size:null,
-            CVs:[]
+            CVs:[],
+            searchBar:true
         })
-        this.specific = true;
+      
         let ref = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase())
         if(type){
             if(type ==="personal"){
@@ -523,6 +673,20 @@ export default class SearchStaff extends React.Component {
                 chat:base
             }
         })
+    }
+
+    seeStaff= (data) => {
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.staffViewer;
+                base.isOpen = true;
+                base.data= data;
+
+                return {
+                    staffViewer:base
+                }
+            })
+        }
     }
 
     render(){
@@ -639,6 +803,7 @@ export default class SearchStaff extends React.Component {
                     <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                    <div id="portalContainer" className="text-left">
+                       {this.state.staffViewer.data !== null?<StaffViewer isOpen={this.state.staffViewer.isOpen} handleClose={this.state.staffViewer.handleClose} data={this.state.staffViewer.data}/>:null}
                    <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
                     <DrawerJob providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
@@ -648,24 +813,22 @@ export default class SearchStaff extends React.Component {
                     <div className="row">
                         <div className="col-sm-3">
                         <div className="form-group">
-                        <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={(e) => {this.setState(state => {
+                        <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={async(e) => {
+                            await this.setState(state => {
                                     let pageSize = state.pageSize;
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});
-                                });}}  />
+                                });
+                                this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value)}}  />
                         </div>
                         <div className="form-group mt-2 text-center">
                         <div className="text-center">Skills</div>
-                            <div className="custom-control custom-switch" onClick={(e) => {
+                            <div className="custom-control custom-switch mt-2" onClick={(e) => {
                                  if(this._mounted){
                                      this.setState(state => {
                                          let base = state.skills;
                                          base.exclusive = !base.exclusive; 
-                                         if(base.exclusive === false){
-                                           // this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
-                                            }else {
-                                              //  this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
-                                            }
+                                         this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value)
                                          return {
                                              skills:base
                                          }
@@ -673,6 +836,7 @@ export default class SearchStaff extends React.Component {
                                  }
                              }}>
                              <input type="checkbox" className="custom-control-input" checked={this.state.skills.exclusive} onChange={()=>{}} />
+                             <label className="custom-control-label">Exclusive?</label>
                              </div>
 
                                 {this.state.skills.skillsSelected.value.map((skill, index) => {
@@ -699,7 +863,11 @@ export default class SearchStaff extends React.Component {
                             <div className="input-group mb-3 mt-3 mx-auto " >
                           <input type="text" className="form-control" onChange={(e) => {this.setState({queryString:e.target.value})}} placeholder="Search" />
                             <div className="input-group-append">
-                            <button className="btn btn-custom-1" type="button" onClick={() => {this.specificSearch(this.state.queryString)}}>Search</button> 
+                            <button className="btn btn-custom-1" type="button" onClick={() => {
+                                this.setState({
+                                    searchBar:true
+                                })
+                                this.specificSearchFixed(this.state.queryString)}}>Search</button> 
                          </div>
                         </div>
                         
@@ -707,13 +875,25 @@ export default class SearchStaff extends React.Component {
                         <ul className="nav nav-tabs">
                           <li className="nav-item ml-auto">
 
-                             <a className="nav-link active bottom-rounded" data-toggle="tab" href="#home" onClick={() => {this.fetchCVs(this.state.pageSize.value,0)}}><i className="material-icons align-middle">all_inclusive</i> All</a>
+                             <a className="nav-link active bottom-rounded" data-toggle="tab" href="#home" onClick={() => {
+                                 this.setState({
+                                     type:"none"
+                                 })
+                                 this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value)}}><i className="material-icons align-middle">all_inclusive</i> All</a>
                          </li>
                          <li className="nav-item">
-                           <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu1" onClick={() => {this.fetchCVs(this.state.pageSize.value,0,"personal")}}><i className="material-icons align-middle">person</i> Personal</a>
+                           <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu1" onClick={() => {
+                               this.setState({
+                                   type:"personal"
+                               })
+                               this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value)}}><i className="material-icons align-middle">person</i> Personal</a>
                         </li>
                         <li className="nav-item mr-auto">
-                            <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu2" onClick={() => {this.fetchCVs(this.state.pageSize.value,0,"company")}}><i className="material-icons align-middle">group</i> Company</a>
+                            <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu2" onClick={() => {
+                                this.setState({
+                                    type:"company"
+                                })
+                                this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value)}}><i className="material-icons align-middle">group</i> Company</a>
                         </li>
                        </ul>
 
@@ -722,7 +902,7 @@ export default class SearchStaff extends React.Component {
                             <div className="tab-pane container active container-staff" id="home">
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                         
-                            return <CVContainer skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
 
                          {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -736,7 +916,7 @@ export default class SearchStaff extends React.Component {
                                    return pages
                                  })().map((data, i) => {
                              
-                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i)}} href="#">{i}</a></li>
+                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.searchBar === true?this.specificSearchFixed(this.state.queryString,i): this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value,i):this.fetchCVsUnion(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value,i)}} href="#">{i}</a></li>
                              
                          })                                                                  }
                      <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
@@ -745,7 +925,7 @@ export default class SearchStaff extends React.Component {
                             <div className="tab-pane container fade container-staff" id="menu1">
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
-                            return <CVContainer skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
 
                          {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -759,7 +939,7 @@ export default class SearchStaff extends React.Component {
                                    return pages
                                  })().map((data, i) => {
                              
-                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i,"personal")}} href="#">{i}</a></li>
+                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.searchBar === true?this.specificSearchFixed(this.state.queryString,i): this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value, i):this.fetchCVsUnion(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
                              
                          })                                                                  }
                      <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
@@ -768,7 +948,7 @@ export default class SearchStaff extends React.Component {
                            <div className="tab-pane container fade container-staff" id="menu2">
                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
-                            return <CVContainer skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
 
                          {this.state.size === null?null:<ul className="pagination text-center mt-2">
@@ -782,7 +962,8 @@ export default class SearchStaff extends React.Component {
                                    return pages
                                  })().map((data, i) => {
                              
-                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specific === true?this.specificSearch(this.state.queryString,i): this.fetchCVs(this.state.pageSize.value, i, "company")}} href="#">{i}</a></li>
+                                return <li key={i} className="page-item"><a className="page-link" onClick={(e) => {
+                                    this.state.searchBar === true?this.specificSearchFixed(this.state.queryString,i): this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value)}} href="#">{i}</a></li>
                              
                          })                                                                  }
                      <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>

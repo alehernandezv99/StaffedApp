@@ -673,7 +673,7 @@ export default class StaffCreator extends React.Component{
 
     render(){
         return (
-            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={() => {this.state.saved?(()=> {})():this.deleteReference(); this.props.handleClose()}} title={""} size={"75%"} isOpen={this.props.isOpen}>
+            <Drawer hasBackdrop={true} style={{zIndex:999}} portalContainer={document.getElementById("portalContainer")} onClose={() => {this.state.saved?(()=> {})():this.deleteReference(); this.props.handleClose()}} title={""} size={"75%"} isOpen={this.props.isOpen}>
             <div className={Classes.DRAWER_BODY}>
               <div className={`${Classes.DIALOG_BODY}`}>
               <div className="container mt-2">

@@ -691,8 +691,13 @@ export default class Profile extends React.Component {
         .then(snap => {
             let batch = firebase.firestore().batch();
 
+            let skillsExclusive = {}
+            for(let i = 0; i < this.state.skills.skillsSelected.value; i++){
+                skillsExclusive[this.state.skills.skillsSelected.value[i]] = true;
+            }
+
             snap.forEach(doc => {
-                batch.update(firebase.firestore().collection("CVs").doc(doc.id), {skills:this.state.skills.skillsSelected.value})
+                batch.update(firebase.firestore().collection("CVs").doc(doc.id), {skills:this.state.skills.skillsSelected.value, skillsExclusive:skillsExclusive})
             })
 
             batch.commit()

@@ -15,7 +15,7 @@ export default class StaffViewer extends React.Component {
 
     render(){
         return(
-            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={() => {this.props.handleClose()}} title={""} size={"75%"} isOpen={this.props.isOpen}>
+            <Drawer hasBackdrop={true} portalContainer={document.getElementById("portalContainer")} style={{zIndex:999}} onClose={() => {this.props.handleClose()}} title={""} size={"75%"} isOpen={this.props.isOpen}>
             <div className={Classes.DRAWER_BODY}>
               <div className={`${Classes.DIALOG_BODY}`}>
               <div className="container mt-2">
@@ -101,7 +101,7 @@ export default class StaffViewer extends React.Component {
                                   </div>
 
                                 <div className="collapse show" id="portfolio">
-                                   {this.props.data.length > 0?this.props.data.portfolio.map((element,i) => {
+                                   {this.props.data.portfolio.length > 0?this.props.data.portfolio.map((element,i) => {
                                     return (
                                <CVcontent editable={false} key={i} title={element.title} text={element.text}/>
 
