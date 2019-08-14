@@ -37,7 +37,7 @@ export default class StaffCreator extends React.Component{
                 expertise:[],
                 contact:[],
                 editable:true,
-                order:[1,2,3,4,5,6],
+                order:[1,2,3,4,5],
                 photoURL:null
             },
             inputs:{
@@ -668,6 +668,36 @@ export default class StaffCreator extends React.Component{
             for(let i =0; i < messages.length; i++){
                 this.props.addToast(messages[i]);
             }
+        }
+    }
+
+    switchPosition = (type, index) => {
+        let arr = [...this.state.CV.order];
+        if(type === "up"){
+            if(index + 1 < arr.length){
+                let help = 0;
+                help = arr[index + 1];
+                arr[index + 1] = arr[index];
+                arr[index] = help;
+
+            }
+        }else if(type === "down"){
+            if(index -1 >= 0){
+                let help = 0;
+                help = arr[index - 1];
+                arr[index -1] = arr[index];
+                arr[index] = help
+            }
+        }
+
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.CV;
+                base.order = arr;
+                return {
+                    CV:base
+                }
+            })
         }
     }
 

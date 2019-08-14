@@ -4,6 +4,7 @@ import "./profile.css";
 import Navbar from "../../navbar";
 import logo from "../../../res/Graphics/main_logo.png";
 import firebase from "../../../firebaseSetUp";
+import TODO from "../drawerJob/TO-DO";
 import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, Divider} from "@blueprintjs/core";
 import TextCollapse from "./textCollapse";
 import EditProposalModule from "./editProposalModule";
@@ -37,6 +38,33 @@ export default class Profile extends React.Component {
             user:null,
             chat:{
                 payload:null
+            },
+            TODO:{
+                isOpen:false,
+                handelClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.TODO;
+                            base.isOpen = false
+
+                            return {
+                                TODO:base
+                            }
+                        })
+                    }
+                },
+              handleOpen:() => {
+                  if(this._mounted){
+                      this.setState(state => {
+                          let base = state.TODO;
+                          base.isOpen = true;
+
+                          return {
+                              TODO:base
+                          }
+                      })
+                  }
+              }
             },
             toasts: [ /* IToastProps[] */ ],
             skills:{
@@ -994,11 +1022,12 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
+               {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                 {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid) && (this.state.staffCreator.isOpen))?<StaffCreator refresh={this.searchCompanyCV} update={this.state.staffCreator.update} index={this.state.staffCreator.index} addToast={this.addToast} toggleLoading={this.toggleLoading} isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
                 {(this.state.companyCV !== null) && (this.state.staffViewer.data !== null)?<StaffViewer isOpen={this.state.staffViewer.isOpen} data={this.state.staffViewer.data} handleClose={this.state.staffViewer.handleClose} addToast={this.addToast} />:null}
                <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                   </div>

@@ -116,14 +116,14 @@ export default class Chat extends React.Component {
             if (user) {
               // User is signed in.
             
-              firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","asc").onSnapshot(async snapshot => {
+              firebase.firestore().collection("chat").where("participants","array-contains",user.uid).orderBy("updated","asc").onSnapshot(async snapshot => {
                 let chats =[]
                 let index= 0
                 let count = 0
                 this.unread = 0
                snapshot.forEach(chat => {
-                this.getParticipantsData(chat.id, index);
-                index++
+                
+                
                 firebase.firestore().collection("chat").doc(chat.id).collection("messages").orderBy("sent","desc").onSnapshot(snap =>{
                   
                     let messages = snap.docs;
@@ -148,8 +148,9 @@ export default class Chat extends React.Component {
                             conversations:chats,
                             unread:this.unread
                         })
+                        this.getParticipantsData(chat.id, index);
                     }
-                    
+                    index++
                })
                 })
                 

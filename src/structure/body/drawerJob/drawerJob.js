@@ -734,7 +734,7 @@ export default class DrawerJob extends React.Component {
         firebase.firestore().collection("projects").doc(this.props.id).get()
         .then(doc => {
             let invitations = doc.data().invitations?doc.data().invitations:[];
-            if(invitations.includes(this.state.inputInvitation)){
+            if(!invitations.includes(this.state.inputInvitation)){
             invitations.push(this.state.inputInvitation);
 
             firebase.firestore().collection("users").where("email","==",this.state.inputInvitation).get()
@@ -892,17 +892,17 @@ export default class DrawerJob extends React.Component {
                     }
                 })()}</div>
                 </div>:null}
-                
+                {this.state.project[0].author === firebase.auth().currentUser.uid?
                 <div>
-                <h4 className="text-center mt-2">Invitations</h4>
+                <h4 className="text-center mt-4">Invitations</h4>
 
-                <div className="input-group mb-3 mt-3 mx-auto">
+                <div className="input-group mb-3 mt-3 mx-auto" style={{width:"350px"}}>
                 <input type="text" className="form-control" value={this.state.inputInvitation} onChange={(e) => {
                     this.setState({
                         inputInvitation:e.target.value
                     })
                 }} placeholder="Enter Email" />
-                  <div className="input-group-append">
+                  <div className="input-group-append ">
                   <button className="btn btn-custom-1" type="button" onClick={() => {this.inviteEmail()}}><i className="material-icons align-middle" style={{fontSize:"15px"}}>add</i> Invite</button> 
                </div>
               </div>
@@ -914,7 +914,7 @@ export default class DrawerJob extends React.Component {
                 </div>
                 :null:null }
               </div>
-               
+               :null}
 
                 </div>
                 <div id="dj-section-2" style={{display:"none"}}>
