@@ -71,7 +71,7 @@ export default class MyProjects extends React.Component {
             pageSize:{
                 min:4,
                 max:12,
-                value:4
+                value:15
             },
             inbox:{
                 count:0,
@@ -702,7 +702,7 @@ export default class MyProjects extends React.Component {
                             <button className="btn btn-custom-1" type="button" onClick={() => {this.specificSearch(this.state.queryString)}}>Search</button> 
                          </div>
                         </div>
-                    <div className="form-group mx-auto mt-4 " style={{width:"300px"}}>
+                    <div className="form-group mx-auto mt-4 " style={{width:"300px"}} style={{display:"none"}}> 
                                 <label>Page Size</label>
                                 <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={async(e) => {await this.setState(state => {
                                     let pageSize = state.pageSize;

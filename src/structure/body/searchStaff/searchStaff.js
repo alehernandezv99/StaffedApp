@@ -217,7 +217,7 @@ export default class SearchStaff extends React.Component {
             pageSize:{
                 min:6,
                 max:12,
-                value:6
+                value:15
             }
         }
         this.toaster = {};
@@ -921,7 +921,7 @@ export default class SearchStaff extends React.Component {
                   </div>
                     <div className="row">
                         <div className="col-sm-3">
-                        <div className="form-group">
+                        <div className="form-group" style={{display:"none"}}>
                         <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}  onChange={async(e) => {
                             await this.setState(state => {
                                     let pageSize = state.pageSize;

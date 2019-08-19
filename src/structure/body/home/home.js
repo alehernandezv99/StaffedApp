@@ -56,7 +56,7 @@ export default class Home extends React.Component {
             pageSize:{
                 min:6,
                 max:12,
-                value:6
+                value:15
             },
             inbox:{
                 count:0,
@@ -972,7 +972,152 @@ export default class Home extends React.Component {
 
                 <div className="container-fluid padding-2">
                     {this.state.user === null? <HomeLoading />:
-                    
+                    <div>
+
+<div className="row">
+                            <div className="col form-group" style={{display:"none"}}>
+                                <div className="text-center mb-3">Page Size</div>
+                                <select value={this.state.pageSize.value} className="custom-select-sm text-center" style={{width:"100%"}} onChange={(e) => {this.setState(state => {
+                                    let pageSize = state.pageSize;
+                                    pageSize.value = Number(e.currentTarget.options[e.currentTarget.selectedIndex].value);
+                                    return ({pageSize:pageSize});
+
+                                });this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)}}>
+                                    <option value="25" style={{textAlign:"center"}}>25</option>
+                                    <option value="50">50</option>
+                                    <option value="75">75</option>
+                                    <option value="100">100</option>
+                                </select>
+        
+                            </div>
+                           
+                          
+
+                       
+                            <div className="form-group col mb-4">
+
+                            <div className="flex-container">
+                            <div className="text-center mb-3">Skills</div>
+                            <div className="custom-control custom-switch ml-4" onClick={(e) => {
+                                 if(this._mounted){
+                                     this.setState(state => {
+                                         let base = state.skills;
+                                         base.exclusive = !base.exclusive; 
+                                         if(base.exclusive === false){
+                                            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+                                            }else {
+                                                this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                                            }
+                                         return {
+                                             skills:base
+                                         }
+                                     })
+                                 }
+                             }}>
+                             <input type="checkbox" className="custom-control-input" checked={this.state.skills.exclusive} onChange={()=>{}} />
+                             <label className="custom-control-label">Exclusive?</label>
+                           </div>
+                           </div>
+                                <div>
+                                {this.state.skills.skillsSelected.value.map((skill, index) => {
+                                  return <button type="button" key={index} className="btn btn-custom-2 btn-custom-skill mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
+                                })}
+                                <div>
+                                <div className="autocomplete">
+                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onChange={(e) => {
+                                if(!this.setted){
+                                    this.bindSkillsInput()
+                                    this.setted = true;
+                                }
+                                }} id="skills-filter" className="form-control" required/>
+                                </div>
+                                </div>
+
+                                </div>
+                              </div>
+                              <div  className="form-group mb-4 col">
+                                  <div className="text-center mb-2">Budget <span>($US Dollars)</span></div>
+
+                                  <div className="flex-container">
+                                  <div className="input-group mb-3 input-group-sm m-2">
+                                    <div className="input-group-prepend">
+                                       <span className="input-group-text">From</span>
+                                   </div>
+                                   <input type="text" className="form-control" value={this.state.budget[0]} onChange={async(e) => {e.persist();await this.setState(state => {
+                                       if(this._mounted){
+                                       
+                                       return {
+                                       budget:[e.target.value,state.budget[1]],
+                                       }
+                                    
+                                    }
+                                   }); this.triggerSearch()}}/>
+                                  </div>
+                              
+
+                                  
+                                  <div className="input-group mb-3 input-group-sm m-2">
+                                    <div className="input-group-prepend">
+                                       <span className="input-group-text">To  </span>
+                                   </div>
+                                   <input type="text" className="form-control" value={this.state.budget[1]} onChange={async(e) => {e.persist();await this.setState(state => {
+                                       if(this._mounted){
+                                       
+                                       return {
+                                       budget:[state.budget[0], e.target.value]
+                                       }
+                                    
+                                    }
+                                   }); this.triggerSearch()}}/>
+                                  </div>
+                                  </div>
+                              </div>
+                              <div className="form-group mb-4">
+                                  <div className="text-center mb-3">Country</div>
+                                  <SelectCountry value={this.state.country} onChange={async(e) => { await this.setState({
+                                      country: e.target.options[e.target.selectedIndex].value
+                                  }); this.triggerSearch()}} />
+                            </div>
+
+                            <div  className="form-group mb-4 col">
+                                  <div className="text-center mb-2">Proposals</div>
+
+                                  <div className="flex-container">
+                                  <div className="input-group mb-3 input-group-sm m-2">
+                                    <div className="input-group-prepend">
+                                       <span className="input-group-text">From</span>
+                                   </div>
+                                   <input type="text" className="form-control" value={this.state.proposals[0]} onChange={async(e) => {e.persist();await this.setState(state => {
+                                       if(this._mounted){
+                                       
+                                       return {
+                                       proposals:[e.target.value,state.proposals[1]],
+                                       }
+                                    
+                                    }
+                                   }); this.triggerSearch()}}/>
+                                  </div>
+
+                                  <div className="input-group mb-3 input-group-sm m-2">
+                                    <div className="input-group-prepend">
+                                       <span className="input-group-text">To  </span>
+                                   </div>
+                                   <input type="text" className="form-control" value={this.state.proposals[1]} onChange={async(e) => {e.persist();await this.setState(state => {
+                                       if(this._mounted){
+                                       
+                                       return {
+                                       proposals:[state.proposals[0], e.target.value]
+                                       }
+                                    
+                                    }
+                                   }); this.triggerSearch()}}/>
+                                  </div>
+                                  </div>
+                              </div>
+                        
+                     
+                        </div>
+
                     <div className="row text-center">
                         <div style={{zIndex:"9999999",position:"relative"}}>
                     <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
@@ -992,114 +1137,10 @@ export default class Home extends React.Component {
                     }} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                   </div>
 
-                        <div className="col">
-                            <div className="form-group">
-                                <div className="text-center mb-3">Page Size</div>
-                              
-                                <Slider min={this.state.pageSize.min} max={this.state.pageSize.max} value={this.state.pageSize.value}   onChange={(e) => {this.setState(state => {
-                                    let pageSize = state.pageSize;
-                                    pageSize.value = e;
-                                    return ({pageSize:pageSize});
+                        
+                        <div className="col-sm-8" id="top">
 
-                                });this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)}}  />
-        
-                            </div>
-                           
-                            <div   className="card">
-                                <div className="card-header" style={{position:"relative"}}><i className="material-icons align-middle" >filter_list</i> Filters
-                                 <button type="button" className="btn btn-open-close" onClick={this.toggleFilters}><i className="material-icons align-middle">
-keyboard_arrow_down</i></button></div>
-
-                            <div className="card-body" style={{display:"none"}} id="filters">
-                            <div className="form-group mb-4">
-                            <div className="text-center mb-3">Skills</div>
-                            <div className="custom-control custom-switch" onClick={(e) => {
-                                 if(this._mounted){
-                                     this.setState(state => {
-                                         let base = state.skills;
-                                         base.exclusive = !base.exclusive; 
-                                         if(base.exclusive === false){
-                                            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
-                                            }else {
-                                                this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
-                                            }
-                                         return {
-                                             skills:base
-                                         }
-                                     })
-                                 }
-                             }}>
-                             <input type="checkbox" className="custom-control-input" checked={this.state.skills.exclusive} onChange={()=>{}} />
-                             <label className="custom-control-label">Exclusive?</label>
-                           </div>
-                                <div>
-                                {this.state.skills.skillsSelected.value.map((skill, index) => {
-                                  return <button type="button" key={index} className="btn btn-custom-2 mt-2 mb-2 mr-2 btn-sm">{skill} <i  className="material-icons ml-1 align-middle skill-close" onClick={(e) => {this.clearSkill(index)}}>clear</i></button>
-                                })}
-                                <div>
-                                <div className="autocomplete">
-                                <input autoComplete="off" ref={ref => this.skillInput = ref} type="text" placeholder="Choose your skill and press enter" onChange={(e) => {
-                                if(!this.setted){
-                                    this.bindSkillsInput()
-                                    this.setted = true;
-                                }
-                                }} id="skills-filter" className="form-control" required/>
-                                </div>
-                                </div>
-
-                                </div>
-                              </div>
-                              <div  className="form-group mb-4">
-                                  <div className="text-center mb-3">Budget <span>($US Dollars)</span></div>
-                                  <div className="input-group mb-3 input-group-sm">
-                                    <div className="input-group-prepend">
-                                       <span className="input-group-text">From</span>
-                                   </div>
-                                   <input type="text" className="form-control" value={this.state.budget[0]} onChange={async(e) => {e.persist();await this.setState(state => {
-                                       if(this._mounted){
-                                       
-                                       return {
-                                       budget:[e.target.value,state.budget[1]],
-                                       }
-                                    
-                                    }
-                                   }); this.triggerSearch()}}/>
-                                  </div>
-
-                                  <div className="input-group mb-3 input-group-sm">
-                                    <div className="input-group-prepend">
-                                       <span className="input-group-text">To  </span>
-                                   </div>
-                                   <input type="text" className="form-control" value={this.state.budget[1]} onChange={async(e) => {e.persist();await this.setState(state => {
-                                       if(this._mounted){
-                                       
-                                       return {
-                                       budget:[state.budget[0], e.target.value]
-                                       }
-                                    
-                                    }
-                                   }); this.triggerSearch()}}/>
-                                  </div>
-                              </div>
-                              <div className="form-group mb-4">
-                                  <div className="text-center mb-3">Country</div>
-                                  <SelectCountry value={this.state.country} onChange={async(e) => { await this.setState({
-                                      country: e.target.options[e.target.selectedIndex].value
-                                  }); this.triggerSearch()}} />
-                            </div>
-
-                            <div className="form-group mb-4">
-                                <div className="text-center mb-3">Number of Proposals</div>
-                                <RangeSlider min={0} max={100} labelStepSize={10} stepSize={1} onChange={async(e) => {
-                                  await  this.setState({
-                                        proposals:e
-                                    }); this.triggerSearch();
-                                }} value={this.state.proposals}/>
-                            </div>
-                            </div>
-                            </div>
-                        </div>
-                        <div className="col-sm-6" id="top">
+                    
                         <div className="input-group mb-3 mt-3 mx-auto">
                           <input type="text" className="form-control" onChange={(e) => {this.setState({queryString:e.target.value})}} placeholder="Search" />
                             <div className="input-group-append">
@@ -1187,25 +1228,7 @@ keyboard_arrow_down</i></button></div>
                                
                             }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                         </div>
-                        <div className="col">
-                            <div className="card">
-                                <div className="card-body text-center">
-                                    <div style={{backgroundImage:`url(${this.state.user[0].photoURL?this.state.user[0].photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"})`,
-                                    backgroundPosition:"center",
-                                    backgroundSize:"cover",
-                                    backgroundRepeat:"no-repeat",
-                                    width:"150px",
-                                    height:"150px",
-                                    marginLeft:"50%",
-                                    transform:"translate(-50%,0)"
-                                }} className="rounded-circle" ></div>
-                                    <div className="text-center mt-2">{firebase.auth().currentUser?firebase.auth().currentUser.displayName?firebase.auth().currentUser.displayName:firebase.auth().currentUser.email:<div className="spinner-loading"></div>}</div>
-                                    <div className="mt-2 text-left"><i className="material-icons">style</i> {this.state.user[0].cards} Cards</div>
-                                    <div className="mt-2 text-left"><i className="material-icons">event_note</i> {this.state.user[0].proposals.length} Proposals</div>
-                                    <div className="mt-2 text-left"><i className="material-icons">work</i> {this.state.user[0].activeCandidancies.length} Active Candidancies</div>
-                                </div>
-                            </div>
-                        </div>
+                    </div>
                     </div>
                     }
  

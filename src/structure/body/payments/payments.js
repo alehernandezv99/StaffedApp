@@ -63,7 +63,7 @@ export default class Payments extends React.Component {
             pageSize:{
                 min:6,
                 max:12,
-                value:6
+                value:15
             },
             transactionDrawer:{
                 isOpen:false,
