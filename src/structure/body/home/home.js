@@ -20,6 +20,7 @@ import InboxMessages from "../InboxMessages";
 import Chat from "../chat";
 
 import "./home.css";
+import { stat } from "fs";
 
 
 
@@ -30,17 +31,20 @@ export default class Home extends React.Component {
         this.addSkill = this.addSkill.bind(this);
         this.clearSkill = this.clearSkill.bind(this);
         this.checkCriteria = checkCriteria;
-        this.reloadProjects = this.reloadProjects.bind(this);
-        this.reloadProjectsServer = this.reloadProjectsServer.bind(this);
-        this.reloadProjectsUnionServer = this.reloadProjectsUnionServer.bind(this)
         this.markAsRead = this.markAsRead.bind(this);
 
         this.state = {
             chat:{
                 payload:null
             },
+            loadMore:true,
+            searchBar:true,
+            lastSeemUnion:[],
+            lastSeem:{},
+            pending:false,
             user:null,
             toasts: [ /* IToastProps[] */ ],
+            currentPage:0,
             projects:[],
             projectsId:[],
             queryString:"",
@@ -243,9 +247,9 @@ export default class Home extends React.Component {
 
     triggerSearch =() => {
         if(this.state.skills.exclusive === false){
-            this.reloadProjectsUnionServer(this.state.pageSize.value,"skills",this.state.skills.skillsSelected.value)
+            this.reloadProjectsFixed(this.state.pageSize.value,"skills",this.state.skills.skillsSelected.value)
         }else {
-            this.reloadProjectsServer(this.state.pageSize.value, "skillsExclusive",this.state.skills.skillsSelected.value)
+            this.reloadProjectsExclusive(this.state.pageSize.value, "skillsExclusive",this.state.skills.skillsSelected.value)
         }
     }
 
@@ -313,9 +317,9 @@ export default class Home extends React.Component {
         })
 
         if(this.state.skills.exclusive === false){
-            this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
             }else {
-                this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
             }
       }
 
@@ -341,9 +345,9 @@ export default class Home extends React.Component {
         })
 
         if(this.state.skills.exclusive === false){
-        this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+        this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
         }else {
-            this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+            this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
         }
       }else {
         this.addToast("You cannot select two repeated skills")
@@ -473,124 +477,97 @@ export default class Home extends React.Component {
     }
 
     specificSearch = (string, page) => {
-         this.setState({
-            projects:[]
+        this.setState({
+            searchBar:true,
+            pending:true,
+            loadMore:true
         })
-
-        firebase.firestore().collection("projects")
-        .where("keywords","array-contains",string.toLowerCase())
-        .orderBy("created","desc")
-        .get()
-        .then(snapshot => {
+        if(page === undefined){
+            this.setState({
+                currentPage:0,
+                projects:[],
+                size:null
+            })
+        }
     
-            if(snapshot.empty){
-                if(this._mounted){
-                    this.setState({
-                        projects:[],
-                        size:null
-                    })
-                }
-            }
-            let size= snapshot.size;
+            
+           
             let lastSeem;
-            if(page){
-                lastSeem = snapshot.docs[((this.state.pageSize.value)*(page))-1];
+            if(page === true){
+                lastSeem = this.state.lastSeem
             }
             let ref= firebase.firestore().collection("projects")
-            if(page){
+            if(page === true){
                   ref= ref.where("keywords","array-contains",string.toLowerCase())
-                  .orderBy("created","desc").startAfter(lastSeem).limit(this.state.pageSize.value)
+                  .orderBy("created","desc").startAfter(lastSeem).limit(Number(this.state.pageSize.value))
             }else {
                 ref = ref.where("keywords","array-contains",string.toLowerCase())
-                .orderBy("created","desc").limit(this.state.pageSize.value)
+                .orderBy("created","desc").limit(Number(this.state.pageSize.value))
             }
 
             ref.get()
             .then(snapshot2 => {
+                let size= snapshot2.size;
                 let arr = []
                 snapshot2.forEach(project => {
                     arr.push(project.data())
                 })
-
                 if(this._mounted){
                     this.setState({
-                        projects:arr,
-                        size:size
+                        projects:this.state.projects.concat(arr),
+                        size:size,
+                        pending:false,
+                        lastSeem:snapshot2.docs[snapshot2.docs.length - 1],
+                        loadMore:size < this.state.pageSize.value?false:true
                     })
                 }
+                
             })
-        })
+            .catch(e => {
+              if(this._mounted){
+                  this.setState({
+                      pending:false
+                  })
+              }
+            })
+
+          
+        
+      
     }
 
-    reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit) => {
-      
+    reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit, newLastSeem) => {
+        this.setState({
+            pending:true,
+            searchBar:false,
+            loadMore:true
+        })
 
-        if(acumDeficit === undefined){
-             this.setState({
-                projects:[]
-            })
+        if(page === undefined){
+            if(this._mounted){
+                this.setState({
+                    projects:[],
+                    size:null
+                })
+            }
         }
         let newIndex = index !== undefined?index:0;
-        let ref = firebase.firestore().collection("projects");
 
-        
-        if(arr.length > 0){
-        ref= ref.where("skills","array-contains",arr[newIndex])
-        }
-
-        if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
-            ref = ref.orderBy("budget","desc");
-            ref= ref.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
-        }
-
-       
-        if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
-           
-            ref = ref.orderBy("proposals","desc")
-            ref= ref.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
-        }
-
-        if(this.state.country !== ""){
-            ref= ref.where("country","==",this.state.country)
-        }
-        if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
-
-        ref = ref.orderBy("created","desc")
-        }
-        
-        
-        ref.get()
-        .then(snapshot => {
-         
-            if(snapshot.empty){
-                if(this._mounted){
-                  
-                    this.setState({
-                        projects:[],
-                        size:null
-                    })
-                }
-            }
             let currentIds = ids !== undefined?ids:[];
             let currentSize = 0;
-
-            snapshot.forEach(document => {
-                if(!(currentIds.includes(document.data().id))){
-                    currentSize++;
-                    currentIds.push(document.data().id);
-                }
-            })
-
+    
+            
+    
             let size = sizeAcum !== undefined?sizeAcum + currentSize:currentSize;
             let lastSeem = {}
             let newDictionary = []
             if(page !== undefined){
             
             if(arr.length > 0){
-            lastSeem = snapshot.docs[((Math.ceil(limit/arr.length))*(page))-(page === 0?0:1)];
+            lastSeem = this.state.lastSeemUnion[newIndex];
        
              } else {
-                lastSeem = snapshot.docs[(limit*(page))-(page === 0?0:1)];
+                lastSeem = this.state.lastSeemUnion[newIndex];
                
             }
             
@@ -598,18 +575,18 @@ export default class Home extends React.Component {
              newDictionary.push(lastSeem);
           
             }
-
+    
             let ref = firebase.firestore().collection("projects");
-
+    
             if(arr.length > 0){
             ref= ref.where("skills","array-contains",arr[newIndex])
             }
-
+    
             if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
                 ref = ref.orderBy("budget","desc");
                 ref= ref.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
             }
-
+    
             if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
             
                 ref = ref.orderBy("proposals","desc")
@@ -619,19 +596,19 @@ export default class Home extends React.Component {
             if(this.state.country !== ""){
                 ref= ref.where("country","==",this.state.country)
             }
-
+    
             if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
-
+    
             ref = ref.orderBy("created","desc")
             }
-
+    
             let currentLimit = 0;
             
-
+    
             if(index !== (arr.length - 1)){
-
+    
                 if(arr.length > 0){
-                currentLimit = Math.ceil(limit/arr.length);
+                currentLimit = Math.ceil(Number(limit)/arr.length);
                 
                 }else {
                     currentLimit= 6;
@@ -639,31 +616,30 @@ export default class Home extends React.Component {
                 
                 }else {
         
-                    currentLimit = (limit - (Math.ceil(limit/arr.length)*(arr.length- 1)-acumDeficit));
+                    currentLimit = (Number(limit) - (Math.ceil(limit/arr.length)*(arr.length- 1)-acumDeficit));
                     if(currentLimit < 1 || currentLimit < 0){
                         currentLimit = 1
                     }
                     currentLimit = currentLimit === 0?6:currentLimit;
                     
             }
-
-            if(page !== undefined){
+    
+            if(page === true){
             ref = ref.startAfter(lastSeem).limit(currentLimit);
             }else {
                 ref = ref.limit(currentLimit); 
             }
             ref.get()
             .then(snapshot2 => {
-           
-                if(snapshot2.empty){
-                    if(this._mounted){
-                
-                        this.setState({
-                            projects:[],
-                            size:null
-                        })
+                let arrOfLastSeem = newLastSeem === undefined?[]:newLastSeem
+                arrOfLastSeem.push(snapshot2.docs[snapshot2.docs.length - 1])
+                snapshot2.forEach(document => {
+                    if(!(currentIds.includes(document.data().id))){
+                        currentSize++;
+                        currentIds.push(document.data().id);
                     }
-                }
+                })
+               
                 let newProjects = projects?projects:[];
                 let checkSize = 0;
                 let deficit = 0;
@@ -677,159 +653,58 @@ export default class Home extends React.Component {
                 })
                 
                 let newDeficit = acumDeficit !== undefined?acumDeficit + deficit:deficit;
-
-
+    
+    
                 if(newIndex === (arr.length - 1) || arr.length === 0){
+                
                     if(this._mounted){
-                    this.setState({
-                        projects:newProjects,
+                      this.setState({
+                        projects:this.state.projects.concat(newProjects),
                         size:size === 0?null:size,
-                        searchBar:false
+                        searchBar:false,
+                        lastSeemUnion:arrOfLastSeem,
+                        pending:false
                     })
                 }
+                
                 }else {
                     newIndex++;
-                    this.reloadProjectsFixed(limit,field,arr,page,newIndex,size,newDictionary,newProjects,currentIds,newDeficit);
+                    this.reloadProjectsFixed(limit,field,arr,page,newIndex,size,newDictionary,newProjects,currentIds,newDeficit ,arrOfLastSeem);
                 }
                 
             })
-        })
-    }
-
-    reloadProjectsUnionServer(limit,field,arr,page){
-
-        this.setState({
-            projects:[]
-     
-         })
- 
-         let body = {};
- 
-         let form_data = new URLSearchParams();
-         body.limit = limit;
-         body.field = field;
-         body.arr = arr
-         body.page = page;
-         body.budget = this.state.budget;
-         body.proposals = this.state.proposals;
-         body.pageSize = this.state.pageSize.value;
-         body.country = this.state.country
-         Object.keys(body).forEach(key => {
-             form_data.append(key, body[key])
-         })
-         fetch("https://staffed-app.herokuapp.com/getSizeReloadProjectsUnion", {
-             method:"POST",
-             body:form_data,
-             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+            .catch(e => {
+              if(this._mounted){
+                  this.setState({
+                      pending:false
+                  })
               }
-             })
-         .then(response => {
-             return response.json()
-         }).then(snapshot => {
-            this.setState({
-                projects:snapshot.projects,
-                size:snapshot.size
             })
-         })
-         .catch(e => {
-             this.setState({
-                 projects:[],
-                 size:0
-             })
-         })
-         
-    }
-
-    reloadProjectsServer(limit,field, arr, page){
-      
-        this.setState({
-           projects:[]
-    
-        })
-
-        let body = {};
-
-        let form_data = new URLSearchParams();
-        body.limit = limit;
-        body.field = field;
-        body.arr = arr
-        body.page = page;
-        body.budget = this.state.budget;
-        body.proposals = this.state.proposals;
-        body.pageSize = this.state.pageSize.value;
-        body.country = this.state.country
-        Object.keys(body).forEach(key => {
-            form_data.append(key, body[key])
-        })
-        fetch("https://staffed-app.herokuapp.com/getSizeReloadProjects", {
-            method:"POST",
-            body:form_data,
-            headers: {
-               'Content-Type': 'application/x-www-form-urlencoded',
-             }
-            })
-        .then(response => {
-            return response.json()
-        }).then(snapshot => {
-           this.setState({
-               projects:snapshot.projects,
-               size:snapshot.size
-           })
-        })
-        .catch(e => {
-            this.setState({
-                projects:[],
-                size:0
-            })
-        })
-    
-    }
-
-   reloadProjects(limit,field, arr, page){
-      
-        this.setState({
-           projects:[]
-    
-        })
-        let ref = firebase.firestore().collection("projects")
         
-        if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10) && !(this.state.proposals[0] > 0 || this.state.proposals[1] < 100)){
-        for(let i= 0; i < arr.length; i ++){
-            if(arr.length > 0){
-            ref = ref.where(`${field}.${arr[i]}`,"==",true)
-            }
-        }
+       
     }
 
-        if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
-            ref = ref.orderBy("budget","desc")
-            ref= ref.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
+    reloadProjectsExclusive = (limit,field, arr, page) =>{
       
-        }
+        this.setState({
+                searchBar:false,
+                pending:true,
+                loadMore:true
+        })
 
-        if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
-            ref = ref.orderBy("proposals","desc")
-            ref= ref.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
+        if(page === undefined){
+            this.setState({
+                currentPage:0,
+                projects:[],
+                size:null
+            })
         }
-
-        if(this.state.country !== ""){
-            ref= ref.where("country","==",this.state.country)
-          
-        }
-
-        ref.get()
-        .then(snapshot => {
-            if(snapshot.empty){
-                this.setState({
-                    projects:[],
-                    size:null
-                })
-            }
-            let lastSeem = snapshot.docs[(this.state.pageSize.value)*(page) -(page === 0?0:1)]
-            let ref2 = firebase.firestore().collection("projects")
+       
+            let lastSeem = this.state.lastSeem
+            let ref2  = firebase.firestore().collection("projects")
             //ref2 = ref2.orderBy("created","desc")
-            if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10) && !(this.state.proposals[0] > 0 || this.state.proposals[1] < 100)){
+            if(!(Number(this.state.budget[1]) < 50000 || Number(this.state.budget[0]) > 10) && !(Number(this.state.proposals[0]) > 0 || Number(this.state.proposals[1]) < 100)){
+           
             for(let i= 0; i < arr.length; i ++){
                 if(arr.length > 0){
                 ref2 = ref2.where(`${field}.${arr[i]}`,"==",true)
@@ -838,13 +713,15 @@ export default class Home extends React.Component {
         }
 
             if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
+        ;
                 ref2 = ref2.orderBy("budget","desc")
                 ref2= ref2.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
              
                 
             }
 
-            if((this.state.proposals[0] > 0 || this.state.proposals[1] < 100) && !(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+            if((Number(this.state.proposals[0]) > 0 || Number(this.state.proposals[1]) < 100) && !(Number(this.state.budget[1]) < 50000 || Number(this.state.budget[0]) > 10)){
+            
                 ref2 = ref2.orderBy("proposals","desc")
                 ref2= ref2.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
             }
@@ -853,15 +730,18 @@ export default class Home extends React.Component {
                 ref2= ref2.where("country","==",this.state.country)
               
             }
-            if(page !== undefined){
-            ref2 = ref2.startAfter(lastSeem).limit(limit).get()
+            if(page === true){
+            
+            ref2 = ref2.startAfter(lastSeem).limit(Number(limit)).get()
             }else{
-                ref2 = ref2.limit(limit).get()
+                ref2 = ref2.limit(Number(limit)).get()
             }
-            ref2.then(snapshot2 => {
-             
+            ref2
+            .then(snapshot2 => {
+             let newLastSeem = snapshot2.docs[snapshot2.docs.length - 1]
+        
             let projects = [];
-            let size = snapshot.size;
+            let size = snapshot2.size;
             if(!(size > 0)){
                 size = null
             }
@@ -871,7 +751,7 @@ export default class Home extends React.Component {
                 projects.push(doc.data())
             })
 
-            if(!(this.state.budget[1] < 50000 || this.state.budget[0] > 10)){
+            if(!(Number(this.state.budget[1]) < 50000 || Number(this.state.budget[0]) > 10)){
 
             projects.sort(function(a, b) {
                 var dateA = new Date(a.created.toDate()), dateB = new Date(b.created.toDate());
@@ -880,16 +760,31 @@ export default class Home extends React.Component {
         
             projects.reverse();
         }
-            this.setState({
-                projects:projects,
-                size:size,
-            })
-            })
         
+          if(this._mounted){
+            this.setState({
+                projects:this.state.projects.concat(projects),
+                size:size,
+                lastSeem:newLastSeem,
+                pending:false,
+                loadMore:snapshot2.size < limit?false:true
+            })
+        }
+            })
+            .catch(e => {
+                if(this._mounted){
+                  this.setState({
+                      pending:false
+                  })
+                }
+                })
 
-        })
+      
+        
+        
     
     }
+
 
    async updateUser(id){
        
@@ -922,9 +817,9 @@ export default class Home extends React.Component {
                 skills.skillsSelected.value = skillsUser;
                 let objOfSkills = {};
                 if(state.skills.exclusive === false){
-                this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", skillsUser); 
+                this.reloadProjectsFixed(this.state.pageSize.value,"skills", skillsUser); 
                 }else {
-                    this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", skillsUser); 
+                    this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", skillsUser); 
                 }
                 return {
                 user:[doc.data()],
@@ -959,6 +854,11 @@ export default class Home extends React.Component {
             }
         })
     }
+    }
+
+    toggleFilters = () =>{
+        $("#filters").slideToggle("fast");
+        $("#toggleFilter").slideToggle("fast")
     }
 
     render(){
@@ -1085,7 +985,7 @@ export default class Home extends React.Component {
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     <CreateProject reloadProjects={() => {
                         if(this.state.searchBar === false){
-                            this.state.skills.exclusive === false? this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)
+                            this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)
                         }else {
                             this.specificSearch(this.state.queryString)
                         }
@@ -1101,10 +1001,16 @@ export default class Home extends React.Component {
                                     pageSize.value = e;
                                     return ({pageSize:pageSize});
 
-                                });this.state.skills.exclusive === false? this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)}}  />
+                                });this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)}}  />
         
                             </div>
-                            <h4 className="text-center mb-3">Filters</h4>
+                           
+                            <div   className="card">
+                                <div className="card-header" style={{position:"relative"}}><i className="material-icons align-middle" >filter_list</i> Filters
+                                 <button type="button" className="btn btn-open-close" onClick={this.toggleFilters}><i className="material-icons align-middle">
+keyboard_arrow_down</i></button></div>
+
+                            <div className="card-body" style={{display:"none"}} id="filters">
                             <div className="form-group mb-4">
                             <div className="text-center mb-3">Skills</div>
                             <div className="custom-control custom-switch" onClick={(e) => {
@@ -1113,9 +1019,9 @@ export default class Home extends React.Component {
                                          let base = state.skills;
                                          base.exclusive = !base.exclusive; 
                                          if(base.exclusive === false){
-                                            this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+                                            this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
                                             }else {
-                                                this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                                                this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
                                             }
                                          return {
                                              skills:base
@@ -1190,6 +1096,8 @@ export default class Home extends React.Component {
                                     }); this.triggerSearch();
                                 }} value={this.state.proposals}/>
                             </div>
+                            </div>
+                            </div>
                         </div>
                         <div className="col-sm-6" id="top">
                         <div className="input-group mb-3 mt-3 mx-auto">
@@ -1260,26 +1168,24 @@ export default class Home extends React.Component {
                 
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
-                           {this.state.projects.length === 0?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     if(this.state.searchBar === false){
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.skills.exclusive === false? this.reloadProjectsUnionServer(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value, i):this.reloadProjectsServer(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value, i) }} href="#">{i}</a></li>
-                                     }else {
-                                        return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.specificSearch(this.state.queryString,i)}} href="#">{i}</a></li>
-                                     }
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                           {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                               if(this.state.skills.exclusive === true){
+                                   this.reloadProjectsExclusive(this.state.pageSize.value, "skillsExclusive",this.state.skills.skillsSelected.value, true)
+                               }else {
+                                   this.reloadProjectsFixed(this.state.pageSize.value, "skills",this.state.skills.skillsSelected.value, true)
+                               }
+                            }else {
+                                this.specificSearch(this.state.queryString, true)
+                            }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                         </div>
                         <div className="col">
                             <div className="card">

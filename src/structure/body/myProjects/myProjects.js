@@ -16,6 +16,7 @@ import JobModule from "../home/jobModule";
 import Chat from "../chat";
 import InboxMessages from "../InboxMessages";
 import $ from "jquery";
+import { throwStatement } from "@babel/types";
 
 export default class MyProjects extends React.Component {
     constructor(props){
@@ -32,6 +33,10 @@ export default class MyProjects extends React.Component {
             chat:{
                 payload:null
             },
+            lastSeem:{},
+            loadMore:false,
+            searchBar:false,
+            pending:false,
             TODO:{
                 isOpen:false,
                 handelClose:() => {
@@ -191,40 +196,65 @@ export default class MyProjects extends React.Component {
         }
     }
 
-    specificQuery = (string) => {
-
-        let projects = this.state.projects;
-        let newProjects = [];
-
-        if(string !== ""){
-        for(let i = 0; i<projects.length; i++){
-        
-        if(projects[i].title.toLowerCase().includes(string.toLowerCase())){
-            newProjects.push(projects[i])
+    specificSearch = (string, page) => {
+        if(this._mounted){
+            this.setState({
+                pending:true,
+                searchBar:true
+            })
+        }
+        if(page !== true){
+           if(this._mounted){
+               this.setState({
+                   size:null,
+                   projects:[]
+               })
+           }
+        }
+        let lastSeem = this.state.lastSeem;
+        let ref = firebase.firestore().collection("projects").where("author","==",firebase.auth().currentUser.uid).where("keywords","array-contains",string.toLowerCase())
+        if(page){
+            ref = ref.startAfter(lastSeem).limit(this.state.pageSize.value)
+        }else {
+            ref = ref.limit(this.state.pageSize.value)
         }
 
-        
-    }
+        ref.get()
+        .then(snapshot => {
+            let projects =[]
+            if(!snapshot.empty){
+               snapshot.forEach(doc => {
+                   projects.push(doc.data())
+               })
 
-    if(newProjects.length > 0){
-    if(this._mounted){
-        this.setState({
-            projects:newProjects
+               let size = snapshot.size
+
+               if(this._mounted){
+                  
+                   this.setState({
+                       projects:projects,
+                       loadMore:size < this.state.pageSize.value?false:true,
+                       pending:false,
+                       size:size
+                   })
+               }
+            }else {
+                if(this._mounted){
+                   
+                    this.setState({
+                        pending:false,
+                        loadMore:false
+                    })
+                }
+            }
         })
-    }
-}else {
-    if(this._mounted){
-        this.setState({
-            projects:[],
-            size:null
+        .catch(e => {
+            if(this._mounted){
+                this.setState({
+                    pending:false
+                })
+            }
         })
-    }
-}
-}else {
-    this.state.currentFilter();
-}
-    
-    
     }
 
     handleInboxEvent = (action) =>{
@@ -259,25 +289,23 @@ export default class MyProjects extends React.Component {
     }
 
     findMyProjects = (arr,limit,page, field,element) => {
-        
-        let ref = firebase.firestore().collection("projects")
-        if(arr){
-           ref = ref.where(arr,"array-contains",firebase.auth().currentUser.email);
-        }
-        if(field){
-            ref =ref.where(field,"==",element)
-        }
-        ref.get()
-        .then(snapshot => {
 
-            if(snapshot.empty){
-                this.setState({
-                    projects:[],
-                    size:null
-                })
-            }
+        if(this._mounted){
+            this.setState({
+                pending:true,
+                searchBar:false
+            })
+        }
+
+        if(page !== true){
+            this.setState({
+                projects:[],
+                size:null
+            })
+        }
+
             let ref2 = firebase.firestore().collection("projects");
-            let lastSeem = snapshot.docs[(this.state.pageSize.value)*(page) -1]
+            let lastSeem = this.state.lastSeem
 
             if(arr){
                 ref2 =ref2.where(arr,"array-contains",firebase.auth().currentUser.email)
@@ -285,6 +313,7 @@ export default class MyProjects extends React.Component {
             if(field){
                 ref2 =ref2.where(field,"==",element)
             }
+            //ref2 = ref2.orderBy("created","desc")
             if(page){
                 ref2 = ref2.startAfter(lastSeem).limit(limit).get()
             }else{
@@ -292,9 +321,9 @@ export default class MyProjects extends React.Component {
             }
 
             ref2.then(snapshot2 => {
-             
+        
                 let projects = [];
-                let size = snapshot.size;
+                let size = snapshot2.size;
                 if(!(size > 0)){
                     size = null
                 }
@@ -302,21 +331,36 @@ export default class MyProjects extends React.Component {
                 snapshot2.forEach(doc => {
                     projects.push(doc.data())
                 })
-    
-                projects.sort(function(a, b) {
-                    var dateA = new Date(a.created.toDate()), dateB = new Date(b.created.toDate());
-                    return dateA - dateB;
-                });
-                projects.reverse();
 
+                if(!snapshot2.empty){
                 if(this._mounted){
                 this.setState({
-                    projects:projects,
+                    projects:this.state.projects.concat(projects),
                     size:size,
+                    loadMore:size < this.state.pageSize.value?false:true,
+                    lastSeem:snapshot2.docs[snapshot2.docs.length - 1],
+                    pending:false
                 })
             }
+            }else {
+                if(this._mounted){
+                    this.setState({
+                        pending:false,
+                        size:0,
+                        loadMore:false
+                    })
+                }
+            }
+            
                 })
-        })
+                .catch(e => {
+                    if(this._mounted){
+                        this.setState({
+                            pending:true
+                        })
+                    }
+                })
+    
     }
 
     async updateUser(id){
@@ -653,9 +697,9 @@ export default class MyProjects extends React.Component {
                     
                     <div className="col-sm-4">
                     <div className="input-group mb-3 mt-3 mx-auto px-3">
-                          <input type="text" className="form-control" placeholder="Search" onChange={async(e) => {await this.setState({queryString:e.target.value}); this.specificQuery(this.state.queryString)}}/>
+                          <input type="text" className="form-control" placeholder="Search" onChange={async(e) => {await this.setState({queryString:e.target.value});}}/>
                             <div className="input-group-append">
-                            <button className="btn btn-custom-1" type="button" onClick={() => {this.specificQuery(this.state.queryString)}}>Search</button> 
+                            <button className="btn btn-custom-1" type="button" onClick={() => {this.specificSearch(this.state.queryString)}}>Search</button> 
                          </div>
                         </div>
                     <div className="form-group mx-auto mt-4 " style={{width:"300px"}}>
@@ -671,20 +715,20 @@ export default class MyProjects extends React.Component {
 
                         <div className="col" id="top">
                         <h4 className="mt-3">My Projects</h4>
-                        <div className="container-fluid">
+                        <div className="container-fluid mb-4">
                         
                         <ul className="nav nav-tabs mt-3">
                              <li className="nav-item ml-auto">
                                <a className="nav-link active" data-toggle="pill" onClick={()=> {let callback = () => { this.findMyProjects("involved",this.state.pageSize.value)}; callback(); this.setState({currentFilter:callback})}} href="#all">All</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() => this.findMyProjects("involved",this.state.pageSize.value,null,"author",firebase.auth().currentUser.uid); callback(); this.setState({currentFilter:callback})}} href="#createdByMe">Created By Me</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() => this.findMyProjects("involved",this.state.pageSize.value,false,"author",firebase.auth().currentUser.uid); callback(); this.setState({currentFilter:callback})}} href="#createdByMe">Created By Me</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("involved",this.state.pageSize.value,null,"status","In Development"); callback(); this.setState({currentFilter:callback})}} href="#inDevelopment">In Development</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("involved",this.state.pageSize.value,false,"status","In Development"); callback(); this.setState({currentFilter:callback})}} href="#inDevelopment">In Development</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("involved",this.state.pageSize.value,null,"status","Completed"); callback(); this.setState({currentFilter:callback})}} href="#completed">Completed</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("involved",this.state.pageSize.value,false,"status","Completed"); callback(); this.setState({currentFilter:callback})}} href="#completed">Completed</a>
                             </li>
                             <li className="nav-item">
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("applicants",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#applied">Applied</a>
@@ -756,20 +800,20 @@ export default class MyProjects extends React.Component {
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
-                        {this.state.size === null?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i)}} href="#">{i}</a></li>
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                             {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                               
+                                   this.findMyProjects("involved", this.state.pageSize.value,true)
+                               
+                            }else {
+                                this.specificSearch(this.state.queryString, true)
+                            }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                                </div>
 
                                <div className="tab-pane container fade" id="createdByMe">
@@ -830,22 +874,21 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
-{this.state.size === null?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i,"author",firebase.auth().currentUser.uid)}} href="#">{i}</a></li>
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                        {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                                e.preventDefault();
+                             await this.setState(state => ({
+                               currentPage:(state.currentPage + 1)
+                               }))
+                             if(this.state.searchBar === false){
+                                   this.findMyProjects("involved", this.state.pageSize.value, true, "author",firebase.auth().currentUser.uid)
+                             
+                             }else {
+                           this.specificSearch(this.state.queryString, true)
+                           }
+    
+ }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                                </div>
                                <div className="tab-pane container fade" id="inDevelopment">
 
@@ -905,23 +948,24 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
                             
 
-                            {this.state.size === null?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i,"status","In Development")}} href="#">{i}</a></li>
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                              
+                                   this.findMyProjects("involved", this.state.pageSize.value,true, "status","In Development")
+                               
+                            }else {
+                                this.specificSearch(this.state.queryString, true)
+                            }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                                </div>
                                <div className="tab-pane container fade" id="completed">
 
@@ -981,22 +1025,22 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
-{this.state.size === null?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("involved",this.state.pageSize.value,i,"status","Completed")}} href="#">{i}</a></li>
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                             {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                             
+                                   this.findMyProjects("involved", this.state.pageSize.value,true, "status","Completed")
+                               
+                            }else {
+                                this.specificSearch(this.state.queryString, true)
+                            }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null} 
                                </div>
 
 
@@ -1059,22 +1103,22 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
 
-{this.state.size === null?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("applicants",this.state.pageSize.value,i)}} href="#">{i}</a></li>
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                           {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                            
+                                   this.findMyProjects("applicants", this.state.pageSize.value,true)
+                               
+                            }else {
+                                this.specificSearch(this.state.queryString, true)
+                            }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                                </div>
 
                                <div className="tab-pane container" id="archived">
@@ -1135,22 +1179,22 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
 
-{this.state.size === null?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.findMyProjects("references",this.state.pageSize.value, i)}} href="#">{i}</a></li>
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                           {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                             
+                                   this.findMyProjects("references", this.state.pageSize.value,true)
+                               
+                            }else {
+                                this.specificSearch(this.state.queryString, true)
+                            }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                                </div>
                          </div>
                         </div>

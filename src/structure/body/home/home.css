@@ -32,4 +32,11 @@
     
 }
 
+.btn-open-close {
+    position: absolute !important;
+    top:50% !important;
+    right:2px !important;
+    transform: translate(0,-50%) !important;
+}
+
 

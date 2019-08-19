@@ -30,6 +30,10 @@ export default class SearchStaff extends React.Component {
 
         this.state = {
             user:null,
+            pending:false,
+            lastSeemUnion:[],
+            loadMore:true,
+            lastSeem:{},
             chat:{
                 payload:null
             },
@@ -383,133 +387,227 @@ export default class SearchStaff extends React.Component {
   })
       }
 
-      fetchCVsUnion = (limit,type,arr,page) => {
-        if(this._mounted){
-            this.setState({
-                CVs:[],
-                size:null
-            })
+      fetchCVsUnion = (limit, type, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit, newLastSeem) => {
+         
+        this.setState({
+            pending:true,
+            searchBar:false,
+            loadMore:true
+        })
+
+        if(page === undefined){
+            if(this._mounted){
+                this.setState({
+                    CVs:[],
+                    size:null
+                })
+            }
         }
-      let body = {}
-      let form_data = new URLSearchParams();
-      body.limit = limit;
-      body.type= type;
-      body.arr = arr
-      body.page = page;
+        let newIndex = index !== undefined?index:0;
 
-      Object.keys(body).forEach(key => {
-          form_data.append(key, body[key])
-      })
-
-      fetch("https://staffed-app.herokuapp.com/getCvsUnion", {
-          method:"POST",
-          body:form_data,
-          headers: {
-             'Content-Type': 'application/x-www-form-urlencoded',
-           }
-          })
-      .then(response => {
-          return response.json()
-      }).then(snapshot => {
+            let currentIds = ids !== undefined?ids:[];
+            
+            let lastSeem = {}
+            let newDictionary = []
+            if(page !== undefined){
+            
+            if(arr.length > 0){
+            lastSeem = this.state.lastSeemUnion[newIndex];
+       
+             } else {
+                lastSeem = this.state.lastSeemUnion[newIndex];
+               
+            }
+            
+             newDictionary = dictionary !== undefined?dictionary:[];
+             newDictionary.push(lastSeem);
+          
+            }
+    
+            let ref = firebase.firestore().collection("CVs");
+    
+            if(arr.length > 0){
+            ref= ref.where("skills","array-contains",arr[newIndex])
+            }
+    
+            if(type === "personal"){
+                ref= ref.where("type","==","personal")
+              }else if(type === "company"){
+                ref = ref.where("type","==","company")
+              }
+    
+    
+            let currentLimit = 0;
+            
+    
+            if(index !== (arr.length - 1)){
+    
+                if(arr.length > 0){
+                currentLimit = Math.ceil(Number(limit)/arr.length);
+                
+                }else {
+                    currentLimit= 6;
+                }
+                
+                }else {
         
-        if(this._mounted){
-            this.setState({
-                CVs:snapshot.CVs,
-                size:snapshot.size
+                    currentLimit = (Number(limit) - (Math.ceil(limit/arr.length)*(arr.length- 1)-acumDeficit));
+                    if(currentLimit < 1 || currentLimit < 0){
+                        currentLimit = 1
+                    }
+                    currentLimit = currentLimit === 0?6:currentLimit;
+                    
+            }
+    
+            if(page === true){
+            ref = ref.startAfter(lastSeem).limit(currentLimit);
+            }else {
+                ref = ref.limit(currentLimit); 
+            }
+            ref.get()
+            .then(snapshot2 => {
+
+                let currentSize = snapshot2.size;
+    
+             let size = sizeAcum !== undefined?sizeAcum + currentSize:currentSize;
+             let arrOfLastSeem = newLastSeem === undefined?[]:newLastSeem
+                arrOfLastSeem.push(snapshot2.docs[snapshot2.docs.length - 1])
+                snapshot2.forEach(document => {
+                    if(!(currentIds.includes(document.data().id))){
+                        currentSize++;
+                        currentIds.push(document.data().id);
+                    }
+                })
+               
+                let newProjects = projects?projects:[];
+                let checkSize = 0;
+                let deficit = 0;
+                snapshot2.forEach(doc => {
+                    if(currentIds.includes(doc.data().id)){
+                        checkSize++;
+                    newProjects.push(doc.data());
+                    }else {
+                        deficit++
+                    }
+                })
+                
+                let newDeficit = acumDeficit !== undefined?acumDeficit + deficit:deficit;
+    
+    
+                if(newIndex === (arr.length - 1) || arr.length === 0){
+                
+                    if(this._mounted){
+                        
+                      this.setState({
+                        CVs:this.state.CVs.concat(newProjects),
+                        size:size === 0?null:size,
+                        searchBar:false,
+                        lastSeemUnion:arrOfLastSeem,
+                        pending:false,
+                        loadMore:size < this.state.pageSize.value?false:true
+                    })
+                }
+                
+                }else {
+                    newIndex++;
+                    this.fetchCVsUnion(limit,type,arr,page,newIndex,size,newDictionary,newProjects,currentIds,newDeficit ,arrOfLastSeem);
+                }
+                
             })
-        }
-      })
+            .catch(e => {
+              if(this._mounted){
+                  this.setState({
+                      pending:false
+                  })
+              }
+            })
+        
       }
     
       fetchCVsExclusive = (limit,type,arr,page) => {
+          if(this._mounted){
+              this.setState({
+                  searchBar:false,
+                  pending:true
+              })
+          }
+        if(page === undefined){
           if(this._mounted){
               this.setState({
                   CVs:[],
                   size:null
               })
           }
-        let body = {}
-        let form_data = new URLSearchParams();
-        body.limit = limit;
-        body.type= type;
-        body.arr = arr
-        body.page = page;
+        }
+      
+     
+            let lastSeem = this.state.lastSeem
+            let ref2  = firebase.firestore().collection("CVs")
+            //ref2 = ref2.orderBy("created","desc")
+            
+           
+            for(let i= 0; i < arr.length; i ++){
+                if(arr.length > 0){
+                ref2 = ref2.where(`${"skillsExclusive"}.${arr[i]}`,"==",true)
+                }
+            }
 
-        Object.keys(body).forEach(key => {
-            form_data.append(key, body[key])
-        })
-
-        fetch("https://staffed-app.herokuapp.com/getCvsExclusive", {
-            method:"POST",
-            body:form_data,
-            headers: {
-               'Content-Type': 'application/x-www-form-urlencoded',
-             }
-            })
-        .then(response => {
-            return response.json()
-        }).then(snapshot => {
-          
-          if(this._mounted){
-              this.setState({
-                  CVs:snapshot.CVs,
-                  size:snapshot.size
-              })
-          }
-        })
-
-
-      }
-
-    fetchCVs = (limit,page, type, ) => {
-        this.setState({
-            size:null,
-            CVs:[]
-        })
-        this.specific = false;
-        let ref1 = firebase.firestore().collection("CVs")
-        if(type){
-            if(type ==="personal"){
-                ref1 = ref1.where("type","==","personal");
+            if(type === "personal"){
+              ref2= ref2.where("type","==","personal")
             }else if(type === "company"){
-                ref1 = ref1.where("type","==","company")
+              ref2 = ref2.where("type","==","company")
+            }
+        
+
+    
+            if(page !== undefined && page !== "undefined"){
+            ref2 = ref2.startAfter(lastSeem).limit(Number(limit)).get()
+            }else{
+                ref2 = ref2.limit(Number(limit)).get()
+            }
+            ref2.then(snapshot2 => {
+             let size = snapshot2.size
+            let projects = [];
+            
+            if(!(size > 0)){
+                size = null
+            }
+           
+            snapshot2.forEach(doc => {
+             
+                projects.push(doc.data())
+            })
+
+            if(!snapshot2.empty){
+        if(this._mounted){
+            this.setState({
+                CVs:this.state.CVs.concat(projects),
+                size:size,
+                loadMore:size < this.state.pageSize.value?false:true,
+                lastSeem:snapshot2.docs[snapshot2.docs.length - 1],
+                pending:false,
+                loadMore:size < this.state.pageSize.value?false:true
+            })
+        }
+        }else {
+            if(this._mounted){
+                this.setState({
+                    pending:false,
+                    loadMore:false
+                })
+                
             }
         }
-        ref1.get()
-          .then(snap => {
-              let size = snap.size;
-              let lastSeem;
-              let ref = firebase.firestore().collection("CVs");
-              lastSeem = snap.docs[(limit*(page))-(page === 0?0:1)];
-              if(type){
-                  if(type ==="personal"){
-                      ref = ref.where("type","==","personal");
-                  }else if(type === "company"){
-                      ref = ref.where("type","==","company")
-                  }
-              }
-              if(page){
-                  ref = ref.startAfter(lastSeem).limit(limit)
-              }else {
-                  ref = ref.limit(limit)
-              }
-              
-              ref.get()
-              .then((snap2) => {
-                  let arr = [];
-
-                  snap2.forEach(doc => {
-                      arr.push(doc.data());
-                  })
+            })
+            .catch(e => {
                 if(this._mounted){
                     this.setState({
-                        CVs:arr,
-                        size:size
+                        pending:false
                     })
-                  }
-              })
-          })
-    }
+                }
+            })
+
+      }
 
     componentWillUnmount(){
         this._mounted = false;
@@ -596,59 +694,25 @@ export default class SearchStaff extends React.Component {
     }
 
     specificSearchFixed= (string, page,type) => {
-        let body = {}
-        let form_data = new URLSearchParams();
-        body.limit = this.state.pageSize.value;
-        body.type= type;
-        body.string = string;
-        body.page = page;
-
-        Object.keys(body).forEach(key => {
-            form_data.append(key, body[key])
-        })
-
-        fetch("https://staffed-app.herokuapp.com/specificSearchCVs", {
-            method:"POST",
-            body:form_data,
-            headers: {
-               'Content-Type': 'application/x-www-form-urlencoded',
-             }
+        if(this._mounted){
+            this.setState({
+                pending:true,
+                searchBar:true
             })
-        .then(response => {
-            return response.json()
-        }).then(snapshot => {
-          
-          if(this._mounted){
-              this.setState({
-                  CVs:snapshot.CVs,
-                  size:snapshot.size
-              })
-          }
-        })
-
-    }
-
-
-    specificSearch = (string, page, type) => {
-        this.setState({
-            size:null,
-            CVs:[],
-            searchBar:true
-        })
-      
-        let ref = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase())
-        if(type){
-            if(type ==="personal"){
-                ref = ref.where("type","==","personal");
-            }else if(type === "company"){
-                ref = ref.where("type","==","company")
+        }
+        if(page === undefined){
+            if(this._mounted){
+                this.setState({
+                    CVs:[],
+                    size:null
+                })
             }
         }
-        ref.get()
-        .then(snap => {
-            let size = snap.size;
+
+        
+        
             let lastSeem;
-            lastSeem = snap.docs[(this.state.pageSize.value*(page))-(page === 0?0:1)]; 
+            lastSeem = this.state.lastSeem
             let ref2 = firebase.firestore().collection("CVs").where("keywords","array-contains",string.toLowerCase())
 
             if(type){
@@ -658,10 +722,10 @@ export default class SearchStaff extends React.Component {
                     ref2 = ref2.where("type","==","company")
                 }
             }
-            if(page){
-                ref2 = ref2.startAfter(lastSeem).limit(this.state.pageSize.value);
+            if(page === true){
+                ref2 = ref2.startAfter(lastSeem).limit(Number(this.state.pageSize.value));
             }else {
-                ref2 =ref2.limit(this.state.pageSize.value);
+                ref2 =ref2.limit(Number(this.state.pageSize.value));
             }
             ref2.get()
             .then(snap2 => {
@@ -669,15 +733,31 @@ export default class SearchStaff extends React.Component {
                 snap2.forEach(doc => {
                     arr.push(doc.data())
                 })
-                if(this._mounted){
+                let size = snap2.size
+              if(this._mounted){
                     this.setState({
-                        CVs:arr,
-                        size:size
+                        CVs:this.state.CVs.concat(arr),
+                        size:size,
+                        pending:false,
+                        loadMore:size < this.state.pageSize.value?false:true,
+                        lastSeem:snap2.docs[snap2.docs.length - 1]
                     })
                 }
+                
             })
-        })
+            .catch(e => {
+                if(this._mounted){
+              this.setState({
+                CVs:[],
+                size:0,
+                pending:false
+              })
+            }
+            })
+      
+
     }
+
 
     resetPayload = () => {
         if(this._mounted){
@@ -934,22 +1014,22 @@ export default class SearchStaff extends React.Component {
                             return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
 
-                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
-                            <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                               (() => {
-                                 let pages = [];
-                                  for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                    pages.push("element")
-                                   }
-                                   return pages
-                                 })().map((data, i) => {
-                             
-                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.searchBar === true?this.specificSearchFixed(this.state.queryString,i): this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value,i):this.fetchCVsUnion(this.state.pageSize.value,"none",this.state.skills.skillsSelected.value,i)}} href="#">{i}</a></li>
-                             
-                         })                                                                  }
-                     <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                   </ul>}
+                           {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                               if(this.state.skills.exclusive === true){
+                                   this.fetchCVsExclusive(this.state.pageSize.value, "none",this.state.skills.skillsSelected.value, true)
+                               }else {
+                                   this.fetchCVsUnion(this.state.pageSize.value, "none",this.state.skills.skillsSelected.value, true)
+                               }
+                            }else {
+                                this.specificSearchFixed(this.state.queryString, true, "none")
+                            }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                             </div>
                             <div className="tab-pane container fade container-staff" id="menu1">
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
@@ -957,22 +1037,22 @@ export default class SearchStaff extends React.Component {
                             return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
 
-                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
-                            <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                               (() => {
-                                 let pages = [];
-                                  for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                    pages.push("element")
-                                   }
-                                   return pages
-                                 })().map((data, i) => {
-                             
-                                return <li key={i} className="page-item"><a className="page-link" onClick={() => {this.state.searchBar === true?this.specificSearchFixed(this.state.queryString,i): this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value, i):this.fetchCVsUnion(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value, i)}} href="#">{i}</a></li>
-                             
-                         })                                                                  }
-                     <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                   </ul>}
+                          {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                                if(this.state.skills.exclusive === true){
+                                    this.fetchCVsExclusive(this.state.pageSize.value, "personal",this.state.skills.skillsSelected.value,true)
+                                }else {
+                                    this.fetchCVsUnion(this.state.pageSize.value, "personal",this.state.skills.skillsSelected.value, true)
+                                }
+                             }else {
+                                 this.specificSearchFixed(this.state.queryString, true, "personal")
+                             }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                             </div>
                            <div className="tab-pane container fade container-staff" id="menu2">
                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
@@ -980,23 +1060,22 @@ export default class SearchStaff extends React.Component {
                             return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
 
-                         {this.state.size === null?null:<ul className="pagination text-center mt-2">
-                            <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                               (() => {
-                                 let pages = [];
-                                  for(let i = 0 ; i<  Math.ceil(this.state.size/this.state.pageSize.value); i++){
-                                    pages.push("element")
-                                   }
-                                   return pages
-                                 })().map((data, i) => {
-                             
-                                return <li key={i} className="page-item"><a className="page-link" onClick={(e) => {
-                                    this.state.searchBar === true?this.specificSearchFixed(this.state.queryString,i): this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value)}} href="#">{i}</a></li>
-                             
-                         })                                                                  }
-                     <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                   </ul>}
+                            {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                                if(this.state.skills.exclusive === true){
+                                    this.fetchCVsExclusive(this.state.pageSize.value, "company",this.state.skills.skillsSelected.value, true)
+                                }else {
+                                    this.fetchCVsUnion(this.state.pageSize.value, "company",this.state.skills.skillsSelected.value, true)
+                                }
+                             }else {
+                                 this.specificSearchFixed(this.state.queryString, true, "company")
+                             }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                            </div>
                         </div>
                                 
