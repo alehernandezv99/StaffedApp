@@ -243,7 +243,9 @@ export default class MyProjects extends React.Component {
                    
                     this.setState({
                         pending:false,
-                        loadMore:false
+                        loadMore:false,
+                        size:0,
+                        projects:[],
                     })
                 }
             }
@@ -652,6 +654,20 @@ export default class MyProjects extends React.Component {
                         },
                         {
                             type:"dropdown",
+                            text:"contracts",
+                            icon:"assignment",
+                            key:3,
+                            href:"",
+                            dropdownItems:[{
+                                href:"",
+                                text:"No Contracts",
+                                key:8,
+                                onClick:() => {}
+                            }],
+                            onClick:() => {}
+                        },
+                        {
+                            type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].displayName?this.state.user[0].displayName:this.state.user[0].email,
                             href:"",
                             state:"",
@@ -695,8 +711,12 @@ export default class MyProjects extends React.Component {
                     <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
                   </div>
                     
-                    <div className="col-sm-4">
-                    <div className="input-group mb-3 mt-3 mx-auto px-3">
+                
+
+                        <div className="col-sm-8" id="top">
+                        <h4 className="mt-3">My Projects</h4>
+
+                        <div className="input-group mb-3 mt-3 mx-auto px-3">
                           <input type="text" className="form-control" placeholder="Search" onChange={async(e) => {await this.setState({queryString:e.target.value});}}/>
                             <div className="input-group-append">
                             <button className="btn btn-custom-1" type="button" onClick={() => {this.specificSearch(this.state.queryString)}}>Search</button> 
@@ -710,11 +730,7 @@ export default class MyProjects extends React.Component {
                                     return ({pageSize:pageSize});
                                 });this.state.currentFilter() }}  />
                             </div>
-   
-                        </div>
 
-                        <div className="col" id="top">
-                        <h4 className="mt-3">My Projects</h4>
                         <div className="container-fluid mb-4">
                         
                         <ul className="nav nav-tabs mt-3">
@@ -798,7 +814,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size !== null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                              {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -858,7 +874,7 @@ export default class MyProjects extends React.Component {
                                 },
                                 {
                                     text:project.country,
-                                    icon:"place",
+                                    icon:"assistant_photo",
                                     key:5
                                 },
                             ]
@@ -932,7 +948,7 @@ export default class MyProjects extends React.Component {
                                 },
                                 {
                                     text:project.country,
-                                    icon:"place",
+                                    icon:"assistant_photo",
                                     key:5
                                 },
                             ]
@@ -1009,7 +1025,7 @@ export default class MyProjects extends React.Component {
                                 },
                                 {
                                     text:project.country,
-                                    icon:"place",
+                                    icon:"assistant_photo",
                                     key:5
                                 },
                             ]
@@ -1086,7 +1102,7 @@ export default class MyProjects extends React.Component {
                                 },
                                 {
                                     text:project.country,
-                                    icon:"place",
+                                    icon:"assistant_photo",
                                     key:5
                                 },
                               
@@ -1163,7 +1179,7 @@ export default class MyProjects extends React.Component {
                                 },
                                 {
                                     text:project.country,
-                                    icon:"place",
+                                    icon:"assistant_photo",
                                     key:5
                                 },
                                
@@ -1199,10 +1215,10 @@ export default class MyProjects extends React.Component {
                          </div>
                         </div>
                     </div>
+                    <div className="col">
+                    </div>
                 </div>}
-                <div id="portalContainer" className="text-left">
-                
-                </div>
+           
             </div>
         )
     }

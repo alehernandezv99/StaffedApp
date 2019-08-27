@@ -512,6 +512,7 @@ export default class Home extends React.Component {
                 snapshot2.forEach(project => {
                     arr.push(project.data())
                 })
+                if(!snapshot2.empty){
                 if(this._mounted){
                     this.setState({
                         projects:this.state.projects.concat(arr),
@@ -521,6 +522,16 @@ export default class Home extends React.Component {
                         loadMore:size < this.state.pageSize.value?false:true
                     })
                 }
+            }else {
+                if(this._mounted){
+                    this.setState({
+                        pending:false,
+                        projects:[],
+                        size:0,
+                        loadMore:false
+                    })
+                }
+            }
                 
             })
             .catch(e => {
@@ -536,7 +547,7 @@ export default class Home extends React.Component {
       
     }
 
-    reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit, newLastSeem) => {
+    reloadProjectsFixed = (limit, field, arr,page,index,sizeAcum,dictionary,projects, ids, acumDeficit, newLastSeem, verification) => {
         this.setState({
             pending:true,
             searchBar:false,
@@ -631,6 +642,10 @@ export default class Home extends React.Component {
             }
             ref.get()
             .then(snapshot2 => {
+                let newVerification = verification === undefined?0:verification;
+
+           
+
                 let arrOfLastSeem = newLastSeem === undefined?[]:newLastSeem
                 arrOfLastSeem.push(snapshot2.docs[snapshot2.docs.length - 1])
                 snapshot2.forEach(document => {
@@ -660,7 +675,7 @@ export default class Home extends React.Component {
                     if(this._mounted){
                       this.setState({
                         projects:this.state.projects.concat(newProjects),
-                        size:size === 0?null:size,
+                        size:size,
                         searchBar:false,
                         lastSeemUnion:arrOfLastSeem,
                         pending:false
@@ -761,6 +776,7 @@ export default class Home extends React.Component {
             projects.reverse();
         }
         
+        if(!snapshot2.empty){
           if(this._mounted){
             this.setState({
                 projects:this.state.projects.concat(projects),
@@ -770,6 +786,16 @@ export default class Home extends React.Component {
                 loadMore:snapshot2.size < limit?false:true
             })
         }
+    }else {
+        if(this._mounted){
+            this.setState({
+                pending:false,
+                loadMore:false,
+                projects:[],
+                size:0
+            })
+        }
+    }
             })
             .catch(e => {
                 if(this._mounted){
@@ -943,6 +969,20 @@ export default class Home extends React.Component {
                                 key:2,
                                 onClick:() => {}
                             }]
+                        },
+                        {
+                            type:"dropdown",
+                            text:"contracts",
+                            icon:"assignment",
+                            key:3,
+                            href:"",
+                            dropdownItems:[{
+                                href:"",
+                                text:"No Contracts",
+                                key:8,
+                                onClick:() => {}
+                            }],
+                            onClick:() => {}
                         },
                         {
                             type:"dropdown",
@@ -1191,7 +1231,7 @@ export default class Home extends React.Component {
                                 },
                                 {
                                     text:project.country,
-                                    icon:"place",
+                                    icon:"assistant_photo",
                                     key:5,
                                     desc:"Country of the client"
                                 },

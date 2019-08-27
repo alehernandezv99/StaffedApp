@@ -76,8 +76,11 @@ export default class SignUpDrawer extends React.Component {
             if(key !== "skills"){
             if(!(checkCriteria(this.state[key]["value"],this.state[key]["criteria"],key).check)){
                 check = 1;
-                
+                if(key !== "country"){
                 messages.push(checkCriteria(this.state[key]["value"],this.state[key]["criteria"],key).message);
+                }else {
+                  messages.push("No Country Selected")
+                }
             }
         }
         })
@@ -118,7 +121,7 @@ export default class SignUpDrawer extends React.Component {
                                 <label>* Password:</label>
                                 <input type="password" className="form-control" onChange={(e) => {this.changeState("password",e.target.value,e.target.parentElement.childNodes[2], `Password Must At Least: Contain 8 characters,
  1 number,1 uppercase character (A-Z),
-No contain special characters
+Not contain special characters
 `)}}/>
                                 <div className="invalid-feedback">Valid.</div>
                               </div>
@@ -136,7 +139,7 @@ No contain special characters
                               <div className="form-group">
                                  <label>* Country</label> 
                                  <div>
-                                 <select value={this.state.country.value} className="custom-select-sm" onChange={(e) => {e.persist(); this.changeState("country", e.target.options[e.target.selectedIndex].value)}} >
+                                 <select value={this.state.country.value} className="custom-select-sm" onChange={(e) => {e.persist(); this.changeState("country", e.target.options[e.target.selectedIndex].value ,e.target.parentElement.childNodes[1], "No Country Selected")}} >
      <option value="">Select Your Country</option>
    <option value="Afganistan">Afghanistan</option>
    <option value="Albania">Albania</option>
@@ -385,6 +388,7 @@ No contain special characters
    <option value="Zambia">Zambia</option>
    <option value="Zimbabwe">Zimbabwe</option>
 </select>
+                                  <div className="invalid-feedback">Valid.</div>
                                  </div>
                               </div>
 

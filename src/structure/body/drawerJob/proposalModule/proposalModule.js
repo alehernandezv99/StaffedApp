@@ -75,7 +75,7 @@ export default class ProposalModule extends React.Component {
                 <div className="card-body">
                 <div className="form-group mt-2">
                     {this.state.user === ""?<div className="spinner-border"></div>:
-                     <UserBox id={this.state.user.uid} />
+                     <UserBox id={this.state.user.uid} size={"60px"} handleStates={this.props.handleStates} addToast={this.props.addToast} />
                     }
                 </div>
                 <div className="form-group">

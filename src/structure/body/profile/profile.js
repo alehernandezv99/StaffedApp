@@ -999,6 +999,20 @@ export default class Profile extends React.Component {
                         },
                         {
                             type:"dropdown",
+                            text:"contracts",
+                            icon:"assignment",
+                            key:3,
+                            href:"",
+                            dropdownItems:[{
+                                href:"",
+                                text:"No Contracts",
+                                key:8,
+                                onClick:() => {}
+                            }],
+                            onClick:() => {}
+                        },
+                        {
+                            type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user.displayName?this.state.user.displayName:this.state.user.email,
                             href:"",
                             key:5,

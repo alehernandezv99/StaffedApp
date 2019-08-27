@@ -55,7 +55,7 @@ export default class JobModule extends React.Component {
     render(){
         return(
             <div className="job-module text-center mt-3" style={{position:"relative",paddingTop:"10px"}}>
-                    <h4><a onClick={this.props.onClick}>{this.props.title}</a></h4>
+                    <h4 className="mt-3"><a onClick={this.props.onClick}>{this.props.title}</a></h4>
                 <div className="job-module-block text-left mt-3">
                     <p>{this.props.description}</p>
                 </div>
@@ -67,7 +67,7 @@ export default class JobModule extends React.Component {
                 </div>
                 <div className="col text-right">
                     {this.props.isSaved === true?null:
-                    <button className="btn btn-custom-1 mr-2 mt-2 btn-sm" title="Save Project" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Project Saved","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">stars</i></button>
+                    <button className="btn btn-custom-1 mr-2 mt-2 btn-sm" title="Mark As Favorite" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Added To Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">stars</i></button>
                     }
                 </div>
                 </div>

@@ -734,6 +734,8 @@ export default class SearchStaff extends React.Component {
                     arr.push(doc.data())
                 })
                 let size = snap2.size
+
+            
               if(this._mounted){
                     this.setState({
                         CVs:this.state.CVs.concat(arr),
@@ -880,6 +882,20 @@ export default class SearchStaff extends React.Component {
                                 key:2,
                                 onClick:() => {}
                             }]
+                        },
+                        {
+                            type:"dropdown",
+                            text:"contracts",
+                            icon:"assignment",
+                            key:3,
+                            href:"",
+                            dropdownItems:[{
+                                href:"",
+                                text:"No Contracts",
+                                key:8,
+                                onClick:() => {}
+                            }],
+                            onClick:() => {}
                         },
                         {
                             type:"dropdown",

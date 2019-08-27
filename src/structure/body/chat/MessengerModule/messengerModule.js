@@ -21,7 +21,7 @@ export default class MessengerModule extends React.Component{
     }
 
     loadMore = () => {
-        console.log(this.state.currentPage)
+        
         firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").get().then(snapshot => {
             let pages = Math.ceil(snapshot.size/30)
 
@@ -33,7 +33,7 @@ export default class MessengerModule extends React.Component{
         if(this.state.currentPage <= pages){
         let lastSeem = snapshot.docs[(30)*(this.state.currentPage) -(this.state.currentPage === 0?0:1)];
 
-        console.log(`the index is ${(30)*(this.state.currentPage) -(this.state.currentPage === 0?0:1)}`,)
+        
 
         firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").startAfter(lastSeem).limit(30).get()
         .then(async snap => {
@@ -42,12 +42,12 @@ export default class MessengerModule extends React.Component{
             this.setScrollDown()
         })
         .catch(e => {
-            console.log(e)
+        
         })
     }
         })
         .catch(e => {
-            console.log(e)
+         
         })
     }
 
@@ -65,7 +65,7 @@ export default class MessengerModule extends React.Component{
         
     })
     .catch(e => {
-        console.log(e)
+      
     })
 
     }
@@ -161,7 +161,7 @@ export default class MessengerModule extends React.Component{
     }
 
     setScrollTop = () => {
-        console.log("called");
+    
         $(this.id).scrollTop(999999999999);
     }
 
@@ -176,7 +176,7 @@ export default class MessengerModule extends React.Component{
                     await firebase.firestore().collection("users").doc(id).get()
                     .then(user => {
                         if(this._mounted){
-                            console.log(user.data())
+           
                         this.setState(state => {
                             let base = state.participants
                             base[user.id] = user.data()
@@ -187,7 +187,7 @@ export default class MessengerModule extends React.Component{
                     } 
                     })
                     .catch(e => {
-                        console.log(e.message);
+                     
                     })
                 })
                
@@ -267,7 +267,7 @@ export default class MessengerModule extends React.Component{
             })
         })
         .catch(e => {
-            console.log(e)
+         
         })
     }
     }

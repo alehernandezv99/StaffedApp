@@ -184,7 +184,13 @@ componentWillUnmount(){
 
       Object.keys(checkObj).forEach(key => {
         if(this.checkCriteria(checkObj[key]["value"], checkObj[key]["criteria"]).check === false){
+          if(key !== "category" && key !== "subCategory"){
           messages.push(this.checkCriteria(checkObj[key]["value"], checkObj[key]["criteria"], key).message);
+          }else if(key === "category"){
+            messages.push("Category Not Selected");
+          }else if(key === "subCategory"){
+            messages.push("Sub Category Not Selected")
+          }
           pass = 1;
         }
       })
@@ -331,9 +337,34 @@ componentWillUnmount(){
     }
     }
 
+    handleClose = async() => {
+     await this.setState(state => {
+        let base = state.formA;
+        base.skills.value = [];
+        base.title.value = "";
+        base.description.value = "";
+        base.category.value = "";
+        base.subCategory.value = "";
+
+        let base2 = state.formB;
+        base2.type.value = "Fixed Price";
+        base2.budget.value = 0;
+        base2.level.value = "Intermediate";
+
+        return {
+          formA:base,
+          formB:base2
+        }
+        
+      })
+
+      this.props.handleClose();
+      this.setted = undefined
+    }
+
     render(){
     return(
-      <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+      <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} style={{zIndex:999}} onClose={this.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
         <div className={Classes.DRAWER_BODY}>
        <div className={`${Classes.DIALOG_BODY}`}>
       
@@ -385,9 +416,11 @@ componentWillUnmount(){
                                   {this.state.subCategories.length > 0 ?
                                 <select onChange={(e) => {this.setValue("formA","subCategory",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
                                   <option>Select Category </option>
+                                  
                                   {this.state.subCategories.map((category,i) => {
                                     return (<option key={i}>{category}</option>)
                                   })}
+                                  <option value="Other">Other</option>
                                 </select>
                                 :<div className="spinnder-border"></div>
                                   }
