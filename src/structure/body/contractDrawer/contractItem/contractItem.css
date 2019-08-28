@@ -1,0 +1,10 @@
+.contract-item {
+    padding:1.5em;
+    border-radius:4px;
+    border:1px solid lightgray;
+    transition:0.3s;
+}
+
+.contract-item:hover {
+    border: 1px solid rgb(58,123,213);
+}

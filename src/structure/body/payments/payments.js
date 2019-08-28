@@ -350,7 +350,7 @@ export default class Payments extends React.Component {
                     return res.json()
                 })
                 .then(result => {
-                    console.log(result)
+                    
                     this.setState({
                         balance:Number(result.balance)
                     })

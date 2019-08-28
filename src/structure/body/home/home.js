@@ -11,6 +11,7 @@ import $ from "jquery";
 import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
 import DrawerJob from "../drawerJob";
+import ContractDrawer from "../contractDrawer";
 import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
 import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
@@ -34,6 +35,7 @@ export default class Home extends React.Component {
         this.markAsRead = this.markAsRead.bind(this);
 
         this.state = {
+            contracts:[],
             chat:{
                 payload:null
             },
@@ -67,6 +69,33 @@ export default class Home extends React.Component {
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
                 exclusive:false,
+            },
+            contractDrawer:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.contractDrawer;
+                            base.isOpen = true;
+
+                            return {
+                                contractDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base =state.contractDrawer;
+                            base.isOpen = false;
+
+                            return {
+                                contractDrawer:base
+                            }
+                        })
+                    }
+                }
             },
             TODO:{
                 isOpen:false,
@@ -836,6 +865,22 @@ export default class Home extends React.Component {
             }})
         }
            })
+
+           firebase.firestore().collection("contracts").where("involved","array-contains",id).limit(6).get()
+           .then(contracts => {
+               let arr = [];
+
+               contracts.forEach(contract => {
+                   arr.push(contract.data());
+               })
+            
+               if(this._mounted){
+                   this.setState({
+                       contracts:arr
+                   })
+               }
+           })
+
            if(this._mounted){
              this.setState(state => {
                 let skills = state.skills;
@@ -976,12 +1021,28 @@ export default class Home extends React.Component {
                             icon:"assignment",
                             key:3,
                             href:"",
-                            dropdownItems:[{
+                            dropdownItems:this.state.contracts.length > 0? this.state.contracts.concat({
                                 href:"",
-                                text:"No Contracts",
+                                title:"See More",
                                 key:8,
                                 onClick:() => {}
-                            }],
+                            }).map((e,i) => {
+                              
+                                return {
+                                    href:"",
+                                    text:e.title,
+                                    key:i,
+                                    onClick:() => {e.projectID !== undefined? this.handleInboxEvent({
+                                        type:"view contract",
+                                        id:e.projectID
+                                    }): this.state.contractDrawer.handleOpen()}
+                                }
+                            }):[{
+                                href:"",
+                                text:"No Contracts",
+                                key:1,
+                                onClick:() => {}
+                            }] ,
                             onClick:() => {}
                         },
                         {
@@ -1160,9 +1221,10 @@ export default class Home extends React.Component {
 
                     <div className="row text-center">
                         <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload}/>
                        </div>
                  <div id="portalContainer" className="text-left">
+                     <ContractDrawer isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                      <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
@@ -1251,11 +1313,9 @@ export default class Home extends React.Component {
                             return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
-                           {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                           {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {
                                e.preventDefault();
-                               await this.setState(state => ({
-                                   currentPage:(state.currentPage + 1)
-                               }))
+                             
                                if(this.state.searchBar === false){
                                if(this.state.skills.exclusive === true){
                                    this.reloadProjectsExclusive(this.state.pageSize.value, "skillsExclusive",this.state.skills.skillsSelected.value, true)

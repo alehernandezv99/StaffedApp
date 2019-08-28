@@ -10,50 +10,72 @@ export default class TransactionDrawer extends React.Component {
 
         this.state = {
             transactions:[],
-            size:0
+            size:0,
+            loadMore:false,
+            lastSeem:{},
+            pending:false
         }
     }
 
     fetchTransactions = (page) => {
         this.setState({
             transactions:[],
-            size:null
+            size:null,
+            pending:true
         })
-        let body = {};
+         let ref =firebase.firestore().collection("transactions").where("freelancer","==",firebase.auth().currentUser.uid).orderBy("created", "desc")
 
-        let form_data = new URLSearchParams();
-        body.uid = firebase.auth().currentUser.uid
-        body.page = page
-        Object.keys(body).forEach(key => {
-            form_data.append(key, body[key])
+         if(page === true ){
+             ref = ref.limit(10).startAfter(this.state.lastSeem)
+         }else {
+             ref = ref.limit(10)
+         }
+         ref.get()
+        .then(snapshot => {
+            let arr = [];
+
+            snapshot.forEach(doc => {
+                arr.push(doc.data());
+            })
+            if(!snapshot.empty){
+                if(this._mounted){
+                    this.setState(state => ({
+                        transactions:state.transactions.concat(arr),
+                        size:snapshot.size,
+                        loadMore: snapshot.size < 10?false:true,
+                        pending:false   
+                    }))
+                }
+            }else {
+                if(this._mounted){
+                    this.setState({
+                        transactions:[],
+                        size:0,
+                        loadMore:false,
+                        pending:false
+                    })
+                }
+            }
         })
-        fetch("https://staffed-app.herokuapp.com/getTransactions", {
-            method:"POST",
-            body:form_data,
-            headers: {
-               'Content-Type': 'application/x-www-form-urlencoded',
-             }
-            })
-        .then(response => {
-            return response.json()
-        }).then(result => {
-
-            console.log(result)
-            this.setState({
-                transactions:result.transactions,
-                size:result.size
-            })
-         })
-         .catch(e => {
-             this.setState({
-                 transactions:[],
-                 size:0
-             })
-         })
+        .catch(e => {
+            if(this._mounted){
+                this.setState({
+                    transactions:[],
+                    size:0,
+                    pending:false,
+                    loadMore:false
+                })
+            }
+        })
         }
 
     componentDidMount(){
+        this._mounted = true
        this.fetchTransactions(0)
+    }
+
+    componentWillUnmount() {
+        this._mounted = false
     }
 
     render(){

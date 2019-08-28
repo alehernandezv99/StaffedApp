@@ -10,50 +10,66 @@ export default class InboxMessages extends React.Component {
 
         this.state = {
             page:0,
-            messages:[]
+            messages:[],
+            size:null,
+            loadMore:false,
+            lastSeem:null,
+            pending:false
         }
     }
 
     fetchMessages= (page) => {
         this.setState({
-            messages:[],
-            size:null
+            size:null,
+            pending:true
         })
-        let body = {};
-
-        let form_data = new URLSearchParams();
-        body.uid = firebase.auth().currentUser.uid
-        body.page = page
-        Object.keys(body).forEach(key => {
-            form_data.append(key, body[key])
-        })
-        fetch("https://staffed-app.herokuapp.com/getInboxMessages", {
-            method:"POST",
-            body:form_data,
-            headers: {
-               'Content-Type': 'application/x-www-form-urlencoded',
-             }
-            })
-        .then(response => {
-            return response.json()
-        }).then(result => {
-           
-            this.setState({
-                messages:result.messages,
-                size:result.size
-            })
-        })
-        .catch(e => {
+        let ref =firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).collection("inbox").orderBy("sent","desc")
+        if(page === true){
+            ref = ref.limit(10).startAfter(this.state.lastSeem)
+        }else {
             this.setState({
                 messages:[],
-                size:0
+                size:null
             })
+            ref = ref.limit(10)
+        }
+
+        ref.get()
+        .then(messages => {
+            let arr = []
+
+            messages.forEach(message => {
+                arr.push(message.data())
+            })
+
+            if(this._mounted){
+                this.setState(state => ({
+                    messages:state.messages.concat(arr),
+                    size:messages.size,
+                    loadMore:messages.size < 10? false:true,
+                    lastSeem:messages.docs[messages.docs.length - 1],
+                    pending:false
+                }))
+            }
+            
+        })
+        .catch(e => {
+            
+            if(this._mounted){
+                this.setState({
+                    messages:[],
+                    size:0,
+                    loadMore:false,
+                    pending:false
+                })
+            }
         })
     }
 
 
     componentDidMount() {
-        this.fetchMessages(0)
+        this._mounted = true;
+        this.fetchMessages(false)
 
     }
 
@@ -79,20 +95,11 @@ export default class InboxMessages extends React.Component {
                        }):this.state.size !== null?<div className="text-center">No messages</div>:<div className="spinner-border"></div>}
                    </div>
 
-                   {this.state.messages.length === 0?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/8); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return ( <li key={i} className="page-item"><a className="page-link" onClick={() => {this.fetchMessages(i)}} href="#">{i}</a></li>)
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                   {this.state.messages.length === 0?null:this.state.loadMore?<div className="text-center mt-3 mb-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                            this.fetchMessages(true)
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                  </div>
             </Drawer>
         )

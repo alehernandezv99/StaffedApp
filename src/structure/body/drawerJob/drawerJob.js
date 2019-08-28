@@ -230,6 +230,7 @@ export default class DrawerJob extends React.Component {
                     created:firebase.firestore.Timestamp.now(),
                     presentation:doc.data().presentation,
                     description:project.data().description,
+                    title:project.data().title,
                     status:"In Process"
                 })
 
