@@ -5,6 +5,10 @@ import firebase from "../../../../firebaseSetUp";
 export default class UploadImg extends React.Component {
     constructor(props){
         super(props);
+
+        this.state ={
+          progress:0
+        }
     }
 
     componentDidMount(){
@@ -24,7 +28,11 @@ export default class UploadImg extends React.Component {
             // Observe state change events such as progress, pause, and resume
             // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
             var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            this.progressBar.style.width = `${progress}%`;
+            if(this._mounted){
+              this.setState({
+                progress:progress
+              })
+            }
             console.log('Upload is ' + progress + '% done');
             switch (snapshot.state) {
               case firebase.storage.TaskState.PAUSED: // or 'paused'
@@ -63,7 +71,7 @@ export default class UploadImg extends React.Component {
                   <label className="custom-file-label" >Choose file</label>
                  </div>
                  <div className="progress mt-3">
-                   <div className="progress-bar" style={{width:"0%"}} ref={ref => this.progressBar =ref}></div>  
+                   <div className="progress-bar" style={{width:`${this.state.progress}%`}}></div>  
                   </div>
                 </form>
                  </div>

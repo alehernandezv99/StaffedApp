@@ -3,6 +3,7 @@ import "./editProposalModule.css";
 import { Button, Position, Classes, Slider, Drawer, DateInput} from "@blueprintjs/core";
 import firebase from "../../../../firebaseSetUp";
 import checkCriteria from "../../../../utils/checkCriteria";
+import LoadingSpinner from "../../../loading/loadingSpinner";
 
 export default class EditProposalModule extends React.Component {
     constructor(props){
@@ -10,15 +11,26 @@ export default class EditProposalModule extends React.Component {
         this.state = {
            title:{value:"", criteria:{type:"text",minLength:4, maxLength:200}},
            content:{value:"", criteria:{type:"text", minLength:4,}},
+           isLoading:false
         }
     }
 
+    toggleLoading = () => {
+        if(this._mounted){
+            this.setState(state => ({
+                isLoading:!state.isLoading
+            }))
+        }
+    }
+
+
     updateCV = (type,element, index) => {
+        this.toggleLoading();
         element.disabled = true;
         let check = 0;
         let messages = [];
         Object.keys(this.state).forEach(key => {
-            let criteria = checkCriteria(this.state[key]["value"], this.state[key]["criteria"], key);
+            let criteria = checkCriteria(String(this.state[key]["value"]).trim(), this.state[key]["criteria"], key);
             if(!(criteria.check)){
                 check = 1;
                 messages.push(criteria.message);
@@ -44,25 +56,36 @@ export default class EditProposalModule extends React.Component {
                 this.props.addToast(`Successfully ${type}${type.includes("e")?"d":"ed"}`);
                 this.props.handleClose();
                 this.props.callBack();
+                this.toggleLoading();
+                element.disabled = false;
             })
             .catch(e => {
                 this.props.addToast(e.message);
                 element.disabled = false;
+                this.toggleLoading()
             })
         })
         .catch(e => {
             this.props.addToast(e.message);
             element.disabled = false;
+            this.toggleLoading()
         })
     }else {
         for(let i = 0; i < messages.length; i++){
             this.props.addToast(messages[i]);
         }
+        element.disabled = false;
+        this.toggleLoading();
     }
     
     }
 
+    componentWillUnmount() {
+        this._mounted = false
+    }
+
     componentDidMount(){
+        this._mounted = true
         if(this.props.type === "update"){
             this.setState(state =>{
                 let base1 = state.title;
@@ -88,7 +111,8 @@ export default class EditProposalModule extends React.Component {
 
     render(){
         return(
-            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+            <Drawer hasBackdrop={true} portalContainer={document.getElementById("portalContainer")} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+                {this.state.isLoading?<LoadingSpinner />:null}
                  <div className={Classes.DRAWER_BODY}>
                  <div className={`${Classes.DIALOG_BODY}`}>
                      <div className="form=group">

@@ -22,6 +22,7 @@ export default class ContractDrawer extends React.Component {
     }
 
     fetchContracts = (page) => {
+
         if(this._mounted){
             this.setState({
                 contracts:[],
@@ -36,10 +37,11 @@ export default class ContractDrawer extends React.Component {
        }else {
            ref = ref.limit(5)
        }
-
+      
        ref.get()
        .then(snap => {
-
+        
+           console.log("The snap is ", snap.empty)
         if(!snap.empty){
            let arr = [];
 
@@ -61,12 +63,14 @@ export default class ContractDrawer extends React.Component {
                 this.setState({
                     contracts:[],
                     size:0,
-                    loadMore:0
+                    loadMore:0,
+                    size:0
                 })
             }
         }
        })
        .catch(e => {
+           console.error(e)
            if(this._mounted){
                this.setState({
                    pending:false,
@@ -83,6 +87,7 @@ export default class ContractDrawer extends React.Component {
         this.fetchContracts(false)
     }
 
+
     render() {
         return (
             <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"50%"} isOpen={this.props.isOpen}>
@@ -90,7 +95,7 @@ export default class ContractDrawer extends React.Component {
                    <div className={`${Classes.DIALOG_BODY}`}>
                        {this.state.contracts.length > 0? this.state.contracts.map((e,i) => {
                            return (
-                               <ContractItem key={i} client={e.client} freelancer={e.freelancer} title={e.title} description={e.description} price={e.price} handleStates={this.props.handleStates} addToast={this.props.addToast} />
+                               <ContractItem key={i} client={e.client} freelancer={e.freelancer} title={e.title} description={e.description} price={e.price} handleStates={this.props.handleStates} onClick={() => {this.props.openContract("view contract", e.projectID)}} addToast={this.props.addToast} />
                            )
                        }):this.state.size !== null?<div className="m-2">No contracts</div>:<div className="spinner-border"></div>}
                    </div>

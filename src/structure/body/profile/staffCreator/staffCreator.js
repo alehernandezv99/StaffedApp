@@ -7,6 +7,7 @@ import checkCriteria from "../../../../utils/checkCriteria";
 import $ from "jquery";
 import autocomplete from "../../../../utils/autocomplete";
 import KeywordsGeneration from "../../../../utils/keywordsGeneration";
+import LoadingSpinner from "../../../loading/loadingSpinner";
 
 
 
@@ -22,6 +23,7 @@ export default class StaffCreator extends React.Component{
             saved:false,
             progress:null,
             submitted:false,
+            isLoading:false,
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
@@ -120,6 +122,14 @@ export default class StaffCreator extends React.Component{
                 },
 
             },
+        }
+    }
+    
+    toggleLoading = () => {
+        if(this._mounted){
+            this.setState(state => ({
+                isLoading:!state.isLoading
+            }))
         }
     }
 
@@ -520,24 +530,21 @@ export default class StaffCreator extends React.Component{
     }
 
     createStaff = () => {
+        this.toggleLoading()
         let check = 0;
         let messages = []
        
-        if(!checkCriteria(this.state.inputs.description.title, {minLength:3, type:"text"},"title")){
+        if(!checkCriteria(String(this.state.inputs.description.title).trim(), {minLength:3, type:"text"},"title").check){
             check = 1
-            messages.push(checkCriteria(this.state.inputs.description.title, {minLength:4, type:"text"},"title").message)
+            messages.push(checkCriteria(String(this.state.inputs.description.title).trim(), {minLength:3, type:"text"},"title").message)
         }
-        if(!checkCriteria(this.state.inputs.description.description, {minLength:3, text:"text",},"description").check){
+        if(!checkCriteria(String(this.state.inputs.description.description).trim(), {minLength:3, type:"text",},"description").check){
             check = 1;
-            messages.push(checkCriteria(this.state.inputs.description.description, {minLength:3, text:"text",},"description").message)
+            messages.push(checkCriteria(String(this.state.inputs.description.description).trim(), {minLength:3, type:"text",},"description").message)
         }
-        if(!checkCriteria(this.state.skills.skillsSelected.value, this.state.skills.skillsSelected.criteria,"skills").check){
+        if(!checkCriteria(String(this.state.inputs.name.title).trim(), {minLength:3, type:"text"},"name").check){
             check = 1;
-            messages.push(checkCriteria(this.state.skills.skillsSelected.value, this.state.skills.skillsSelected.criteria,"skills").message)
-        }
-        if(!checkCriteria(this.state.inputs.name.title, {minLength:3, text:"text"},"name").check){
-            check = 1;
-            messages.push(checkCriteria(this.state.inputs.name.title, {minLength:3, text:"text"}, "name").message)
+            messages.push(checkCriteria(String(this.state.inputs.name.title).trim(), {minLength:3, type:"text"}, "name").message)
         }
 
         if(check === 0){
@@ -558,6 +565,7 @@ export default class StaffCreator extends React.Component{
             this.props.toggleLoading();
             firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","company").get()
             .then(snapshot => {
+             
                 if(!snapshot.empty){
                     let id = "";
                     let staff = []
@@ -572,16 +580,19 @@ export default class StaffCreator extends React.Component{
                     staff.push(obj)
                     firebase.firestore().collection("CVs").doc(id).update({staff:staff})
                     .then(() => {
+                        this.toggleLoading()
                         this.props.addToast("Staff Added");
                         this.props.toggleLoading();
                         this.props.handleClose();
                         this.props.refresh();
                     })
                     .catch(e => {
+                        this.toggleLoading()
                         this.props.addToast("ohoh something went wrong :(");
                         this.props.toggleLoading();
                     })
                 }else {
+                    this.toggleLoading()
                     this.props.toggleLoading();
                     alert("Empty men")
                 }
@@ -589,12 +600,14 @@ export default class StaffCreator extends React.Component{
             .catch(e => {
                 this.props.addToast("ohoh something went wrong :(");
                 this.props.toggleLoading();
+                this.toggleLoading()
             })
         }else {
            
             for(let i =0; i < messages.length; i++){
                 this.props.addToast(messages[i]);
             }
+            this.toggleLoading()
         }
     }
 
@@ -614,6 +627,8 @@ export default class StaffCreator extends React.Component{
         }
 
         if(check === 0){
+
+            this.toggleLoading()
             this.setState(state => {
                 let base = state.CV;
                 let base2 = base.description;
@@ -645,21 +660,25 @@ export default class StaffCreator extends React.Component{
                     staff[this.props.index] = obj
                     firebase.firestore().collection("CVs").doc(id).update({staff:staff})
                     .then(() => {
+                        this.toggleLoading()
                         this.props.addToast("Staff Updated");
                         this.props.toggleLoading();
                         this.props.handleClose();
                         this.props.refresh();
                     })
                     .catch(e => {
+                        this.toggleLoading()
                         this.props.addToast("ohoh something went wrong :(");
                         this.props.toggleLoading();
                     })
                 }else {
+                    this.toggleLoading()
                     this.props.toggleLoading();
                     alert("Empty men")
                 }
             })
             .catch(e => {
+                this.toggleLoading()
                 this.props.addToast("ohoh something went wrong :(");
                 this.props.toggleLoading();
             })
@@ -704,6 +723,7 @@ export default class StaffCreator extends React.Component{
     render(){
         return (
             <Drawer hasBackdrop={true} style={{zIndex:999}} portalContainer={document.getElementById("portalContainer")} onClose={() => {this.state.saved?(()=> {})():this.deleteReference(); this.props.handleClose()}} title={""} size={"75%"} isOpen={this.props.isOpen}>
+                {this.state.isLoading?<LoadingSpinner/>:null}
             <div className={Classes.DRAWER_BODY}>
               <div className={`${Classes.DIALOG_BODY}`}>
               <div className="container mt-2">
@@ -727,14 +747,17 @@ export default class StaffCreator extends React.Component{
                                     <input type="file" className="custom-file-input" id="customFile" onChange={e => {e.persist(); this.upload(e)}}/>
                                     <label className="custom-file-label" >Choose file</label>
                                 </div>
+                              
+                             <div className="progress mt-3 mx-2">
+                               <div className="progress-bar" style={{width:`${this.state.progress}%`}}></div>
+                            </div>
+                             
                               </div>
+
+                              
                              </div>
 
-                             {this.state.progress?
-                             <div className="progress mt-4">
-                               <div className="progress-bar" style={{width:`${this.state.progress}%`}}></div>
-                            </div>:null
-                             }
+                             
                         </div>
                     </div>
                     <div className="form-group">
@@ -820,7 +843,7 @@ export default class StaffCreator extends React.Component{
                                         </div>
                                         <div className="form-group">
                                             <button type="button" className="btn btn-custom-1 btn-sm" onClick={() =>{this.applyEditItem("experience", this.state.inputsEdit.experience.index,"#experience-form-edit")}}><i className="material-icons align-middle">create</i> Edit</button>
-                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#experience-form-edit")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#experience-form-edit")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                         </div>
                                         </div>                                      
                                          
@@ -838,7 +861,7 @@ export default class StaffCreator extends React.Component{
                                          </div>
                                          <div className="form-group">
                                              <button type="button" onClick={() => {this.addElement("experience",{title:this.state.inputs.experience.title,text:this.state.inputs.experience.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
-                                             <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#experience-form","up","experience")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                             <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#experience-form","up","experience")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                          </div>
                                      </div>
                                      </div>
@@ -887,7 +910,7 @@ export default class StaffCreator extends React.Component{
                                         </div>
                                         <div className="form-group">
                                             <button type="button" className="btn btn-custom-1 btn-sm" onClick={() =>{this.applyEditItem("education", this.state.inputsEdit.education.index,"#education-form-edit")}}><i className="material-icons align-middle">create</i> Edit</button>
-                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#education-form-edit")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#education-form-edit")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                         </div>
                                         </div>
                         
@@ -905,7 +928,7 @@ export default class StaffCreator extends React.Component{
                             </div>
                             <div className="form-group">
                                 <button type="button" onClick={() => {this.addElement("education",{title:this.state.inputs.education.title,text:this.state.inputs.education.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
-                                <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#education-form","up","education")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#education-form","up","education")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                             </div>
                         </div>
                         </div>
@@ -952,7 +975,7 @@ export default class StaffCreator extends React.Component{
                                         </div>
                                         <div className="form-group">
                                             <button type="button" onClick={() =>{this.applyEditItem("portfolio", this.state.inputsEdit.portfolio.index,"#portfolio-form-edit")}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">create</i> Edit</button>
-                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#portfolio-form-edit")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#portfolio-form-edit")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                         </div>
                                         </div>
 
@@ -970,7 +993,7 @@ export default class StaffCreator extends React.Component{
                                    </div>
                                    <div className="form-group">
                                        <button type="button" onClick={() => {this.addElement("portfolio",{title:this.state.inputs.portfolio.title,text:this.state.inputs.portfolio.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
-                                       <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#portfolio-form","up","portfolio")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                       <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#portfolio-form","up","portfolio")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                    </div>
                                </div>
                                </div>
@@ -1020,7 +1043,7 @@ export default class StaffCreator extends React.Component{
                                         </div>
                                         <div className="form-group">
                                             <button type="button" onClick={() =>{this.applyEditItem("expertise", this.state.inputsEdit.expertise.index,"#expertise-form-edit")}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">create</i> Edit</button>
-                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#expertise-form-edit")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#expertise-form-edit")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                         </div>
                                         </div>
 
@@ -1038,7 +1061,7 @@ export default class StaffCreator extends React.Component{
                                         </div>
                                         <div className="form-group">
                                             <button type="button" onClick={() => {this.addElement("expertise",{title:this.state.inputs.expertise.title,text:this.state.inputs.expertise.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
-                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#expertise-form","up","expertise")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#expertise-form","up","expertise")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                         </div>
                                     </div>
                                     </div>
@@ -1085,7 +1108,7 @@ export default class StaffCreator extends React.Component{
                                         </div>
                                         <div className="form-group">
                                             <button type="button" onClick={() =>{this.applyEditItem("contact", this.state.inputsEdit.contact.index,"#contact-form-edit")}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">create</i> Edit</button>
-                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#contact-form-edit")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                            <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => {this.closeEditForm("#contact-form-edit")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                         </div>
                                         </div>
 
@@ -1103,7 +1126,7 @@ export default class StaffCreator extends React.Component{
                                             </div>
                                             <div className="form-group">
                                                 <button type="button" onClick={() => {this.addElement("contact",{title:this.state.inputs.contact.title,text:this.state.inputs.contact.description})}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">add</i> Add</button>
-                                                <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#contact-form","up","contact")}}><i className="material-icons align-middle">remove</i> Cancel</button>
+                                                <button type="button" className="btn btn-danger btn-sm ml-3" onClick={(e) => {this.toggleAddContent("#contact-form","up","contact")}}><i className="material-icons align-middle">clear</i> Cancel</button>
                                             </div>
                                         </div>
                                         </div>

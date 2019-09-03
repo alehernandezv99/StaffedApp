@@ -16,6 +16,7 @@ import TransactionRow from "./transactionRow";
 import TransactionDrawer from "./transactionDrawer";
 import TODO from "../drawerJob/TO-DO";
 import Chat from "../chat";
+import ContractDrawer from "../contractDrawer";
 
 
 export default class Payments extends React.Component {
@@ -23,7 +24,11 @@ export default class Payments extends React.Component {
         super(props)
 
         this.state ={
+            contracts:[],
             user:null,
+            loadMore:false,
+            pending:false,
+            lastSeem:{},
             chat:{
                 payload:null
             },
@@ -64,6 +69,33 @@ export default class Payments extends React.Component {
                 min:6,
                 max:12,
                 value:15
+            },
+            contractDrawer:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.contractDrawer;
+                            base.isOpen = true;
+
+                            return {
+                                contractDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base =state.contractDrawer;
+                            base.isOpen = false;
+
+                            return {
+                                contractDrawer:base
+                            }
+                        })
+                    }
+                }
             },
             transactionDrawer:{
                 isOpen:false,
@@ -277,6 +309,27 @@ export default class Payments extends React.Component {
                 })
             }
         })
+        .catch(e => {
+            this.addToast("Ohoh something wnet wrong :(");
+        })
+
+        firebase.firestore().collection("contracts").where("involved","array-contains",id).limit(6).get()
+        .then(contracts => {
+            let arr = [];
+
+            contracts.forEach(contract => {
+                arr.push(contract.data());
+            })
+         
+            if(this._mounted){
+                this.setState({
+                    contracts:arr
+                })
+            }
+        })
+        .catch(e => {
+            this.addToast("Ohoh something went wrong :(")
+        })
         firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
                
             let count = 0
@@ -345,7 +398,7 @@ export default class Payments extends React.Component {
     }
 
     fetchBalance =() => {
-        fetch(`https://staffed-app.herokuapp.com/balance?id=${firebase.auth().currentUser.uid}`)
+        fetch(`https://staffedapp.appspot.com/balance?id=${firebase.auth().currentUser.uid}`)
                 .then(res => {
                     return res.json()
                 })
@@ -357,8 +410,21 @@ export default class Payments extends React.Component {
                 })
     }
 
-    fetchTransactions = () => {
-        firebase.firestore().collection("transactions").where("freelancer","==",firebase.auth().currentUser.uid).orderBy("created","desc").get()
+    fetchTransactions = (page) => {
+        if(this._mounted){
+            this.setState({
+                pending:true,
+
+            })
+        }
+       let ref =  firebase.firestore().collection("transactions").where("freelancer","==",firebase.auth().currentUser.uid).orderBy("created","desc")
+
+       if(page === true){
+           ref = ref.startAfter(this.state.lastSeem).limit(6)
+       }else {
+           ref = ref.limit(6)
+       }
+       ref.get()
         .then(snap => {
             if(!snap.empty){
                 let transactions = [];
@@ -368,9 +434,31 @@ export default class Payments extends React.Component {
                 })
 
                 this.setState({
-                    transactions:transactions
+                    transactions:transactions,
+                    loadMore:snap.size < 6?false:true,
+                    pending:false,
+                    lastSeem:snap.docs[snap.docs.length - 1]
+                })
+            }else {
+                if(this._mounted){
+                    this.setState({
+                        transactions:[],
+                        loadMore:false,
+                        pending:false
+                    })
+                }
+            }
+        })
+        .catch(e => {
+            if(this._mounted){
+                this.setState({
+                    transactions:[],
+                    loadMore:false,
+                    pending:false
                 })
             }
+
+            this.addToast("Ohoh something went wrong :(")
         })
     }
 
@@ -511,12 +599,28 @@ export default class Payments extends React.Component {
                             icon:"assignment",
                             key:3,
                             href:"",
-                            dropdownItems:[{
+                            dropdownItems:this.state.contracts.length > 0? this.state.contracts.concat({
                                 href:"",
-                                text:"No Contracts",
+                                title:"See More",
                                 key:8,
                                 onClick:() => {}
-                            }],
+                            }).map((e,i) => {
+                              
+                                return {
+                                    href:"",
+                                    text:e.title,
+                                    key:i,
+                                    onClick:() => {e.projectID !== undefined? this.handleInboxEvent({
+                                        type:"view contract",
+                                        id:e.projectID
+                                    }): this.state.contractDrawer.handleOpen()}
+                                }
+                            }):[{
+                                href:"",
+                                text:"No Contracts",
+                                key:1,
+                                onClick:() => {}
+                            }] ,
                             onClick:() => {}
                         },
                         {
@@ -546,9 +650,10 @@ export default class Payments extends React.Component {
                 {this.state.user === null?<PaymentsLoading />:
                 <div className="container-fluid p-5">
                     <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                     <div id="portalContainer">
+                    <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                     {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                     <TransactionDrawer isOpen={this.state.transactionDrawer.isOpen} handleClose={() => {this.state.transactionDrawer.handleClose()}} />
                     <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />

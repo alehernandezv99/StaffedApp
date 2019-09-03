@@ -205,10 +205,10 @@ export default class DrawerJob extends React.Component {
         .then(proposalAccepted => {
 
             if(proposalAccepted.empty){
-                this.toggleLoading2()
+              
         if(window.confirm("Sure you want to accept this proposal")){
         //this.toggleLoading();
-        this.toggleLoading2()
+        
         let batch = firebase.firestore().batch();
         
         firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
@@ -244,13 +244,13 @@ export default class DrawerJob extends React.Component {
                         this.sendMessage(`The owner of the project "${this.state.project[0].title}" accepted you the proposal `,userId.data().user,{type:"view contract" ,id:idProject})
                         this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the proposal`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
                     this.toggleLoading2()
-                    //this.toggleLoading();
+                this.toggleLoading();
                     this.startInterview(idProject,idProposal);
                 })
                 .catch(e => {
                     this.addToast(e.message);
                     this.toggleLoading2()
-                   // this.toggleLoading()
+                    this.toggleLoading()
                 })
             }else {
                 this.toggleLoading2()
@@ -260,17 +260,17 @@ export default class DrawerJob extends React.Component {
             }else {
                 this.addToast("Proposal does not exist");
                 this.toggleLoading2()
-              //  this.toggleLoading();
+                this.toggleLoading();
             }
             
         })
         .catch(e => {
             this.addToast(e.message);
             this.toggleLoading2()
-            //this.toggleLoading();
+            this.toggleLoading();
         })
     }else {
-        //this.toggleLoading();
+        this.toggleLoading();
         this.toggleLoading2();
     }
 }else {
@@ -750,6 +750,7 @@ export default class DrawerJob extends React.Component {
             this.fetchProjectProps();
         })
        
+       
     }
 
      setValue = async (obj, prop, value,index,cb, objA, propA, coeficent)=> {
@@ -889,15 +890,15 @@ export default class DrawerJob extends React.Component {
                             <div className="row mt-3">
                                 <div className="col-sm-4">
                                     <div><h5><i className="material-icons align-middle">attach_money</i> Budget</h5></div>
-                                    <div><h6 className="text-center">{this.state.project[0].budget}</h6></div>
+                                    <div><h6 className="text-left">{this.state.project[0].budget}</h6></div>
                                 </div>
                                 <div className="col-sm-4">
                                 <div><h5><i className="material-icons align-middle">show_chart</i> Level</h5></div>
-                                <div><h6 className="text-center">{this.state.project[0].level}</h6></div>
+                                <div><h6 className="text-left">{this.state.project[0].level}</h6></div>
                                 </div>
                                 <div className="col-sm-4">
                                     <div><h5><i className="material-icons align-middle">library_books</i> Proposals</h5></div>
-                                    <div><h6 className="text-center">{this.state.project[0].quantity}</h6></div>
+                                    <div><h6 className="text-left">{this.state.project[0].quantity}</h6></div>
                                 </div>
                             </div>
                         </div>
@@ -986,7 +987,7 @@ export default class DrawerJob extends React.Component {
               {this.state.project[0].invitations?this.state.project[0].invitations.length > 0?
                <div className="invitations-job-drawer">
                 {this.state.project[0].invitations.map((e,i) => {
-                  return ( <UserBox addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} email={e} />)
+                  return ( <UserBox key={i} addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} email={e} />)
                 })}
                 </div>
                 :null:null }

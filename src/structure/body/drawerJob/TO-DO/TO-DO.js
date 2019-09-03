@@ -177,7 +177,6 @@ export default class TODO extends React.Component{
                 })
                 return {
                     TODO:base,
-                    input:""
                 }
             })
 
@@ -223,7 +222,7 @@ export default class TODO extends React.Component{
                     :null}
                   {this.state.TODO.map((e,i) => {
                       return (
-                          <div className={`${e.state?"TODO-item-ready":"TODO-item"}  p-4 mt-2`}>
+                          <div key={i} className={`${e.state?"TODO-item-ready":"TODO-item"}  p-4 mt-2`}>
                               <i className="material-icons align-middle" onClick={() => {this.state.editable?this.toggleCheck(i):(() => {})()}}>{e.state?"check_box":"check_box_outline_blank"}</i>
                               <span className="ml-3">{e.text}</span>
                               {this.state.editable?

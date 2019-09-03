@@ -10,6 +10,7 @@ import MyProjectLoading from "../../loading/myProjectLoading";
 import checkCriteria from "../../../utils/checkCriteria";
 import CreateProject from "../createProject";
 import DrawerJob from "../drawerJob";
+import ContractDrawer from "../contractDrawer";
 import ProposalsViewer from "../proposalViewer";
 import LoadingSpinner from "../../loading/loadingSpinner"
 import JobModule from "../home/jobModule";
@@ -29,6 +30,7 @@ export default class MyProjects extends React.Component {
         this.markAsRead = this.markAsRead.bind(this);
         
         this.state = {
+            contracts:[],
             isLoading:false,
             chat:{
                 payload:null
@@ -79,6 +81,33 @@ export default class MyProjects extends React.Component {
             },
             projects:[],
             size:null,
+            contractDrawer:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.contractDrawer;
+                            base.isOpen = true;
+
+                            return {
+                                contractDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base =state.contractDrawer;
+                            base.isOpen = false;
+
+                            return {
+                                contractDrawer:base
+                            }
+                        })
+                    }
+                }
+            },
             inboxDrawer:{
                 isOpen:false,
                 handleOpen:() => {this.setState(state => {
@@ -398,6 +427,27 @@ export default class MyProjects extends React.Component {
         }
            
         })
+        .catch(e => {
+            this.addToast("Ohoh something went wrong :(");
+        })
+
+        firebase.firestore().collection("contracts").where("involved","array-contains",id).limit(6).get()
+        .then(contracts => {
+            let arr = [];
+
+            contracts.forEach(contract => {
+                arr.push(contract.data());
+            })
+         
+            if(this._mounted){
+                this.setState({
+                    contracts:arr
+                })
+            }
+        })
+        .catch(e => {
+            this.addToast("Ohoh something went wrong :(")
+        })
     }
 
     async clearSkill(index){
@@ -658,12 +708,28 @@ export default class MyProjects extends React.Component {
                             icon:"assignment",
                             key:3,
                             href:"",
-                            dropdownItems:[{
+                            dropdownItems:this.state.contracts.length > 0? this.state.contracts.concat({
                                 href:"",
-                                text:"No Contracts",
+                                title:"See More",
                                 key:8,
                                 onClick:() => {}
-                            }],
+                            }).map((e,i) => {
+                              
+                                return {
+                                    href:"",
+                                    text:e.title,
+                                    key:i,
+                                    onClick:() => {e.projectID !== undefined? this.handleInboxEvent({
+                                        type:"view contract",
+                                        id:e.projectID
+                                    }): this.state.contractDrawer.handleOpen()}
+                                }
+                            }):[{
+                                href:"",
+                                text:"No Contracts",
+                                key:1,
+                                onClick:() => {}
+                            }] ,
                             onClick:() => {}
                         },
                         {
@@ -700,9 +766,11 @@ export default class MyProjects extends React.Component {
                 
                  <div className=" row text-center">
                      <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat addToast={this.addToast}  payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
+                    <Chat handleStates={this.props.handleStates} addToast={this.addToast}  payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                   <div id="portalContainer" className="text-left">
+                      <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
+                  <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                   {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                   <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
@@ -712,7 +780,7 @@ export default class MyProjects extends React.Component {
                   </div>
                     
                 
-
+   
                         <div className="col-sm-8" id="top">
                         <h4 className="mt-3">My Projects</h4>
 
@@ -1213,6 +1281,7 @@ export default class MyProjects extends React.Component {
                             }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                                </div>
                          </div>
+                         
                         </div>
                     </div>
                     <div className="col">

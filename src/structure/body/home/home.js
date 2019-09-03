@@ -880,6 +880,9 @@ export default class Home extends React.Component {
                    })
                }
            })
+           .catch(e => {
+               this.addToast("Ohoh something went wrong :(")
+           })
 
            if(this._mounted){
              this.setState(state => {
@@ -1221,10 +1224,10 @@ export default class Home extends React.Component {
 
                     <div className="row text-center">
                         <div style={{zIndex:"9999999",position:"relative"}}>
-                    <Chat addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload}/>
+                    <Chat addToast={this.addToast} payload={this.state.chat.payload} handleStates={this.props.handleStates} resetPayload={this.resetPayload}/>
                        </div>
                  <div id="portalContainer" className="text-left">
-                     <ContractDrawer isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
+                     <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                      <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:

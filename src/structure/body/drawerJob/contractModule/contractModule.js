@@ -76,8 +76,8 @@ export default class ContractModule extends React.Component {
                             <h6>{this.props.deadline.toDate().toDateString()}</h6>
                         </div>
                     </div>
-                    {this.props.status === "in process" && this.state.status === "" && this.state.owner === true?
-                     <form action={`https://staffed-app.herokuapp.com/pay`} target="_blank" className="m-3" method="POST" >
+                    {this.props.status === "In Process" && this.state.status === "" && this.state.owner === true?
+                     <form action={`https://staffedapp.appspot.com/pay`} target="_blank" className="m-3" method="POST" >
                          <input type="text" name="freelancer" value={this.props.freelancer} style={{display:"none"}}/>
                          <input type="text" name="client" value={this.props.client} style={{display:"none"}} />
                          <input type="text"  name="projectID" value={this.props.projectID} style={{display:"none"}} />

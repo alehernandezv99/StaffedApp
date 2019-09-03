@@ -8,6 +8,9 @@
     font-size:18px;
 }
 
+body {
+  overflow-x: hidden !important;
+}
 
 
 .invalid-input-field:focus {

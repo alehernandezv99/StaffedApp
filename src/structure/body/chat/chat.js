@@ -180,7 +180,7 @@ export default class Chat extends React.Component {
             } else {
               // User is signed out.
               this.props.handleStates(0)
-              this.props.passLastID(this.uid)
+              //this.props.passLastID(this.uid)
               
 
               // ...
@@ -301,7 +301,7 @@ export default class Chat extends React.Component {
                         
                         }
                         return (
-                            <ConversationItem unread={unread} isOnline={e.isOnline} name={e.name?e.name:null} photoURL={e.photoURL?e.photoURL:null} date={e.updated.toDate().toDateString()} chatName={e.projectName} lastMessage={e.lastMessage} handleClick={() => {this.openChat(e.id)}} />
+                            <ConversationItem key={i} unread={unread} isOnline={e.isOnline} name={e.name?e.name:null} photoURL={e.photoURL?e.photoURL:null} date={e.updated.toDate().toDateString()} chatName={e.projectName} lastMessage={e.lastMessage} handleClick={() => {this.openChat(e.id)}} />
                         )
                     })}
                     {this.state.conversations.length === 0?<div>No Conversations</div>:null}

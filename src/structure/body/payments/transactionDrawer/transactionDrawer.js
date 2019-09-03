@@ -19,8 +19,6 @@ export default class TransactionDrawer extends React.Component {
 
     fetchTransactions = (page) => {
         this.setState({
-            transactions:[],
-            size:null,
             pending:true
         })
          let ref =firebase.firestore().collection("transactions").where("freelancer","==",firebase.auth().currentUser.uid).orderBy("created", "desc")
@@ -40,10 +38,11 @@ export default class TransactionDrawer extends React.Component {
             if(!snapshot.empty){
                 if(this._mounted){
                     this.setState(state => ({
-                        transactions:state.transactions.concat(arr),
+                        transactions:this.state.transactions.concat(arr),
                         size:snapshot.size,
                         loadMore: snapshot.size < 10?false:true,
-                        pending:false   
+                        pending:false   ,
+                        lastSeem:snapshot.docs[snapshot.docs.length - 1]
                     }))
                 }
             }else {
@@ -114,20 +113,12 @@ export default class TransactionDrawer extends React.Component {
                        }):this.state.size !== null?<tr><td colSpan={3}>No Transactions</td></tr>:<div className="spinner-border"></div>}
                        </tbody>
                     </table>
-                    {this.state.transactions.length === 0?null:<ul className="pagination text-center mt-2">
-                             <li className="page-item ml-auto"><a className="page-link" href="#">Previous</a></li>
-                             {
-                                 (() => {
-                                     let pages = [];
-                                     for(let i = 0 ; i<  Math.ceil(this.state.size/8); i++){
-                                         pages.push("element")
-                                     }
-                                     return pages
-                                 })().map((data, i) => {
-                                     return ( <li key={i} className="page-item"><a className="page-link" onClick={() => {this.fetchTransactions(i)}} href="#">{i}</a></li>)
-                                 })                                                                  }
-                             <li className="page-item mr-auto"><a className="page-link" href="#">Next</a></li>
-                           </ul>}
+                    {this.state.transactions.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {
+                               e.preventDefault();
+                             
+                              this.fetchTransactions(true)
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                    </div>
                 </div>
             </Drawer>

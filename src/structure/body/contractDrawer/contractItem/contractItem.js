@@ -10,7 +10,7 @@ export default class ContractItem extends React.Component {
 
     render(){
         return (
-        <div className="contract-item" onClick={this.props.onClick}>
+        <div className="contract-item mt-2" onClick={this.props.onClick}>
             <div className="row text-center">
                 <div className="col-xs-6 text-center">
                     <h5>Client</h5>
@@ -20,7 +20,9 @@ export default class ContractItem extends React.Component {
                     <h5>Freelancer</h5>
                     <UserBox id={this.props.freelancer} handleStates={this.props.handleStates} addToast={this.props.addToast} size={"60px"} />
                 </div>
-                <div className="px-4 text-left" >
+            </div>
+
+            <div className="container-fluid px-4 text-left" >
                     <h5 className="mt-2">Title</h5>
                     <div>{this.props.title}</div>
 
@@ -30,8 +32,6 @@ export default class ContractItem extends React.Component {
                     <h5 className="mt-2">Price</h5>
                     <div><TextCollapse text={`${this.props.price}$`} maxWidth={120} /></div>
                 </div>
-
-            </div>
         </div>
         )
     }
