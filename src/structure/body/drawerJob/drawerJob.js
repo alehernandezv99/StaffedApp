@@ -1,6 +1,6 @@
 import React from "react";
 import "./drawerJob.css";
-import {Classes, Drawer,} from "@blueprintjs/core";
+import {Classes, Drawer,Alert, Intent} from "@blueprintjs/core";
 import firebase from "../../../firebaseSetUp";
 import DrawerJobLoading from "../../loading/drawerJobLoading";
 import $ from "jquery";
@@ -23,6 +23,35 @@ export default class DrawerJob extends React.Component {
         super(props);
 
         this.state = {
+            alert:{
+                isOpen:false,
+                confirm:() => {},
+                text:"Sure you want to submit this proposal",
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base =state.alert;
+                            alert.isOpen =true
+
+                            return {
+                                alert:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.alert;
+                            base.isOpen = false;
+
+                            return {
+                                alert:base
+                            }
+                        })
+                    }
+                }
+            },
             TODO:[],
             project:[],
             enableProposals:false,
@@ -142,7 +171,7 @@ export default class DrawerJob extends React.Component {
 
     updateProposal = () => {
 
-       if(window.confirm("Sure you want to update your proposal?")){
+       this.toggleLoading2()
         let objectProposal = this.state.proposalFetched;
         
         let check = 0;
@@ -179,6 +208,7 @@ export default class DrawerJob extends React.Component {
                     firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(id).update(data)
                     .then(async () => {
                         this.addToast("Proposal Updated");
+                        this.toggleLoading2()
                         let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
                         this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.proposalFetchedListener.id, id2:id})
@@ -186,17 +216,22 @@ export default class DrawerJob extends React.Component {
                         this.props.handleClose();
                     })
                     .catch(e => {
-                        this.addToast(e.message);
-
+                        this.addToast("Ohoh something went wrong!")
+                        this.toggleLoading2()
                     })
                 }
+            })
+            .catch(e => {
+                this.toggleLoading2();
+                this.addToast("Ohoh something went wrong!")
             })
             }else {
                 for(let i = 0; i < messages.length; i++){
                     this.addToast(messages[i]);
                 }
+                this.toggleLoading2()
             }
-        }
+        
     }
 
     acceptProposal = (idProject, idProposal) => {
@@ -206,7 +241,7 @@ export default class DrawerJob extends React.Component {
 
             if(proposalAccepted.empty){
               
-        if(window.confirm("Sure you want to accept this proposal")){
+      
         //this.toggleLoading();
         
         let batch = firebase.firestore().batch();
@@ -269,10 +304,7 @@ export default class DrawerJob extends React.Component {
             this.toggleLoading2()
             this.toggleLoading();
         })
-    }else {
-        this.toggleLoading();
-        this.toggleLoading2();
-    }
+    
 }else {
     this.addToast("There is an accepted proposal already");
     this.toggleLoading2()
@@ -434,7 +466,7 @@ export default class DrawerJob extends React.Component {
 
     submitProposal(){
         this.toggleLoading2();
-        if(window.confirm("Sure you want to submit this proposal?")){
+       
         let objectProposals = this.state.proposal;
         let check = 0;
         let messages = [];
@@ -534,9 +566,7 @@ export default class DrawerJob extends React.Component {
             this.toggleLoading2()
         }
 
-    }else {
-        this.toggleLoading2();
-    }
+   
     }
 
     fetchProjectProps = () =>{
@@ -851,6 +881,9 @@ export default class DrawerJob extends React.Component {
             {this.state.isLoading2?<LoadingSpinner />:null}
                 {this.state.project.length ===0?<DrawerJobLoading />:
                 <div className={Classes.DRAWER_BODY}>
+                    <Alert icon="info-sign" intent={Intent.WARNING} isOpen={this.state.alert.isOpen} onConfirm={() => {this.state.alert.confirm(); this.state.alert.handleClose();}} onCancel={() =>{this.state.alert.handleClose()}} confirmButtonText="Yes" cancelButtonText="No">
+                        <p>{this.state.alert.text}</p> 
+                    </Alert>
                 <div id="dj-section-1">
                 <div className={`row ${Classes.DIALOG_BODY}`}>
                     
@@ -1009,7 +1042,7 @@ export default class DrawerJob extends React.Component {
                           <h4>Price <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" value={this.state.proposal.price.value} className="form-control" onChange={(e) => {this.setValue("proposal","price",e.target,1, ()=> {},"proposal","receive",-0.15)}}/>
+                          <input type="number" value={this.state.proposal.price.value} className="form-control ml-2" onChange={(e) => {this.setValue("proposal","price",e.target,1, ()=> {},"proposal","receive",-0.15)}}/>
                           <div className="invalid-feedback">Valid.</div>
                            
                         </div>
@@ -1020,7 +1053,7 @@ export default class DrawerJob extends React.Component {
                           <h4>StaffedApp Service Cost</h4>
                         </div>
                         <div className="text-left">
-                          <h6>15% ({ Math.round((this.state.proposal.price.value * 0.15)*100)/100} $)</h6>
+                          <h6 className="ml-2">15% ({ Math.round((this.state.proposal.price.value * 0.15)*100)/100} $)</h6>
                         </div>
                           </div>
 
@@ -1029,7 +1062,7 @@ export default class DrawerJob extends React.Component {
                           <h4>You will Receive <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" className="form-control" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1, ()=> {},"proposal","price",-(1-(1/(1-0.15)))); }}/>
+                          <input type="number" className="form-control ml-2" value={this.state.proposal.receive.value} onChange={(e) => {this.setValue("proposal","receive",e.target,1, ()=> {},"proposal","price",-(1-(1/(1-0.15)))); }}/>
                           <div className="invalid-feedback">Valid.</div>
                         </div>
                           </div>
@@ -1038,8 +1071,9 @@ export default class DrawerJob extends React.Component {
                         <div className="col-sm-5">
                           <h4>Deadline</h4>
                         </div>
-                        <div className="col">
+                        <div className="text-left">
                         <DatePicker
+                        className="pr-2"
                               minDate={new Date()}
                               maxDate={new Date(new Date().setMonth(new Date().getMonth()+20))}
                         
@@ -1061,7 +1095,21 @@ export default class DrawerJob extends React.Component {
                       </div>
 
                       <div className="card-footer text-center">
-                          <button type="button" className="btn btn-custom-1" onClick={()=> {this.submitProposal()}}><i className="material-icons align-middle">send</i> Submit</button>
+                          <button type="button" className="btn btn-custom-1" onClick={()=> {
+                              if(this._mounted){
+                                  this.setState(state => {
+                                      let base = state.alert;
+                                      base.isOpen = true;
+                                      base.confirm = () => {this.submitProposal()}
+                                      base.text = "Sure you want to submit this proposal?"
+                                      return {
+                                          alert:base
+                                      }
+                                  })
+                              }
+                              
+                            }
+                              }><i className="material-icons align-middle">send</i> Submit</button>
                       </div>
                   </div>
                   </div>
@@ -1082,7 +1130,7 @@ export default class DrawerJob extends React.Component {
                           <h4>Price <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" value={this.state.proposalFetched.price.value} className="form-control" onChange={(e) => {e.persist(); this.setValue("proposalFetched","price",e.target,1, () => {this.checkChange(e.target, this.state.proposalFetched)},"proposalFetched","received",-0.15); }}/>
+                          <input type="number" value={this.state.proposalFetched.price.value} className="form-control ml-2" onChange={(e) => {e.persist(); this.setValue("proposalFetched","price",e.target,1, () => {this.checkChange(e.target, this.state.proposalFetched)},"proposalFetched","received",-0.15); }}/>
                           <div className="invalid-feedback">Valid.</div>
                            
                         </div>
@@ -1093,7 +1141,7 @@ export default class DrawerJob extends React.Component {
                           <h4>StaffedApp Service Cost</h4>
                         </div>
                         <div className="text-left">
-                          <h6>15% ({ Math.round((this.state.proposalFetched.price.value * 0.15)*100)/100} $)</h6>
+                          <h6 className="ml-2">15% ({ Math.round((this.state.proposalFetched.price.value * 0.15)*100)/100} $)</h6>
                         </div>
                           </div>
 
@@ -1102,7 +1150,7 @@ export default class DrawerJob extends React.Component {
                           <h4>You Receive <span className="light-text">($US Dollars)</span></h4>
                         </div>
                         <div className="text-left">
-                          <input type="number" className="form-control" value={this.state.proposalFetched.received.value} onChange={(e) => {e.persist(); this.setValue("proposalFetched","received",e.target,1, ()=> { this.checkChange(e.target,this.state.proposalFetched)},"proposalFetched","price",-(1-(1/(1-0.15)))); }}/>
+                          <input type="number" className="form-control ml-2" value={this.state.proposalFetched.received.value} onChange={(e) => {e.persist(); this.setValue("proposalFetched","received",e.target,1, ()=> { this.checkChange(e.target,this.state.proposalFetched)},"proposalFetched","price",-(1-(1/(1-0.15)))); }}/>
                           <div className="invalid-feedback">Valid.</div>
                         </div>
                           </div>
@@ -1111,7 +1159,7 @@ export default class DrawerJob extends React.Component {
                         <div className="col-sm-5">
                           <h4>Deadline</h4>
                         </div>
-                        <div className="col">
+                        <div className="text-left">
                         <DatePicker
                               minDate={this.state.proposalFetched.deadline.value}
                               maxDate={new Date(new Date().setMonth(new Date().getMonth()+20))}
@@ -1134,7 +1182,20 @@ export default class DrawerJob extends React.Component {
 
                       <div className="card-footer text-center">
                           {this.state.hasChanged === true?
-                          <button type="button" className="btn btn-custom-1" onClick={()=> {this.updateProposal()}}><i className="material-icons align-middle">send</i> Confirm Edit</button>
+                          <button type="button" className="btn btn-custom-1" onClick={()=> {
+                              if(this._mounted){
+                                  this.setState(state => {
+                                      let base = state.alert;
+                                      base.isOpen = true;
+                                      base.confirm = () => {this.updateProposal()}
+                                      base.text ="Sure you want to update this proposal?"
+                                      return {
+                                          alert:base
+                                      }
+                                  })
+                              }
+                              
+                            }}><i className="material-icons align-middle">send</i> Confirm Edit</button>
                           :null
                           }
                       </div>
@@ -1156,7 +1217,20 @@ export default class DrawerJob extends React.Component {
                     {this.state.isOwner === true && this.state.contract === ""?    
                    <div className="container-fluid">
                         {this.state.proposals.length > 0?this.state.proposals.map((proposal,i) => {
-                        return <ProposalModule handleStates={this.props.handleStates} addToast={this.addToast} startInterview={() => {this.startInterview(this.props.id,proposal.id)}} acceptProposal={() => {this.acceptProposal(this.props.id, proposal.id)}}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
+                        return <ProposalModule handleStates={this.props.handleStates} addToast={this.addToast} startInterview={() => {this.startInterview(this.props.id,proposal.id)}} acceptProposal={() => {
+                            if(this._mounted){
+                                this.setState(state => {
+                                    let base =state.alert;
+                                    base.isOpen = true;
+                                    base.confirm = () => {this.acceptProposal(this.props.id, proposal.id)}
+                                    base.text ="Sure you want to accept this proposal?"
+                                    return {
+                                        alert:base
+                                    }
+                                })
+                            }
+                            
+                        }}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
                     })
                     :<div className="container-fluid text-center">
                         <h4>No Proposals</h4>

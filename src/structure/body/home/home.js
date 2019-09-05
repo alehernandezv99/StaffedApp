@@ -1284,7 +1284,7 @@ export default class Home extends React.Component {
                                 },
                                 {
                                     text:project.applicants?project.applicants.length:0,
-                                    icon:"people",
+                                    icon:"drafts",
                                     key:3,
                                     desc:"Applicants in this project"
                                 },
@@ -1313,7 +1313,7 @@ export default class Home extends React.Component {
                             }
                 
 
-                            return <JobModule date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {

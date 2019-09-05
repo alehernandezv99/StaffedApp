@@ -5,7 +5,7 @@ import Navbar from "../../navbar";
 import logo from "../../../res/Graphics/main_logo.png";
 import firebase from "../../../firebaseSetUp";
 import TODO from "../drawerJob/TO-DO";
-import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, Divider} from "@blueprintjs/core";
+import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, Divider ,Alert, Intent} from "@blueprintjs/core";
 import TextCollapse from "./textCollapse";
 import EditProposalModule from "./editProposalModule";
 import CVcontent from "./CVcontent";
@@ -36,6 +36,36 @@ export default class Profile extends React.Component {
         this.checkCriteria = checkCriteria;
 
         this.state = {
+            alert:{
+                isOpen:false,
+                text:"",
+                confirm:()=>{},
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.alert;
+                            base.isOpen =false;
+
+                            return {
+                                alert:base
+                            }
+                        })
+                    }
+                },
+
+                handelOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.alert;
+                            base.isOpen =true;
+
+                            return {
+                                alert:base
+                            }
+                        })
+                    }
+                }
+            },
             contracts:[],
             user:null,
             chat:{
@@ -545,8 +575,8 @@ export default class Profile extends React.Component {
     }
 
     deleteContent = (prop,index) => {
-        
-        if(window.confirm("Sure you want to delete this item?")){
+        this.toggleLoading();
+     
         firebase.firestore().collection("CVs").doc(this.state.CV.id).get()
         .then(doc => {
             let arr = doc.data()[prop];
@@ -555,15 +585,18 @@ export default class Profile extends React.Component {
             .then(() => {
                 this.addToast("Element Deleted");
                 this.loadCv();
+                this.toggleLoading();
             })
             .catch(e => {
                 this.addToast(e.message);
+                this.toggleLoading();
             })
         })
         .catch(e => {
             this.addToast(e.message);
+            this.toggleLoading()
         })
-    }
+    
     }
 
     loadInbox = (id)=> {
@@ -966,6 +999,9 @@ export default class Profile extends React.Component {
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
+                <Alert icon="trash" intent={Intent.DANGER} isOpen={this.state.alert.isOpen} onConfirm={() => {this.state.alert.confirm(); this.state.alert.handleClose();}} onCancel={() =>{this.state.alert.handleClose()}} confirmButtonText="Yes" cancelButtonText="No">
+                        <p>{this.state.alert.text}</p> 
+                    </Alert>
                 <Navbar logo={{
                     img:logo,
                     href:"#top"
@@ -1156,7 +1192,20 @@ export default class Profile extends React.Component {
                               <button type="button" className="dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
                                 <div className="dropdown-menu dropdown-menu-right">
                                 <button className="dropdown-item" onClick={() => {this.openEditPanel("update",this.state.CV.id,"description",0,this.title.textContent,this.text.textContent)}}>Edit</button>
-                                <button className="dropdown-item" onClick={() => {this.deleteContent("description",0); }}>Delete</button>
+                                <button className="dropdown-item" onClick={() => {
+                                    if(this._mounted){
+                                        this.setState(state => {
+                                            let base = state.alert;
+                                            base.isOpen = true;
+                                            base.confirm = () => {this.deleteContent("description",0); }
+                                            base.text = "Sure you want to delete this item?"
+                                            return {
+                                                alert:base
+                                            }
+                                        })
+                                    }
+                                    
+                                    }}>Delete</button>
                               </div>
                              </div>:null}
                             </div>
@@ -1262,7 +1311,20 @@ export default class Profile extends React.Component {
                                   <div className="collapse show" data-parent="#accordion" id="experience">
                                    {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
                                        return (
-                                           <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => {this.deleteContent("experience",i); }} title={element.title} text={element.text}/>
+                                           <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => { 
+                                            if(this._mounted){
+                                                this.setState(state => {
+                                                    let base = state.alert;
+                                                    base.isOpen = true;
+                                                    base.confirm = () => {this.deleteContent("experience",i);  }
+                                                    base.text = "Sure you want to delete this item?"
+                                                    return {
+                                                        alert:base
+                                                    }
+                                                })
+                                            }
+                                            
+                                            }} title={element.title} text={element.text}/>
             
                                    )
                                        }):null}
@@ -1290,7 +1352,21 @@ export default class Profile extends React.Component {
                             <div className="collapse show" id="education">
                             {this.state.CV.education.length > 0?this.state.CV.education.map((element,i) => {
                            return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"education",i,element.title,element.text)}} delete={() => {this.deleteContent("education",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"education",i,element.title,element.text)}} delete={() => {
+                                if(this._mounted){
+                                    this.setState(state => {
+                                        let base = state.alert;
+                                        base.isOpen = true;
+                                        base.confirm = () => {this.deleteContent("education",i);  }
+                                        base.text = "Sure you want to delete this item?"
+
+                                        return {
+                                            alert:base
+                                        }
+                                    })
+                                }
+                                
+                                }} title={element.title} text={element.text}/>
 
                        )
                            }):null}
@@ -1316,7 +1392,20 @@ export default class Profile extends React.Component {
                                 <div className="collapse show" id="portfolio">
                                    {this.state.CV.portfolio.length > 0?this.state.CV.portfolio.map((element,i) => {
                                     return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {this.deleteContent("portfolio",i); }} title={element.title} text={element.text}/>
+                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {
+                                if(this._mounted){
+                                    this.setState(state => {
+                                        let base = state.alert;
+                                        base.isOpen = true;
+                                        base.confirm = () => {this.deleteContent("portfolio",i);  }
+                                        base.text = "Sure you want to delete this item?"
+                                        return {
+                                            alert:base
+                                        }
+                                    })
+                                }
+                                
+                                 }} title={element.title} text={element.text}/>
 
                                )
                               }):null}
@@ -1344,7 +1433,21 @@ export default class Profile extends React.Component {
                                     <div className="collapse show"  id="expertise">
                                        {this.state.CV.expertise.length > 0?this.state.CV.expertise.map((element,i) => {
                                       return (
-                                      <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {this.deleteContent("expertise",i); }} title={element.title} text={element.text}/>
+                                      <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {
+                                        if(this._mounted){
+                                            this.setState(state => {
+                                                let base = state.alert;
+                                                base.isOpen = true;
+                                                base.confirm = () => {this.deleteContent("expertise",i);   }
+                                                base.text = "Sure you want to delete this item?"
+
+                                                return {
+                                                    alert:base
+                                                }
+                                            })
+                                        }
+                                        
+                                        }} title={element.title} text={element.text}/>
 
                                        )
                                     }):null}
@@ -1371,7 +1474,21 @@ export default class Profile extends React.Component {
                                     <div className="collapse show" id="contact">
                                        {this.state.CV.contact.length > 0?this.state.CV.contact.map((element,i) => {
                                       return (
-                                        <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {this.deleteContent("contact",i); }} title={element.title} text={element.text}/>
+                                        <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {
+                                            if(this._mounted){
+                                                this.setState(state => {
+                                                    let base = state.alert;
+                                                    base.isOpen = true;
+                                                    base.confirm = () => {this.deleteContent("contact",i);    }
+                                                    base.text = "Sure you want to delete this item?"
+
+                                                    return {
+                                                        alert:base
+                                                    }
+                                                })
+                                            }
+                                            
+                                        }} title={element.title} text={element.text}/>
 
                                         )
                                        }):null}

@@ -220,7 +220,7 @@ export default class TODO extends React.Component{
                          </div>
                         </div>
                     :null}
-                  {this.state.TODO.map((e,i) => {
+                  {this.state.TODO.length > 0?this.state.TODO.map((e,i) => {
                       return (
                           <div key={i} className={`${e.state?"TODO-item-ready":"TODO-item"}  p-4 mt-2`}>
                               <i className="material-icons align-middle" onClick={() => {this.state.editable?this.toggleCheck(i):(() => {})()}}>{e.state?"check_box":"check_box_outline_blank"}</i>
@@ -234,7 +234,7 @@ export default class TODO extends React.Component{
                               {this.state.editable? <button className=" btn btn-close" onClick={() => {this.removeItem(i)}}><i className="material-icons align-middle">close</i></button>:null}
                           </div>
                       )
-                  })}
+                  }):<div className="text-center mt-3">No tasks defined yet</div>}
               </div>
               </div>
             </Drawer>
