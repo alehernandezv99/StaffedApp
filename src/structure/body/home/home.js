@@ -214,6 +214,8 @@ export default class Home extends React.Component {
             },
             createProject:{
                 isOpen:false,
+                mode:"create",
+                id:"",
                 handleClose:() => {
                     if(this._mounted){
                     this.setState(state => {
@@ -935,6 +937,20 @@ export default class Home extends React.Component {
         $("#toggleFilter").slideToggle("fast")
     }
 
+    editProject = (id) => {
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.createProject;
+                base.isOpen = true;
+                base.mode ="update"
+                base.id = id
+                return {
+                    createProject:base
+                }
+            })
+        }
+    }
+
     render(){
         return(
             <div>
@@ -1231,15 +1247,15 @@ export default class Home extends React.Component {
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                      <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat}  handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat}  handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
-                    <CreateProject reloadProjects={() => {
+                   {this.state.createProject.isOpen? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} reloadProjects={() => {
                         if(this.state.searchBar === false){
                             this.state.skills.exclusive === false? this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value):this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value)
                         }else {
                             this.specificSearch(this.state.queryString)
                         }
-                    }} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                    }} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>:null}
                   </div>
 
                         

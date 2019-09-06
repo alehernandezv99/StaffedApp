@@ -224,6 +224,8 @@ export default class SearchStaff extends React.Component {
             },
             createProject:{
                 isOpen:false,
+                mode:"create",
+                id:"",
                 handleClose:() => {
                     if(this._mounted){
                     this.setState(state => {
@@ -849,6 +851,20 @@ export default class SearchStaff extends React.Component {
         }
     }
 
+    editProject = (id) => {
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.createProject;
+                base.isOpen = true;
+                base.mode ="update"
+                base.id = id
+                return {
+                    createProject:base
+                }
+            })
+        }
+    }
+
     render(){
         return(
             <div>
@@ -998,9 +1014,9 @@ export default class SearchStaff extends React.Component {
                        {this.state.staffViewer.data !== null?<StaffViewer isOpen={this.state.staffViewer.isOpen} handleClose={this.state.staffViewer.handleClose} data={this.state.staffViewer.data}/>:null}
                    <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
-                    <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                   {this.state.createProject.isOpen? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/> :null}
                   </div>
                   <div className="container-fluid">
                         <div className="form-group" style={{display:"none"}}>
@@ -1012,8 +1028,8 @@ export default class SearchStaff extends React.Component {
                                 });
                                 this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value)}}  />
                         </div>
-                        <div className="form-group mt-2 text-center">
-                        <div className="text-center">Skills</div>
+                        <div className="form-group mt-2 text-left">
+                        <div className="text-left">Skills</div>
                             <div className="custom-control custom-switch mt-2" onClick={(e) => {
                                  if(this._mounted){
                                      this.setState(state => {
@@ -1040,7 +1056,7 @@ export default class SearchStaff extends React.Component {
                                     this.bindSkillsInput()
                                     this.setted = true;
                                 }
-                                }} id="skills-filter" className="form-control mx-auto" required/>
+                                }} id="skills-filter" className="form-control " required/>
                                 </div>
                                 </div>
 

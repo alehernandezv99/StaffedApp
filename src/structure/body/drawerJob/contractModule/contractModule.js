@@ -2,6 +2,7 @@ import React from "react";
 import "./contractModule.css";
 import firebase from "../../../../firebaseSetUp";
 import UserBox from "../../profile/userBox";
+import EditBtn from "../../profile/editBtn";
 
 
 
@@ -50,7 +51,15 @@ export default class ContractModule extends React.Component {
 
     render(){
         return(
-            <div className="container-fluid">
+            <div className="container-fluid" style={{position:"relative"}}>
+                <EditBtn btns={
+                    [
+                        {
+                            text:"End Contract",
+                            callback:()=> {}
+                        }
+                    ]
+                }/>
             <div className="form-group">
                 <h4>Client</h4>
                 <UserBox id={this.props.client} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />

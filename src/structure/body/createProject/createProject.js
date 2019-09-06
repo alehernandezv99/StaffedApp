@@ -27,6 +27,7 @@ export default class CreateProject extends React.Component{
             budget:{value:0, criteria:{type:"number", min:10, max:50000}},
             level:{value:"Intermediate", criteria:{type:"text", minLength:2}},
           },
+          mode:"",
           categories:[],
           subCategories:[],
           skills:[],
@@ -133,6 +134,36 @@ bindSkillInput = () => {
   }
   });
 }
+
+fetchProjectData =() => {
+  firebase.firestore().collection("projects").doc(this.props.id).get()
+  .then(doc => {
+    let data = doc.data();
+    if(this._mounted){
+      this.setState(state => {
+        let base = state.formA;
+        base.title.value = data.title
+        base.description.value = data.description;
+        base.skills.value = data.skills;
+        base.category.value = data.category;
+        base.subCategory.value = data.subCategory; 
+
+        let base2 = state.formB;
+        base2.type.value = data.type;
+        base2.budget.value = data.budget;
+        base2.level.value = data.level
+
+        return {
+          formA:base,
+          formB:base2
+        }
+      })
+    }
+  })
+  .catch(e => {
+    this.addToast("Ohoh something went wrong!")
+  })
+}
   
 componentWillUnmount(){
   this._mounted = false;
@@ -143,8 +174,21 @@ componentWillUnmount(){
       this._mounted = true;
       $(".cp-section-2").hide();
 
-      
-      
+      alert(this.props.mode)
+      if(this.props.mode === "create"){
+        if(this._mounted){
+          this.setState({
+            mode:"create"
+          })
+        }
+      }else if(this.props.mode === "update"){
+        this.fetchProjectData();
+        if(this._mounted){
+          this.setState({
+            mode:"update"
+          })
+        }
+      }
 
       firebase.firestore().collection("categories").get()
       .then(snapshot => {
@@ -261,6 +305,73 @@ componentWillUnmount(){
    
     }
 
+    updateProject = () => {
+      this.toggleLoading();
+      let check = this.gotToNextPage("","", this.state.formB);
+      let messages = check.messages;
+
+      if(check.status){
+      let formA = this.state.formA;
+      let formB = this.state.formB;
+
+      let skills = formA.skills["value"];
+
+      let skillsExclusive = {}
+      for(let i =0; i < skills.length; i++){
+        skillsExclusive[skills[i]]  =  true;
+      }
+      
+      let data = {
+        title:formA.title["value"],
+        skillsExclusive:skillsExclusive,
+        keywords:KeywordsGeneration.generateKeywords(formA.title["value"]).concat([""]),
+        description:formA.description["value"],
+        skills:skills,
+        category:formA.category["value"],
+        subCategory:formA.subCategory["value"],
+        type:formB.type["value"],
+        budget:Number(formB.budget["value"]),
+        level:formB.level["value"],
+        updated:firebase.firestore.Timestamp.now(),
+        cards:2,
+      }
+
+      firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
+      .then(snapshot => {
+        let country = snapshot.data().country;
+        let id = snapshot.id;
+
+        data.country = country;
+        data.author = id;
+        data.involved = [snapshot.data().email]
+
+        firebase.firestore().collection("projects").doc(this.props.id).update(data)
+      .then(async () => {
+        this.toggleLoading();
+          console.log("Project Updated");
+          this.addToast("Project Updated");
+          this.props.handleClose();
+         // this.props.reloadProjects?this.props.reloadProjects():(()=>{})()
+      })
+      .catch(e => {
+        this.toggleLoading();
+        this.addToast(e.message);
+        this.setted = undefined;
+      })
+
+      })
+      .catch(e => {
+        this.addToast(e.message);
+        this.toggleLoading();
+        this.setted = undefined;
+      })
+
+      
+    }else {
+      
+      this.toggleLoading();
+    }
+    }
   
     createProject(){
       this.toggleLoading();
@@ -376,21 +487,21 @@ componentWillUnmount(){
                         <div className="card">
                             <div className="card-header">
                             
-                                <h4 className="card-title text-center">Create Project</h4>
+                                <h4 className="card-title text-center">{this.state.mode === "create"?"Create Project":this.state.mode ==="update"?"Edit Project":null}</h4>
                               
                             </div>
                             <div className="card-body">
                             <form className="cp-section-1" >
                               <div className="form-group mt-2">
                                 <label>* Title</label>
-                                <input type="text" placeholder="Title of the project" onChange={(e) => {
+                                <input type="text" placeholder="Title of the project" value={this.state.formA.title.value} onChange={(e) => {
                                   this.setValue("formA","title",e.target.value,e.target.parentNode.childNodes[2], e.target)}} className="form-control"  required/>
                                   <div className="invalid-feedback">Valid.</div>
                                   <div className="valid-feedback">Please fill out this field.</div>
                               </div>
                               <div className="form-group">
                                  <label>* Description</label>
-                                <textarea className="form-control"  onChange={(e) => {
+                                <textarea className="form-control" value={this.state.formA.description.value}  onChange={(e) => {
                                   this.setValue("formA","description",e.target.value,e.target.parentNode.childNodes[2], e.target)}} placeholder="The description about the project" rows="5" style={{resize:"none"}} required></textarea>
                                 <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
@@ -399,11 +510,12 @@ componentWillUnmount(){
                                 <label>* Category</label>
                                 <div>
                                   {this.state.categories.length > 0 ?
-                                <select onChange={(e) => {this.setValue("formA","category",e.target.options[e.target.selectedIndex].value);}} className="custom-select-sm mb-1">
+                                <select value={this.state.formA.category.value} onChange={(e) => {this.setValue("formA","category",e.target.options[e.target.selectedIndex].value);}} className="custom-select-sm mb-1">
                                   <option>Select Category</option>
                                   {this.state.categories.map((category ,i) => {
                                     return (<option key={i}>{category}</option>)
                                   })}
+                                  <option value="Other">Other</option>
                                 </select>
                                 :<div className="spinner-border"></div>
                                   }
@@ -414,7 +526,7 @@ componentWillUnmount(){
                                 <label>* Sub Category</label>
                                 <div>
                                   {this.state.subCategories.length > 0 ?
-                                <select onChange={(e) => {this.setValue("formA","subCategory",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
+                                <select value={this.state.formA.subCategory.value} onChange={(e) => {this.setValue("formA","subCategory",e.target.options[e.target.selectedIndex].value)}} className="custom-select-sm mb-1">
                                   <option>Select Category </option>
                                   
                                   {this.state.subCategories.map((category,i) => {
@@ -472,7 +584,7 @@ componentWillUnmount(){
                               </div>
                               <div className="form-group mt-2">
                                   <label>Budget <span className="light-text">($US Dollars)</span></label>
-                                  <input type="number" className="form-control" onChange={(e) => {this.setValue("formB","budget", e.target.value,e.target.parentNode.childNodes[2], e.target)}} required/>
+                                  <input value={this.state.formB.budget.value} type="number" className="form-control" onChange={(e) => {this.setValue("formB","budget", e.target.value,e.target.parentNode.childNodes[2], e.target)}} required/>
                                   <div className="invalid-feedback">Valid.</div>
                                 <div className="valid-feedback">Please fill out this field.</div>
                               </div>
@@ -480,7 +592,7 @@ componentWillUnmount(){
                               <div className="form-group mt-2">
                                 <label>Project Level</label>
                                 <div>
-                                  <select className="custom-select-sm" onChange={(e) => {this.setValue("formB","level", e.target.options[e.target.selectedIndex].value)}}>
+                                  <select value={this.state.formB.level.value} className="custom-select-sm" onChange={(e) => {this.setValue("formB","level", e.target.options[e.target.selectedIndex].value)}}>
 
                                     <option>Basic</option>
                                     <option selected value="Intermediate">Intermediate</option>
@@ -488,7 +600,8 @@ componentWillUnmount(){
                                   </select>
                                 </div>
                               </div>
-                              <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.createProject()}}>Create Project</button>
+                             {this.state.mode === "create"?<button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.createProject()}}>Create Project</button>:null}
+                             {this.state.mode === "update"?<button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={(e) => {this.updateProject()}}>Update Project</button>:null}
                             </form>
 
                             </div>

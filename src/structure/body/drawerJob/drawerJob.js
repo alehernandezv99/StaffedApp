@@ -10,13 +10,12 @@ import ContractModule from "./contractModule";
 import AbsoluteLoading from "../../loading/absoluteLoading";
 import UserBox from "../profile/userBox";
 import LoadingSpinner from "../../loading/loadingSpinner";
+import EditBtn from "../profile/editBtn";
 
 import { DatePicker, TimePrecision } from "@blueprintjs/datetime";
 import { isDate } from "util";
 import { throwStatement } from "@babel/types";
-const algoliasearch = require('algoliasearch');
-const client = algoliasearch('D6DXHGALTD', 'fad277b448e0555dfe348a06cc6cc875');
-const index = client.initIndex('projects');
+
 
 export default class DrawerJob extends React.Component {
     constructor(props){
@@ -27,6 +26,8 @@ export default class DrawerJob extends React.Component {
                 isOpen:false,
                 confirm:() => {},
                 text:"Sure you want to submit this proposal",
+                intent:Intent.WARNING,
+                icon:"info-sign",
                 handleOpen:() => {
                     if(this._mounted){
                         this.setState(state => {
@@ -881,15 +882,57 @@ export default class DrawerJob extends React.Component {
             {this.state.isLoading2?<LoadingSpinner />:null}
                 {this.state.project.length ===0?<DrawerJobLoading />:
                 <div className={Classes.DRAWER_BODY}>
-                    <Alert icon="info-sign" intent={Intent.WARNING} isOpen={this.state.alert.isOpen} onConfirm={() => {this.state.alert.confirm(); this.state.alert.handleClose();}} onCancel={() =>{this.state.alert.handleClose()}} confirmButtonText="Yes" cancelButtonText="No">
+                    <Alert icon={this.state.alert.icon} intent={this.state.alert.intent} isOpen={this.state.alert.isOpen} onConfirm={() => {this.state.alert.confirm(); this.state.alert.handleClose();}} onCancel={() =>{this.state.alert.handleClose()}} confirmButtonText="Yes" cancelButtonText="No">
                         <p>{this.state.alert.text}</p> 
                     </Alert>
-                <div id="dj-section-1">
+                <div id="dj-section-1" >
+                    
                 <div className={`row ${Classes.DIALOG_BODY}`}>
                     
                     <div className="col-sm-8">
                         <div className="card">
-                        <div className="text-center card-header">
+                        <div className="text-center card-header" style={{position:"relative"}}>
+                        {this.state.isOwner? <EditBtn btns={
+                        [
+                            {
+                                text:"Edit",
+                                callback:() => {
+                                    if(this._mounted){
+                                        this.setState(state => {
+                                            let base = state.alert;
+                                            base.isOpen = true;
+                                            base.confirm =() => { this.props.editProject(this.props.id)}
+                                            base.text = "Sure you want to edit this project?"
+                                            base.icon = "info-sign";
+                                            base.intent = Intent.WARNING
+                                            return {
+                                                alert:base
+                                            }
+                                        })
+                                    }
+                                }
+                            },
+                            {
+                                text:"Delete",
+                                callback:() => {
+                                    if(this._mounted){
+                                        this.setState(state => {
+                                            let base = state.alert;
+                                            base.isOpen = true;
+                                            base.confirm = () => {this.deleteProject()}
+                                            base.text = "Sure you want to delete this project? This cannot be reverted"
+                                            base.icon = "trash";
+                                            base.intent = Intent.DANGER
+
+                                            return {
+                                                alert:base
+                                            }
+                                        })
+                                    }
+                                }
+                            }
+                        ]
+                    }/>:null}
                             <h3>{this.state.project[0].title}</h3>
                         </div>
                         <div className="card-body">

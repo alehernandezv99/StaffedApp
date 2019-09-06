@@ -12,6 +12,13 @@ body {
   overflow-x: hidden !important;
 }
 
+.dropdown-toggle {
+  background-color: transparent !important;
+  border:none !important;
+}
+
+.remove-caret::after { content: none !important }
+
 
 .invalid-input-field:focus {
     box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 100, 121, 0.8) !important;
@@ -79,6 +86,12 @@ body {
   .btn-custom-3 {
     background-color:rgb(221, 194, 43) !important;
     color:white !important;
+  }
+
+  .right-corner-btn {
+    position: absolute !important;
+    top:10px !important;
+    right:10px !important;
   }
 
 

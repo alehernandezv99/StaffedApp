@@ -197,6 +197,8 @@ export default class MyProjects extends React.Component {
             },
             createProject:{
                 isOpen:false,
+                mode:"create",
+                id:"",
                 handleClose:() => {
                     if(this._mounted){
                     this.setState(state => {
@@ -241,7 +243,7 @@ export default class MyProjects extends React.Component {
            }
         }
         let lastSeem = this.state.lastSeem;
-        let ref = firebase.firestore().collection("projects").where("author","==",firebase.auth().currentUser.uid).where("keywords","array-contains",string.toLowerCase())
+        let ref = firebase.firestore().collection("projects").where("keywords","array-contains",string.toLowerCase())
         if(page){
             ref = ref.startAfter(lastSeem).limit(this.state.pageSize.value)
         }else {
@@ -619,6 +621,20 @@ export default class MyProjects extends React.Component {
         })
     }
 
+    editProject = (id) => {
+        if(this._mounted){
+            this.setState(state => {
+                let base = state.createProject;
+                base.isOpen = true;
+                base.mode ="update"
+                base.id = id
+                return {
+                    createProject:base
+                }
+            })
+        }
+    }
+
     render(){
         return(
             <div>
@@ -774,9 +790,9 @@ export default class MyProjects extends React.Component {
                   {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                   <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
-                    <CreateProject isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/>
+                   {this.state.createProject.isOpen ? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/> : null}
                   </div>
                     
                 
@@ -818,7 +834,7 @@ export default class MyProjects extends React.Component {
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("applicants",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#applied">Applied</a>
                            </li>
                            <li className="nav-item mr-auto">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("references",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#archived">Favorite</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("references",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#archived">Favorites</a>
                           </li>
                         </ul>
 
