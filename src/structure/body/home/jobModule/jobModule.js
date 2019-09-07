@@ -62,7 +62,7 @@ export default class JobModule extends React.Component {
                     
                 </div>
                 <div className="container mt-5">
-                    <UserBox size={"30px"} id={this.props.author} addToast={this.props.addToast} handleStates={this.props.handleStates} />
+                    <UserBox size={"30px"} id={this.props.author} addToast={this.props.addToast} handleStates={this.props.handleStates} openUser={this.props.openUser} />
                 </div>
                     <h4><a onClick={this.props.onClick}>{this.props.title}</a></h4>
                 <div className="job-module-block text-left mt-3 p-2">

@@ -17,6 +17,7 @@ import logo from "../../../res/Graphics/main_logo.png";
 import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
 import InboxMessages from "../InboxMessages";
 import ProposalsList from "../proposalsList";
+import ProfileViewer from "../profileViewer";
 
 //Chat 
 import Chat from "../chat";
@@ -70,6 +71,35 @@ export default class Home extends React.Component {
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
                 exclusive:false,
+            },
+            profileViewer:{
+                isOpen:false,
+                userId:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = true;
+                            base.userId = id
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = false;
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                }
             },
             proposalsList:{
                 isOpen:false,
@@ -1279,6 +1309,7 @@ export default class Home extends React.Component {
                     <Chat addToast={this.addToast} payload={this.state.chat.payload} handleStates={this.props.handleStates} resetPayload={this.resetPayload}/>
                        </div>
                  <div id="portalContainer" className="text-left">
+                     {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                   {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                      <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
@@ -1366,7 +1397,7 @@ export default class Home extends React.Component {
                             }
                 
 
-                            return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} openUser={(id) => {this.state.profileViewer.handleOpen(id)}} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {
