@@ -29,6 +29,7 @@ import InventoryCreator from "./inventoryCreator";
 import InventoryCard from "./inventoryCard";
 
 import Chat from "../chat";
+import ProposalsList from "../proposalsList";
 
 export default class Profile extends React.Component {
     constructor(props){
@@ -100,6 +101,33 @@ export default class Profile extends React.Component {
 
                             return {
                                 inventoryCreator:base
+                            }
+                        })
+                    }
+                }
+            },
+            proposalsList:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = true;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = false;
+
+                            return {
+                                proposalsList:base
                             }
                         })
                     }
@@ -1194,6 +1222,14 @@ export default class Profile extends React.Component {
                             key:6
                         },
                         {
+                            type:"link",
+                            text:"Proposals",
+                            href:"",
+                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            icon:"list",
+                            key:2
+                        },
+                        {
                             type:"dropdown badge",
                             text:"Inbox",
                             icon:"inbox",
@@ -1269,6 +1305,7 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
+               {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                    {this.state.inventoryCreator.isOpen ? <InventoryCreator id={this.state.inventoryCreator.id} index={this.state.inventoryCreator.index} refresh={this.searchMachines_n_vehicles} addToast={this.addToast} isOpen={this.state.inventoryCreator.isOpen} handleClose={this.state.inventoryCreator.handleClose} mode={this.state.inventoryCreator.mode} />:null}
                <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}

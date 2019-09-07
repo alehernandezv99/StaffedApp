@@ -17,6 +17,7 @@ import TransactionDrawer from "./transactionDrawer";
 import TODO from "../drawerJob/TO-DO";
 import Chat from "../chat";
 import ContractDrawer from "../contractDrawer";
+import ProposalsList from "../proposalsList";
 
 
 export default class Payments extends React.Component {
@@ -31,6 +32,33 @@ export default class Payments extends React.Component {
             lastSeem:{},
             chat:{
                 payload:null
+            },
+            proposalsList:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = true;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = false;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                }
             },
             TODO:{
                 isOpen:false,
@@ -589,6 +617,14 @@ export default class Payments extends React.Component {
                             key:6
                         },
                         {
+                            type:"link",
+                            text:"Proposals",
+                            href:"",
+                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            icon:"list",
+                            key:2
+                        },
+                        {
                             type:"dropdown badge",
                             text:"Inbox",
                             icon:"inbox",
@@ -666,6 +702,7 @@ export default class Payments extends React.Component {
                 {this.state.user === null?<PaymentsLoading />:
                 <div className="container-fluid p-5">
                     <div style={{zIndex:"9999999",position:"relative"}}>
+                    {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}    
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                     <div id="portalContainer">

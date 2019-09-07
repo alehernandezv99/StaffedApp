@@ -19,6 +19,7 @@ import StaffViewer from "../profile/staffViewer";
 import TODO from "../drawerJob/TO-DO";
 import ContractDrawer from "../contractDrawer";
 import MVviewer from "./m_n_v_viewer";
+import ProposalsList from "../proposalsList";
 
 
 
@@ -63,6 +64,33 @@ export default class SearchStaff extends React.Component {
 
                             return {
                                 MVviewer:base
+                            }
+                        })
+                    }
+                }
+            },
+            proposalsList:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = true;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = false;
+
+                            return {
+                                proposalsList:base
                             }
                         })
                     }
@@ -965,6 +993,14 @@ export default class SearchStaff extends React.Component {
                             key:6
                         },
                         {
+                            type:"link",
+                            text:"Proposals",
+                            href:"",
+                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            icon:"list",
+                            key:2
+                        },
+                        {
                             type:"dropdown badge",
                             text:"Inbox",
                             icon:"inbox",
@@ -1042,6 +1078,7 @@ export default class SearchStaff extends React.Component {
                 
                 <div className="container-fluid pt-4 pb-4" id="top">
                     <div style={{zIndex:"9999999",position:"relative"}}>
+                    {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                    <div id="portalContainer" className="text-left">

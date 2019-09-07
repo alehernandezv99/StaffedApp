@@ -17,7 +17,7 @@ import JobModule from "../home/jobModule";
 import Chat from "../chat";
 import InboxMessages from "../InboxMessages";
 import $ from "jquery";
-import { throwStatement } from "@babel/types";
+import ProposalsList from "../proposalsList";
 
 export default class MyProjects extends React.Component {
     constructor(props){
@@ -39,6 +39,33 @@ export default class MyProjects extends React.Component {
             loadMore:false,
             searchBar:false,
             pending:false,
+            proposalsList:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = true;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = false;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                }
+            },
             TODO:{
                 isOpen:false,
                 handelClose:() => {
@@ -698,6 +725,14 @@ export default class MyProjects extends React.Component {
                             key:6
                         },
                         {
+                            type:"link",
+                            text:"Proposals",
+                            href:"",
+                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            icon:"list",
+                            key:2
+                        },
+                        {
                             type:"dropdown badge",
                             text:"Inbox",
                             icon:"inbox",
@@ -782,6 +817,7 @@ export default class MyProjects extends React.Component {
                 
                  <div className=" row text-center">
                      <div style={{zIndex:"9999999",position:"relative"}}>
+                     {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast}  payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                   <div id="portalContainer" className="text-left">

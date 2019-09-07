@@ -8,22 +8,74 @@ export default class ProposalsList extends React.Component {
         super(props);
 
         this.state = {
-            proposals:null
+            proposals:null,
+            lastSeem:{},
+            loadMore:true,
+            pending:false
         }
+    }
+
+    fetchProposals = (page) => {
+        if(this._mounted){
+            this.setState({
+                pending:true
+            })
+        }
+
+       let ref = firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).orderBy("created","desc")
+
+       if(page === true){
+           ref= ref.startAfter(this.state.lastSeem).limit(6)
+       }else {
+        
+           ref = ref.limit(6)
+       }
+
+       ref.get().then(snap => {
+           if(!snap.empty){
+
+            let proposals = []
+               snap.forEach(doc => {
+                   proposals.push(doc.data())
+            })
+
+            if(page === true){
+                if(this._mounted){
+                    this.setState(state => ({
+                        proposals:state.proposals.concat(proposals),
+                        lastSeem:snap.docs[snap.docs.length - 1],
+                        pending:false,
+                        loadMore:snap.size < 6?false:true,
+                        size:snap.size
+                    }))
+                }
+            }else {
+                if(this._mounted){
+                    this.setState(state => ({
+                        proposals:proposals,
+                        lastSeem:snap.docs[snap.docs.length - 1],
+                        pending:false,
+                        loadMore:snap.size < 6?false:true,
+                        size:snap.size
+                    }))
+                }
+            }
+           }else {
+            if(this._mounted){
+                this.setState(state => ({
+                    proposals:[],
+                    pending:false,
+                    loadMore:false
+                }))
+            }
+           }
+       })
     }
 
     componentDidMount(){
         this._mounted =true;
-        firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
-        .then(user => {
-            let proposals = user.data().proposals?user.data().proposals:[];
 
-            if(this._mounted){
-                this.setState({
-                    proposals:proposals
-                })
-            }
-        })
+        this.fetchProposals(false)
         
     }
 
@@ -39,9 +91,14 @@ export default class ProposalsList extends React.Component {
                      {this.state.proposals === null?<div className="spinner-border mt-3"></div>:this.state.proposals.length > 0?this.state.proposals.map((e,i) => {
 
                          return(
-                         <ProposalsItem key={i} projectID={e.projectId} proposalID={e.proposalId} onClick={this.props.openProposal} addToast={this.props.addToast} />
+                         <ProposalsItem key={i} projectID={e.projectID} proposalID={e.id} title={e.title} cover={e.presentation} openProposal={() => {this.props.openProposal(e.projectID,e.id)}} addToast={this.props.addToast} />
                          )
                      }):<div className="mt-3">No proposals</div>}
+
+                    {this.state.proposals !== null? this.state.proposals.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {
+                               this.fetchProposals(true)
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null:null}
                  </div>
                  </div>
             </Drawer>

@@ -230,7 +230,7 @@ export default class DrawerJob extends React.Component {
                 updated:firebase.firestore.Timestamp.now(),
             }
          
-            firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
+            firebase.firestore().collection("proposals").where("projectID","==",this.props.id).where("user","==",firebase.auth().currentUser.uid).get()
             .then(snapshot => {
                 if(!(snapshot.empty)){
                     let id = "";
@@ -238,11 +238,11 @@ export default class DrawerJob extends React.Component {
                         id = doc.id;
                     })
 
-                    firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(id).update(data)
+                    firebase.firestore().collection("proposals").doc(id).update(data)
                     .then(async () => {
                         this.addToast("Proposal Updated");
                         this.toggleLoading2()
-                        let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
+                        let authorId = await firebase.firestore().collection("users").where("uid","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
                         this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.proposalFetchedListener.id, id2:id})
                     })
@@ -269,7 +269,7 @@ export default class DrawerJob extends React.Component {
 
     acceptProposal = (idProject, idProposal) => {
         this.toggleLoading2()
-        firebase.firestore().collection("projects").doc(idProject).collection("proposals").where("status","==","accepted").get()
+        firebase.firestore().collection("proposals").where("projectID","==",idProject).where("status","==","accepted").get()
         .then(proposalAccepted => {
 
             if(proposalAccepted.empty){
@@ -279,7 +279,7 @@ export default class DrawerJob extends React.Component {
         
         let batch = firebase.firestore().batch();
         
-        firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
+        firebase.firestore().collection("proposals").doc(idProposal).get() 
         .then(doc => {
             if(doc.exists){
                 firebase.firestore().collection("projects").doc(idProject).get()
@@ -287,7 +287,7 @@ export default class DrawerJob extends React.Component {
                 if(project.data().status === "hiring"){
                  let contractID = firebase.firestore().collection("contracts").doc().id
 
-                batch.update(firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal), {status:"accepted"})
+                batch.update(firebase.firestore().collection("proposals").doc(idProposal), {status:"accepted"})
                 batch.set(firebase.firestore().collection("contracts").doc(contractID), {
                     projectID:idProject,
                     involved:[doc.data().user,firebase.auth().currentUser.uid ],
@@ -307,7 +307,7 @@ export default class DrawerJob extends React.Component {
                 batch.commit()
                 .then(async () => {
                     this.addToast("Proposal Accepted");
-                    let userId = await firebase.firestore().collection("projects").doc(idProject).collection("proposals").doc(idProposal).get()
+                    let userId = await firebase.firestore().collection("proposals").doc(idProposal).get()
                     
                         this.sendMessage(`The owner of the project "${this.state.project[0].title}" accepted you the proposal `,userId.data().user,{type:"view contract" ,id:idProject})
                         this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the proposal`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
@@ -435,7 +435,7 @@ export default class DrawerJob extends React.Component {
             let projectID = project.id;
             let projectName = project.data().title;
             let projectOwner = project.data().author;
-            firebase.firestore().collection("projects").doc(projectID).collection("proposals").doc(proposalID).get()
+            firebase.firestore().collection("proposals").doc(proposalID).get()
             .then(proposal => {
                 firebase.firestore().collection("chat").where("participants","array-contains",proposal.data().user).where("projectID","==",projectID).get()
                 .then(snap => {
@@ -485,10 +485,15 @@ export default class DrawerJob extends React.Component {
 
             })
             .catch(e => {
-
+                this.addToast("Something goes wrong :(, Try Again")
+                    this.toggleLoading2()
             })
             
                 
+            })
+            .catch(e => {
+                this.addToast("Something goes wrong :(, Try Again")
+                    this.toggleLoading2()
             })
         })
         .catch(e => {
@@ -523,7 +528,9 @@ export default class DrawerJob extends React.Component {
             status:"pending",
             deadline:this.state.proposal.deadline.value,
             created:firebase.firestore.Timestamp.now(),
-            id:firebase.firestore().collection("projects").doc().collection("proposals").doc().id
+            id:firebase.firestore().collection("proposals").doc().id,
+            projectID:this.state.project[0].id,
+            title:this.state.project[0].title
         }
 
         
@@ -532,16 +539,16 @@ export default class DrawerJob extends React.Component {
         .then((user) => {
         if(user.data().cards >= this.state.project[0].cards){
          let newCards = Number(user.data().cards - this.state.project[0].cards);
-         let previewPorposals = user.data().proposals !== undefined? user.data().proposals:[];
-         previewPorposals.push({projectId:this.props.id ,proposalId:data.id});
+         //let previewPorposals = user.data().proposals !== undefined? user.data().proposals:[];
+        // previewPorposals.push({projectId:this.props.id ,proposalId:data.id});
          let batch = firebase.firestore().batch();
-         batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid), {proposals:previewPorposals})
+         //batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid), {proposals:previewPorposals})
          batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid),{cards:newCards} )
           
-        firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
+        firebase.firestore().collection("proposals").where("projectID","==",this.props.id).where("user","==",firebase.auth().currentUser.uid).get()
         .then(snapshot => {
             if(snapshot.empty){
-               batch.set(firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").doc(data.id), data)
+               batch.set(firebase.firestore().collection("proposals").doc(data.id), data)
 
                firebase.firestore().collection("projects").doc(this.props.id).get()
                .then(async project => {
@@ -620,13 +627,13 @@ export default class DrawerJob extends React.Component {
                  //project[0].author = author;
                 // project[0].authorImg = img;
                  let references = snapshot.data().references;
-                let result = await firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").get()
+                let result = await firebase.firestore().collection("projects").where("projectID","==",this.props.id).get()
  
                 quantity =  result.size
                 project[0].quantity = quantity;
 
                 if(!(idAuthorProject === firebase.auth().currentUser.uid)){
-                 firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("user","==",firebase.auth().currentUser.uid).get()
+                 firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("projectID","==",this.props.id).get()
                  .then(snapshot2 => {
              
                  let documentF = null;
@@ -711,7 +718,7 @@ export default class DrawerJob extends React.Component {
                  }
               
  
-              firebase.firestore().collection("projects").doc(this.props.id).collection("proposals").where("status","==","accepted").get()
+              firebase.firestore().collection("proposals").where("status","==","accepted").where("projectID","==",this.props.id).get()
               .then(proposalAccepted => {
                   if(proposalAccepted.empty){
                     if(this._mounted){
@@ -743,7 +750,7 @@ export default class DrawerJob extends React.Component {
 
                  let proposals = [];
 
-                 firebase.firestore().collection("projects").doc(project[0].id).collection("proposals").orderBy("created","desc").get()
+                 firebase.firestore().collection("proposals").where("projectID","==",project[0].id).orderBy("created","desc").get()
                  .then( s => {
                      
                      let contract = "";
@@ -951,10 +958,10 @@ export default class DrawerJob extends React.Component {
                                         this.setState(state => {
                                             let base = state.alert;
                                             base.isOpen = true;
-                                            base.confirm = () => {this.deleteProject()}
-                                            base.text = "Sure you want to delete this project? This cannot be reverted"
-                                            base.icon = "trash";
-                                            base.intent = Intent.DANGER
+                                            base.confirm = () => {this.closeProject()}
+                                            base.text = "Sure you want to close this project?"
+                                            base.icon = "info-sign";
+                                            base.intent = Intent.WARNING
 
                                             return {
                                                 alert:base
@@ -1294,6 +1301,16 @@ export default class DrawerJob extends React.Component {
                     {this.state.isOwner === true && this.state.contract === ""?    
                    <div className="container-fluid">
                         {this.state.proposals.length > 0?this.state.proposals.map((proposal,i) => {
+
+                       let date;
+                            
+                            try {
+                       date = proposal.created.toDate().toDateString();
+
+                         }catch(e){
+
+                          date = firebase.firestore.Timestamp.fromMillis((proposal.created.seconds !== undefined ?proposal.created.seconds:proposal.created._seconds)*1000).toDate().toDateString()
+                         }
                         return <ProposalModule handleStates={this.props.handleStates} addToast={this.addToast} startInterview={() => {this.startInterview(this.props.id,proposal.id)}} acceptProposal={() => {
                             if(this._mounted){
                                 this.setState(state => {
@@ -1307,7 +1324,7 @@ export default class DrawerJob extends React.Component {
                                 })
                             }
                             
-                        }}  key={i} date={proposal.updated === undefined?proposal.created.toDate().toString():proposal.updated.toDate().toString()} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
+                        }}  key={i} date={date} deadline={proposal.deadline} user={proposal.user} price={proposal.price} presentation={proposal.presentation} />
                     })
                     :<div className="container-fluid text-center">
                         <h4>No Proposals</h4>

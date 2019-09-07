@@ -28,7 +28,7 @@ export default class ProposalsViewer extends React.Component {
         firebase.firestore().collection("projects").doc(this.props.projectId).get()
         .then(doc => {
             let project = doc.data();
-            firebase.firestore().collection("projects").doc(doc.id).collection("proposals").doc(this.props.proposalId).get()
+            firebase.firestore().collection("proposals").doc(this.props.proposalId).get()
             .then(doc2 => {
                 let proposal = doc2.data();
 
