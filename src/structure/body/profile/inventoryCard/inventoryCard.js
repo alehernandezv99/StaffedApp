@@ -11,7 +11,7 @@ export default class InventoryCard extends React.Component {
     render(){
         return (
             <div className="card" style={{minWidth:300, maxWidth:300, position:"relative"}}>
-
+                {this.props.editable?
                 <EditBtn btns={
                     [
                         {
@@ -23,7 +23,8 @@ export default class InventoryCard extends React.Component {
                             callback:()=> {this.props.delete()}
                         }
                     ]
-                } />
+                } />:null
+            }
                 <div className="card-header">
                 <div style={{backgroundImage:`url(${this.props.photoURL})`,
                                     backgroundPosition:"center",

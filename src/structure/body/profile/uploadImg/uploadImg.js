@@ -44,7 +44,7 @@ export default class UploadImg extends React.Component {
             }
           }, (error) => {
             // Handle unsuccessful uploads
-            alert("The operation cannot be completed");
+            this.props.addToast("Ohoh something went wrong!");
           }, ()  =>{
 
             // Handle successful uploads on complete
@@ -52,7 +52,7 @@ export default class UploadImg extends React.Component {
             uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
               firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).update({photoURL:downloadURL})
               .then(() => {
-                  alert("Operation Completed");
+                  this.props.addToast("Upload Completed!");
                   this.props.handleClose();
                   this.props.callback();
               })
@@ -62,7 +62,7 @@ export default class UploadImg extends React.Component {
 
     render(){
         return(
-            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+            <Drawer hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"50%"} isOpen={this.props.isOpen}>
                  <div className={Classes.DRAWER_BODY}>
                  <div className={`${Classes.DIALOG_BODY}`}>
                  <form>
@@ -71,7 +71,7 @@ export default class UploadImg extends React.Component {
                   <label className="custom-file-label" >Choose file</label>
                  </div>
                  <div className="progress mt-3">
-                   <div className="progress-bar" style={{width:`${this.state.progress}%`}}></div>  
+                   <div className="progress-bar" style={{width:`${this.state.progress}%`}}>{this.state.progress >0?this.state.progress === 100?"Complete!":"Uploading...":null}</div>  
                   </div>
                 </form>
                  </div>

@@ -315,7 +315,7 @@ export default class Payments extends React.Component {
             this.addToast("Ohoh something wnet wrong :(");
         })
 
-        firebase.firestore().collection("contracts").where("involved","array-contains",id).limit(6).get()
+        firebase.firestore().collection("contracts").where("involved","array-contains",id).orderBy("created","desc").limit(6).get()
         .then(contracts => {
             let arr = [];
 

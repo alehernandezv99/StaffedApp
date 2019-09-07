@@ -60,7 +60,7 @@ export default class TextCollapse extends React.Component {
                 
                </div>
                
-               :<div><p>{this.props.text}</p></div>
+               :<p>{this.props.text}</p>
                 }
             </div>
         )

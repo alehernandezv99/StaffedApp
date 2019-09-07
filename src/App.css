@@ -94,4 +94,14 @@ body {
     right:10px !important;
   }
 
+  .proposal-item {
+    transition: 0.3s;
+    cursor: pointer;
+  }
+
+  .proposal-item:hover {
+    box-shadow:0 5px 5px 0 rgba(0,0,0,0.2);
+  
+  }
+
 

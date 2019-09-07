@@ -18,6 +18,7 @@ import checkCriteria from "../../../utils/checkCriteria";
 import StaffViewer from "../profile/staffViewer";
 import TODO from "../drawerJob/TO-DO";
 import ContractDrawer from "../contractDrawer";
+import MVviewer from "./m_n_v_viewer";
 
 
 
@@ -38,6 +39,34 @@ export default class SearchStaff extends React.Component {
             lastSeem:{},
             chat:{
                 payload:null
+            },
+            MVviewer:{
+                isOpen:false,
+                data:"",
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.MVviewer;
+                            base.isOpen = false;
+
+                            return {
+                                MVviewer:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.MVviewer;
+                            base.isOpen = true;
+
+                            return {
+                                MVviewer:base
+                            }
+                        })
+                    }
+                }
             },
             TODO:{
                 isOpen:false,
@@ -324,7 +353,7 @@ export default class SearchStaff extends React.Component {
             this.addToast("Ohoh something went wrong :(")
         })
 
-        firebase.firestore().collection("contracts").where("involved","array-contains",id).limit(6).get()
+        firebase.firestore().collection("contracts").where("involved","array-contains",id).orderBy("created","desc").limit(6).get()
         .then(contracts => {
             let arr = [];
 
@@ -486,7 +515,9 @@ export default class SearchStaff extends React.Component {
                 ref= ref.where("type","==","personal")
               }else if(type === "company"){
                 ref = ref.where("type","==","company")
-              }
+              }else if(type === "machines&vehicles"){
+                ref = ref.where("type","==","machines&vehicles")
+            }
     
     
             let currentLimit = 0;
@@ -549,7 +580,7 @@ export default class SearchStaff extends React.Component {
                 if(newIndex === (arr.length - 1) || arr.length === 0){
                 
                     if(this._mounted){
-                        
+                 
                       this.setState({
                         CVs:this.state.CVs.concat(newProjects),
                         size:size === 0?null:size,
@@ -608,6 +639,8 @@ export default class SearchStaff extends React.Component {
               ref2= ref2.where("type","==","personal")
             }else if(type === "company"){
               ref2 = ref2.where("type","==","company")
+            }else if(type === "machines&vehicles"){
+                ref2 = ref2.where("type","==","machines&vehicles")
             }
         
 
@@ -632,6 +665,7 @@ export default class SearchStaff extends React.Component {
 
             if(!snapshot2.empty){
         if(this._mounted){
+            
             this.setState({
                 CVs:this.state.CVs.concat(projects),
                 size:size,
@@ -772,6 +806,8 @@ export default class SearchStaff extends React.Component {
                     ref2 = ref2.where("type","==","personal");
                 }else if(type === "company"){
                     ref2 = ref2.where("type","==","company")
+                }else if(type === "machines&vehicles"){
+                    ref2 = ref2.where("type","==","machines&vehicles")
                 }
             }
             if(page === true){
@@ -1009,6 +1045,7 @@ export default class SearchStaff extends React.Component {
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                    <div id="portalContainer" className="text-left">
+                   {this.state.MVviewer.isOpen === true? <MVviewer isOpen={this.state.MVviewer.isOpen} handleClose={this.state.MVviewer.handleClose} name={this.state.MVviewer.data.name} description={this.state.MVviewer.data.description} photoURL={this.state.MVviewer.data.photoURL} />:null}
                    <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                    {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                        {this.state.staffViewer.data !== null?<StaffViewer isOpen={this.state.staffViewer.isOpen} handleClose={this.state.staffViewer.handleClose} data={this.state.staffViewer.data}/>:null}
@@ -1097,12 +1134,20 @@ export default class SearchStaff extends React.Component {
                                })
                                this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"personal",this.state.skills.skillsSelected.value)}}><i className="material-icons align-middle">person</i> Personal</a>
                         </li>
-                        <li className="nav-item mr-auto">
+                        <li className="nav-item">
                             <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu2" onClick={() => {
                                 this.setState({
                                     type:"company"
                                 })
                                 this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"company",this.state.skills.skillsSelected.value)}}><i className="material-icons align-middle">group</i> Company</a>
+                        </li>
+
+                        <li className="nav-item mr-auto">
+                            <a className="nav-link bottom-rounded" data-toggle="tab" href="#menu3" onClick={() => {
+                                this.setState({
+                                    type:"machines&vehicles"
+                                })
+                                this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,"machines&vehicles",this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,"machines&vehicles",this.state.skills.skillsSelected.value)}}><i className="material-icons align-middle">build</i> Machines & Vehicles</a>
                         </li>
                        </ul>
 
@@ -1111,7 +1156,7 @@ export default class SearchStaff extends React.Component {
                             <div className="tab-pane container active container-staff" id="home">
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                         
-                            return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                            {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1134,7 +1179,7 @@ export default class SearchStaff extends React.Component {
                             <div className="tab-pane container fade container-staff" id="menu1">
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
-                            return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                           {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1157,7 +1202,7 @@ export default class SearchStaff extends React.Component {
                            <div className="tab-pane container fade container-staff" id="menu2">
                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
-                            return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                             {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1173,6 +1218,41 @@ export default class SearchStaff extends React.Component {
                                 }
                              }else {
                                  this.specificSearchFixed(this.state.queryString, true, "company")
+                             }
+                               
+                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
+                           </div>
+
+                           <div className="tab-pane container fade container-staff" id="menu3">
+                           {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
+                            
+                            return <CVContainer seeInventory={(e) => {
+                                if(this._mounted){
+                                    this.setState(state => {
+                                        let base = state.MVviewer;
+                                        base.data = e;
+                                        base.isOpen = true
+                                        return {
+                                            MVviewer:base
+                                        }
+                                    })
+                                }
+                            }} inventory={element.inventory?element.inventory:null} seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
+
+                            {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
+                               e.preventDefault();
+                               await this.setState(state => ({
+                                   currentPage:(state.currentPage + 1)
+                               }))
+                               if(this.state.searchBar === false){
+                                if(this.state.skills.exclusive === true){
+                                    this.fetchCVsExclusive(this.state.pageSize.value, "machines&vehicles",this.state.skills.skillsSelected.value, true)
+                                }else {
+                                    this.fetchCVsUnion(this.state.pageSize.value, "machines&vehicles",this.state.skills.skillsSelected.value, true)
+                                }
+                             }else {
+                                 this.specificSearchFixed(this.state.queryString, true, "machines&vehicles")
                              }
                                
                             }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}

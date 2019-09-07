@@ -92,8 +92,32 @@ export default class InventoryCreator extends React.Component {
         if(this.props.mode === "create"){
         id = firebase.firestore().collection("CVs").doc().id;
 
-        }else if(this.state.mode === "update"){
-            id = this.props.id
+        }else if(this.props.mode === "update"){
+         
+
+            firebase.firestore().collection("CVs").doc(this.props.id).get()
+            .then(doc => {
+               
+                let inventory = doc.data().inventory;
+                if(this._mounted){
+                    this.setState(state => {
+                        let base = state.CV;
+                        base.id = inventory[this.props.index].id
+                        base.name.value = inventory[this.props.index].name;
+                        base.photoURL = inventory[this.props.index].photoURL;
+                        base.description.value = inventory[this.props.index].description
+
+                        return {
+                            CV:base
+                        }
+
+                    })
+                }
+            })
+            .catch(e => {
+                this.props.addToast(e.message);
+                this.props.addToast("Ohoh something went wrong!");
+            })
         }
 
         if(this._mounted){
@@ -110,6 +134,71 @@ export default class InventoryCreator extends React.Component {
 
     componentWillUnmount(){
         this._mounted = false
+    }
+
+    updateInventory = () => {
+        this.toggleLoading();
+        let check = 0;
+        let messages = [];
+
+
+        Object.keys(this.state.CV).forEach(key => {
+            if(key !== "photoURL" && key !== "id"){
+                if(!(checkCriteria(this.state.CV[key].value, this.state.CV[key].criteria,key).check)){
+                    check = 1
+                    messages.push(checkCriteria(this.state.CV[key].value, this.state.CV[key].criteria,key).message)
+                }
+            }
+        })
+
+        if(this.state.CV.photoURL === "" || this.state.CV.photoURL === null){
+            check = 1
+            messages.push("You need to add a photo");
+        }
+
+        if(check === 0){
+        firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","machines&vehicles").get()
+        .then(snap => {
+            if(!snap.empty){
+                snap.forEach(doc => {
+                    
+                    let id = doc.id;
+                    let inventory = doc.data().inventory;
+                    let newInventory = {
+                        id:this.state.CV.id,
+                        name:this.state.CV.name.value,
+                        description:this.state.CV.description.value,
+                        photoURL:this.state.CV.photoURL
+                    }
+                    inventory[this.props.index] = newInventory;
+                    firebase.firestore().collection("CVs").doc(id).update({inventory:inventory})
+                    .then(() => {
+                        this.props.addToast("Inventory Added");
+                        this.props.handleClose();
+                        this.props.refresh();
+                        this.toggleLoading();
+                    })
+                    .catch(e => {
+                        this.props.addToast("Ohoh something went wrong!");
+                        this.toggleLoading();
+                    })
+
+                })
+            }
+        })
+        .catch(e => {
+            this.props.addToast("Ohoh something went wrong!");
+            this.toggleLoading();
+        })
+
+    }else {
+    
+        for(let i =0; i<messages.length; i++){
+            this.props.addToast(messages[i]);
+        }
+
+        this.toggleLoading();
+    }
     }
 
     addInventory = () => {
@@ -211,7 +300,7 @@ export default class InventoryCreator extends React.Component {
                                 </div>
                               
                              <div className="progress mt-3 mx-2">
-                               <div className="progress-bar" style={{width:`${this.state.progress}%`}}></div>
+                               <div className="progress-bar" style={{width:`${this.state.progress}%`}}>{this.state.progress >0?this.state.progress === 100?"Complete!":"Uploading...":null}</div>
                             </div>
 
                             </div>
@@ -269,7 +358,8 @@ export default class InventoryCreator extends React.Component {
                             }
                         }}></textarea>
 
-                        <button type="button" onClick={() => {this.addInventory();}} className="btn btn-custom-1 mt-3"><i className="material-icons align-middle">add</i> Add Inventory</button>
+                      {this.props.mode === "create"?  <button type="button" onClick={() => {this.addInventory();}} className="btn btn-custom-1 mt-3"><i className="material-icons align-middle">add</i> Add Inventory</button>:null}
+                      {this.props.mode === "update"?  <button type="button" onClick={() => {this.updateInventory();}} className="btn btn-custom-1 mt-3"><i className="material-icons align-middle">add</i> Update Inventory</button>:null}
                     </div>
               </div>
               </div>

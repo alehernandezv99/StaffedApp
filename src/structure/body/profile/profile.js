@@ -79,6 +79,7 @@ export default class Profile extends React.Component {
                 isOpen:false,
                 mode:"create",
                 id:"",
+                index:"",
                 handleClose:() => {
                     if(this._mounted){
                         this.setState(state => {
@@ -796,7 +797,7 @@ export default class Profile extends React.Component {
               if(user.emailVerified === false){
                   this.addToast("Please Verify Your Email")
               }
-              firebase.firestore().collection("contracts").where("involved","array-contains",user.uid).limit(6).get()
+              firebase.firestore().collection("contracts").where("involved","array-contains",user.uid).orderBy("created","desc").limit(6).get()
               .then(contracts => {
                   let arr = [];
    
@@ -1098,6 +1099,32 @@ export default class Profile extends React.Component {
         }
     }
 
+    deleteMachines_n_vehicles = (id, index) => {
+        this.toggleLoading();
+        
+        firebase.firestore().collection("CVs").doc(id).get()
+        .then(doc => {
+            let data = doc.data();
+            let inventory = data.inventory;
+            inventory.splice(index,1);
+
+            firebase.firestore().collection("CVs").doc(id).update({inventory:inventory})
+            .then(() => {
+                this.toggleLoading();
+                this.addToast("Element Deleted");
+                this.searchMachines_n_vehicles();
+            })
+            .catch(e => {
+                this.addToast("Ohoh something went wrong!");
+            })
+
+        })
+        .catch(e => {
+            this.addToast("Ohoh something went wrong!")
+            
+        })
+    }
+
     render() {
         return(
             
@@ -1242,7 +1269,7 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
-                   {this.state.inventoryCreator.isOpen ? <InventoryCreator id={this.state.inventoryCreator.id} refresh={this.searchMachines_n_vehicles} addToast={this.addToast} isOpen={this.state.inventoryCreator.isOpen} handleClose={this.state.inventoryCreator.handleClose} mode={this.state.inventoryCreator.mode} />:null}
+                   {this.state.inventoryCreator.isOpen ? <InventoryCreator id={this.state.inventoryCreator.id} index={this.state.inventoryCreator.index} refresh={this.searchMachines_n_vehicles} addToast={this.addToast} isOpen={this.state.inventoryCreator.isOpen} handleClose={this.state.inventoryCreator.handleClose} mode={this.state.inventoryCreator.mode} />:null}
                <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                 {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid) && (this.state.staffCreator.isOpen))?<StaffCreator refresh={this.searchCompanyCV} update={this.state.staffCreator.update} index={this.state.staffCreator.index} addToast={this.addToast} toggleLoading={this.toggleLoading} isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
@@ -1256,7 +1283,7 @@ export default class Profile extends React.Component {
                     {this.state.editPanel.id !== ""?
                 <EditProposalModule index={this.state.editPanel.index} title={this.state.editPanel.title} content={this.state.editPanel.content} section={this.state.editPanel.prop} callBack={() => {this.loadCv()}} isOpen={this.state.editPanel.isOpen} handleClose={this.state.editPanel.handleClose} id={this.state.editPanel.id} prop={this.state.editPanel.prop} type={this.state.editPanel.type} addToast={this.addToast}/>
                 :null}
-                {this.state.CV.editable === true?<UploadImg callback={() => {this.loadCv()}} isOpen={this.state.uploadImg.isOpen} handleClose={this.state.uploadImg.handleClose} />:null}
+                {this.state.CV.editable === true?<UploadImg addToast={this.addToast} callback={() => {this.loadCv()}} isOpen={this.state.uploadImg.isOpen} handleClose={this.state.uploadImg.handleClose} />:null}
                   </div>
 
                 
@@ -1441,7 +1468,9 @@ export default class Profile extends React.Component {
                                                     let base = state.alert;
                                                     base.isOpen = true;
                                                     base.confirm = () => {this.deleteContent("experience",i);  }
-                                                    base.text = "Sure you want to delete this item?"
+                                                    base.text = "Sure you want to delete this item?";
+                                                    base.icon ="trash";
+                                                    base.intent = Intent.DANGER;
                                                     return {
                                                         alert:base
                                                     }
@@ -1483,7 +1512,8 @@ export default class Profile extends React.Component {
                                         base.isOpen = true;
                                         base.confirm = () => {this.deleteContent("education",i);  }
                                         base.text = "Sure you want to delete this item?"
-
+                                        base.icon ="trash";
+                                         base.intent = Intent.DANGER;
                                         return {
                                             alert:base
                                         }
@@ -1522,7 +1552,9 @@ export default class Profile extends React.Component {
                                         let base = state.alert;
                                         base.isOpen = true;
                                         base.confirm = () => {this.deleteContent("portfolio",i);  }
-                                        base.text = "Sure you want to delete this item?"
+                                        base.text = "Sure you want to delete this item?";
+                                        base.icon ="trash";
+                                        base.intent = Intent.DANGER;
                                         return {
                                             alert:base
                                         }
@@ -1564,7 +1596,8 @@ export default class Profile extends React.Component {
                                                 base.isOpen = true;
                                                 base.confirm = () => {this.deleteContent("expertise",i);   }
                                                 base.text = "Sure you want to delete this item?"
-
+                                                base.icon ="trash";
+                                                base.intent = Intent.DANGER;
                                                 return {
                                                     alert:base
                                                 }
@@ -1605,7 +1638,8 @@ export default class Profile extends React.Component {
                                                     base.isOpen = true;
                                                     base.confirm = () => {this.deleteContent("contact",i);    }
                                                     base.text = "Sure you want to delete this item?"
-
+                                                    base.icon ="trash";
+                                                    base.intent = Intent.DANGER;
                                                     return {
                                                         alert:base
                                                     }
@@ -1630,21 +1664,49 @@ export default class Profile extends React.Component {
                     {(this.state.companyCV !== null) && (this.state.companyCV !== 0)?
                     <div className="tab-pane container cv-container fade" id="menu1">
                         <div className="cards-container">
-                            {this.state.companyCV.staff.concat(<AddCardElement />).map((e,i) => {
-                                if( i !== (this.state.companyCV.staff.length)){
+                            {this.state.companyCV.staff.map((e,i) => {
+                                
                                     return (
-                                       <StaffCard key={i} edit={() => {this.editStaff(i)}} skills={e.skills} delete = {() => {this.removeStaff(i)}} photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} name={e.name?e.name[0].title:null} description={e.description[0].description} />
+                                       <StaffCard key={i} edit={() => {
+                                           if(this._mounted){
+                                               this.setState(state => {
+                                                let base = state.alert;
+                                                base.text  ="Sure you want to edit this item?";
+                                                base.isOpen = true;
+                                                base.icon ="info-sign";
+                                                base.intent = Intent.WARNING
+                                                base.confirm = () => {
+                                                    this.editStaff(i)
+                                                }
+                                                return {
+                                                    alert:base
+                                                }
+                                               })
+                                           }
+                                           
+                                        }} skills={e.skills} delete = {() => {
+                                            if(this._mounted){
+                                                this.setState(state => {
+                                                    let base = state.alert;
+                                                    base.text = "Sure you want to delete this item?";
+                                                    base.isOpen = true;
+                                                    base.icon = "trash";
+                                                    base.intent = Intent.DANGER;
+                                                    base.confirm = () => { this.removeStaff(i)}
+ 
+                                                    return {
+                                                        alert:base
+                                                    }
+                                                })
+                                            }
+                                           
+                                        }} photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} name={e.name?e.name[0].title:null} description={e.description[0].description} />
                                     )
-                                }else {
-                                    if(this.state.CV.editable === true){
-                                    return (
-                                        <AddCardElement text="Add Staff" onClick={() => {this.state.staffCreator.handleOpen(false)}} key={i} />
-                                    )
-                                    }else {
-                                        return null
-                                    }
-                                }
+                               
                             } )}
+                        </div>
+                        <div className="container text-center">
+                        <AddCardElement text="Add Staff" onClick={() => {this.state.staffCreator.handleOpen(false)}}  />
                         </div>
                     </div>
                     :null}
@@ -1652,11 +1714,11 @@ export default class Profile extends React.Component {
                    {(this.state.machines_vehicles!== null) && (this.state.machines_vehicles !== 0)?
                     <div className="tab-pane container cv-container fade" id="menu2">
                         <div className="cards-container">
-                            {this.state.machines_vehicles.inventory.concat(<AddCardElement />).map((e,i) => {
-                                if( i !== (this.state.machines_vehicles.inventory.length)){
+                            {this.state.machines_vehicles.inventory.map((e,i) => {
+                                
                                    
                                     return (
-                                       <InventoryCard edit={() => {
+                                       <InventoryCard editable={this.state.CV.editable} edit={() => {
                                            if(this._mounted){
                                                this.setState(state => {
                                                    let base = state.alert;
@@ -1669,9 +1731,9 @@ export default class Profile extends React.Component {
                                                            this.setState(state => {
                                                                let base2 = state.inventoryCreator;
                                                                base2.isOpen = true;
-                                                               base2.id = e.id;
+                                                               base2.id = this.state.machines_vehicles.id;
                                                                base2.mode = "update";
-
+                                                               base2.index = i
                                                                return {
                                                                    inventoryCreator:base2
                                                                }
@@ -1691,7 +1753,7 @@ export default class Profile extends React.Component {
                                                    base.isOpen = true;
                                                    base.icon = "trash";
                                                    base.intent = Intent.DANGER;
-                                                   base.confirm = () => {this.deleteMachines_n_vehicles(e.id, i)}
+                                                   base.confirm = () => {this.deleteMachines_n_vehicles(this.state.machines_vehicles.id, i)}
 
                                                    return {
                                                        alert:base
@@ -1700,16 +1762,11 @@ export default class Profile extends React.Component {
                                            }
                                        }} key={i} name={e.name} description={e.description} photoURL={e.photoURL} />
                                     )
-                                }else {
-                                    if(this.state.CV.editable === true){
-                                    return (
-                                        <AddCardElement text="Add Inventory" onClick={() => {this.state.inventoryCreator.handleOpen(false)}} key={i} />
-                                    )
-                                    }else {
-                                        return null
-                                    }
-                                }
+                                
                             } )}
+                        </div>
+                        <div className="container text-center">
+                        <AddCardElement text="Add Inventory" onClick={() => {this.state.inventoryCreator.handleOpen(false)}}  />
                         </div>
                     </div>
                     :null}

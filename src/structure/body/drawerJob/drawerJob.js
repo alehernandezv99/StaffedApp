@@ -65,7 +65,7 @@ export default class DrawerJob extends React.Component {
             proposal:{
                 price:{value:"", criteria:{type:"number", min:10, max:50000}},
                 receive:{value:"", criteria:{type:"number", min:10}},
-                message:{value:"", criteria:{type:"text", minLength:5, maxLength:3000}},
+                message:{value:"", criteria:{type:"text", minLength:5, maxLength:10000}},
                 deadline:{value:new Date(), criteria:{}}
             },
             proposalFetched:null,
@@ -94,6 +94,38 @@ export default class DrawerJob extends React.Component {
         this.setState(state => ({
             isLoading2:!state.isLoading2
         }))
+    }
+
+    removeFromFavorites = () => {
+        this.toggleLoading2();
+
+        firebase.firestore().collection("projects").doc(this.props.id).get()
+        .then(doc => {
+            let data = doc.data();
+            let references = data.references;
+
+            
+
+            for(let i =0 ; i < references.length; i++){
+                if(references[i] === firebase.auth().currentUser.email){
+                    references.splice(i,1);
+                }
+            }
+
+            firebase.firestore().collection("projects").doc(this.props.id).update({references:references})
+            .then(() => {
+                this.addToast("Project Removed From Favorites!");
+                this.toggleLoading2();
+            })
+            .catch(e => {
+                this.addToast("Ohoh something went wrong!");
+                this.toggleLoading2();
+            })
+        })
+        .catch(e => {
+            this.addToast("Ohoh something went wrong!");
+            this.toggleLoading2();
+        })
     }
 
     performTransaction(collection, prop, value, type, messageSucess, messageFailure,cb){
@@ -997,9 +1029,11 @@ export default class DrawerJob extends React.Component {
                         }
                     
                         {
-                        this.state.isSaved === true?null:
+                        this.state.isSaved === true?<div className="action-btns text-center">
+                        <button onClick={() => {this.removeFromFavorites()}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">clear</i>Remove From Favorites</button>
+                            </div>:
                         <div className="action-btns text-center">
-                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">stars</i> Mark As Favorite</button>
+                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">favorite</i> Mark As Favorite</button>
                         </div>
                         }
                         <div className="container-fluid mt-4">
@@ -1011,12 +1045,12 @@ export default class DrawerJob extends React.Component {
                         <h6 className="mt-3">{this.state.project[0].country}</h6>
                         </div>
                         <div className="form-group">
-                            <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={this.props.openTODO}><i className="material-icons align-middle">check_box</i> TO-DO</button>
+                            <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={this.props.openTODO}><i className="material-icons align-middle">add</i> TO-DO</button>
                         </div>
                     </div>
                 </div>
                  <h4 className="text-center mt-2 ">Progress</h4>
-                {this.state.TODO !== undefined? <div className="progress mx-4 mt-3">
+                {this.state.TODO !== undefined? <div className="progress mx-4 mt-3 "  style={{backgroundColor:"darkgray"}}>
                    
                    <div className="progress-bar" style={{width:(() => {
                        if(this.state.TODO.length > 0){
@@ -1204,7 +1238,7 @@ export default class DrawerJob extends React.Component {
                         </div>
                         <div className="text-left">
                         <DatePicker
-                              minDate={this.state.proposalFetched.deadline.value}
+                              minDate={this.state.proposalFetched.created.value}
                               maxDate={new Date(new Date().setMonth(new Date().getMonth()+20))}
                           
                              onChange={async(newDate) => { await this.setValue("proposalFetched","deadline",newDate,); this.checkChange(newDate, this.state.proposalFetched, true)}}

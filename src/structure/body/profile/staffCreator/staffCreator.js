@@ -749,7 +749,7 @@ export default class StaffCreator extends React.Component{
                                 </div>
                               
                              <div className="progress mt-3 mx-2">
-                               <div className="progress-bar" style={{width:`${this.state.progress}%`}}></div>
+                               <div className="progress-bar" style={{width:`${this.state.progress}%`}}>{this.state.progress >0?this.state.progress === 100?"Complete!":"Uploading...":null}</div>
                             </div>
                              
                               </div>
@@ -759,6 +759,7 @@ export default class StaffCreator extends React.Component{
 
                              
                         </div>
+                        
                     </div>
                     <div className="form-group">
                         <label>Name</label>

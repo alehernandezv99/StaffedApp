@@ -16,6 +16,7 @@ import ProposalsViewer from "../proposalViewer";
 import logo from "../../../res/Graphics/main_logo.png";
 import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
 import InboxMessages from "../InboxMessages";
+import ProposalsList from "../proposalsList";
 
 //Chat 
 import Chat from "../chat";
@@ -69,6 +70,33 @@ export default class Home extends React.Component {
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
                 exclusive:false,
+            },
+            proposalsList:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = true;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.proposalsList;
+                            base.isOpen = false;
+
+                            return {
+                                proposalsList:base
+                            }
+                        })
+                    }
+                }
             },
             contractDrawer:{
                 isOpen:false,
@@ -868,7 +896,7 @@ export default class Home extends React.Component {
         }
            })
 
-           firebase.firestore().collection("contracts").where("involved","array-contains",id).limit(6).get()
+           firebase.firestore().collection("contracts").where("involved","array-contains",id).orderBy("created","desc").limit(6).get()
            .then(contracts => {
                let arr = [];
 
@@ -1012,6 +1040,14 @@ export default class Home extends React.Component {
                             icon:"add",
                             onClick:() => {this.state.createProject.handleOpen()},
                             key:6
+                        },
+                        {
+                            type:"link",
+                            text:"Proposals",
+                            href:"",
+                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            icon:"list",
+                            key:2
                         },
                         {
                             type:"dropdown badge",
@@ -1243,6 +1279,7 @@ export default class Home extends React.Component {
                     <Chat addToast={this.addToast} payload={this.state.chat.payload} handleStates={this.props.handleStates} resetPayload={this.resetPayload}/>
                        </div>
                  <div id="portalContainer" className="text-left">
+                     <ProposalsList addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />
                      <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                      <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
