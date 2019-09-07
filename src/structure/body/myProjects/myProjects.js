@@ -898,7 +898,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                              {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -974,7 +974,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                         {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                 e.preventDefault();
@@ -1048,7 +1048,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
                             
 
                             {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1125,7 +1125,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="mt-3 mb-5">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                              {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -1203,7 +1203,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="my-3">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -1279,7 +1279,7 @@ export default class MyProjects extends React.Component {
                             }
 
                             return <JobModule author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
-                        }):this.state.size === null?<div className="spinner-border"></div>:<div className="my-3">No projects found</div>}
+                        }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="my-3">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();

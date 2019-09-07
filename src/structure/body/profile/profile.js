@@ -25,6 +25,8 @@ import autocomplete from "../../../utils/autocomplete";
 import checkCriteria from "../../../utils/checkCriteria";
 import EditBtn from "./editBtn";
 import ContractDrawer from "../contractDrawer";
+import InventoryCreator from "./inventoryCreator";
+import InventoryCard from "./inventoryCard";
 
 import Chat from "../chat";
 
@@ -39,6 +41,8 @@ export default class Profile extends React.Component {
             alert:{
                 isOpen:false,
                 text:"",
+                icon:"",
+                intent:Intent.WARNING,
                 confirm:()=>{},
                 handleClose:() => {
                     if(this._mounted){
@@ -70,6 +74,35 @@ export default class Profile extends React.Component {
             user:null,
             chat:{
                 payload:null
+            },
+            inventoryCreator:{
+                isOpen:false,
+                mode:"create",
+                id:"",
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.inventoryCreator;
+                            base.isOpen = false
+
+                            return {
+                                inventoryCreator:base
+                            }
+                        })
+                    }
+                },
+                handleOpen: () => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base =state.inventoryCreator;
+                            base.isOpen = true
+
+                            return {
+                                inventoryCreator:base
+                            }
+                        })
+                    }
+                }
             },
             TODO:{
                 isOpen:false,
@@ -116,6 +149,7 @@ export default class Profile extends React.Component {
                 order:[1,2,3,4,5,6]
             },
             companyCV:null,
+            machines_vehicles:null,
             contractDrawer:{
                 isOpen:false,
                 handleOpen:() => {
@@ -678,6 +712,7 @@ export default class Profile extends React.Component {
                         }
                 })
                 this.searchCompanyCV()
+                this.searchMachines_n_vehicles();
             }
         })
         })
@@ -878,6 +913,42 @@ export default class Profile extends React.Component {
         $("a").off("click");
     }
 
+    addMachines_n_vehicles = () => {
+        this.toggleLoading();
+        if(this.props.userId === firebase.auth().currentUser.uid){
+            firebase.firestore().collection("CVs").where("uid","==",firebase.auth().currentUser.uid).where("type","==","machines&vehicles").get()
+            .then(snapshot => {
+                if(snapshot.empty){
+                    let id = firebase.firestore().collection("CVs").doc().id;
+
+                    firebase.firestore().collection("CVs").doc(id).set({
+                        type:"machines&vehicles",
+                        inventory:[],
+                        uid:firebase.auth().currentUser.uid,
+                        uemail:firebase.auth().currentUser.email,
+                        id:id,
+                        description:this.state.CV.description,
+                        created:firebase.firestore.Timestamp.now(),
+                    })
+                    .then(() => {
+                        this.toggleLoading()
+                        this.searchMachines_n_vehicles()
+                    })
+                    .catch(e => {
+                        this.addToast("ohoh something went wrong :(");
+                        this.toggleLoading()
+                    })
+                }else {
+                    this.toggleLoading()
+                }
+            })
+            .catch(e => {
+                this.addToast("ohoh something went wrong :(");
+                        this.toggleLoading()
+            })
+        }
+    }
+
     addCompanyCV = () => {
         this.toggleLoading();
         if(this.props.userId === firebase.auth().currentUser.uid){
@@ -926,6 +997,27 @@ export default class Profile extends React.Component {
             }else {
                 this.setState({
                     companyCV:0
+                })
+            }
+        })
+        .catch(e => {
+            this.addToast("ohoh something went wrong :(");
+        })
+    }
+
+    searchMachines_n_vehicles = () => {
+        firebase.firestore().collection("CVs").where("uid","==",this.props.userId).where("type","==","machines&vehicles").get()
+        .then(snapshot => {
+            if(!snapshot.empty){
+                snapshot.forEach(cv => {
+                   
+                    this.setState({
+                        machines_vehicles:cv.data()
+                    })
+                })
+            }else {
+                this.setState({
+                    machines_vehicles:0
                 })
             }
         })
@@ -1015,7 +1107,7 @@ export default class Profile extends React.Component {
                     {/* "Toasted!" will appear here after clicking button. */}
                     {this.state.toasts.map(toast => <Toast {...toast} />)}
                 </Toaster>
-                <Alert icon="trash" intent={Intent.DANGER} isOpen={this.state.alert.isOpen} onConfirm={() => {this.state.alert.confirm(); this.state.alert.handleClose();}} onCancel={() =>{this.state.alert.handleClose()}} confirmButtonText="Yes" cancelButtonText="No">
+                <Alert icon={this.state.alert.icon} intent={this.state.alert.intent} isOpen={this.state.alert.isOpen} onConfirm={() => {this.state.alert.confirm(); this.state.alert.handleClose();}} onCancel={() =>{this.state.alert.handleClose()}} confirmButtonText="Yes" cancelButtonText="No">
                         <p>{this.state.alert.text}</p> 
                     </Alert>
                 <Navbar logo={{
@@ -1150,6 +1242,7 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
+                   {this.state.inventoryCreator.isOpen ? <InventoryCreator id={this.state.inventoryCreator.id} refresh={this.searchMachines_n_vehicles} addToast={this.addToast} isOpen={this.state.inventoryCreator.isOpen} handleClose={this.state.inventoryCreator.handleClose} mode={this.state.inventoryCreator.mode} />:null}
                <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                 {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid) && (this.state.staffCreator.isOpen))?<StaffCreator refresh={this.searchCompanyCV} update={this.state.staffCreator.update} index={this.state.staffCreator.index} addToast={this.addToast} toggleLoading={this.toggleLoading} isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
@@ -1244,10 +1337,25 @@ export default class Profile extends React.Component {
                            <a className="dropdown-item" href="#" onClick={() => {this.addCompanyCV()}}>Create Company CV</a>
                          </div>
                          
-                    </li>:<li className="nav-item mr-auto"></li>:
+                    </li>:<li className="nav-item "></li>:
                     ((this.state.companyCV !== 0) && (this.state.companyCV !== null))? 
-                      <li className="nav-item mr-auto">
+                      <li className="nav-item ">
                       <a className="nav-link remove-bottom-rounded" data-toggle="tab" href="#menu1"><i className="material-icons align-middle">group</i> Company</a>
+                 </li>:<li className="nav-item "></li>}
+
+                 {this.state.machines_vehicles === 0?
+                    this.state.CV.editable === true?
+                    <li className="nav-item mr-auto dropdown">
+                         <a className="nav-link dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">add</i></a>
+                          
+                         <div className="dropdown-menu dropdown-menu-right">
+                           <a className="dropdown-item" href="#" onClick={() => {this.addMachines_n_vehicles()}}>Create Machines & Vehicles CV</a>
+                         </div>
+                         
+                    </li>:<li className="nav-item mr-auto"></li>:
+                    ((this.state.machines_vehicles !== 0) && (this.state.machines_vehicles !== null))? 
+                      <li className="nav-item mr-auto">
+                      <a className="nav-link remove-bottom-rounded" data-toggle="tab" href="#menu2"><i className="material-icons align-middle">build</i> Machines & Vehicles</a>
                  </li>:<li className="nav-item mr-auto"></li>}
                     </ul>
 
@@ -1530,7 +1638,72 @@ export default class Profile extends React.Component {
                                 }else {
                                     if(this.state.CV.editable === true){
                                     return (
-                                        <AddCardElement onClick={() => {this.state.staffCreator.handleOpen(false)}} key={i} />
+                                        <AddCardElement text="Add Staff" onClick={() => {this.state.staffCreator.handleOpen(false)}} key={i} />
+                                    )
+                                    }else {
+                                        return null
+                                    }
+                                }
+                            } )}
+                        </div>
+                    </div>
+                    :null}
+
+                   {(this.state.machines_vehicles!== null) && (this.state.machines_vehicles !== 0)?
+                    <div className="tab-pane container cv-container fade" id="menu2">
+                        <div className="cards-container">
+                            {this.state.machines_vehicles.inventory.concat(<AddCardElement />).map((e,i) => {
+                                if( i !== (this.state.machines_vehicles.inventory.length)){
+                                   
+                                    return (
+                                       <InventoryCard edit={() => {
+                                           if(this._mounted){
+                                               this.setState(state => {
+                                                   let base = state.alert;
+                                                   base.text  ="Sure you want to edit this item?";
+                                                   base.isOpen = true;
+                                                   base.icon ="info-sign";
+                                                   base.intent = Intent.WARNING
+                                                   base.confirm = () => {
+                                                       if(this._mounted){
+                                                           this.setState(state => {
+                                                               let base2 = state.inventoryCreator;
+                                                               base2.isOpen = true;
+                                                               base2.id = e.id;
+                                                               base2.mode = "update";
+
+                                                               return {
+                                                                   inventoryCreator:base2
+                                                               }
+                                                           })
+                                                       }
+                                                   }
+                                                   return {
+                                                       alert:base
+                                                   }
+                                               })
+                                           }
+                                       }} delete={() => {
+                                           if(this._mounted){
+                                               this.setState(state => {
+                                                   let base = state.alert;
+                                                   base.text = "Sure you want to delete this item?";
+                                                   base.isOpen = true;
+                                                   base.icon = "trash";
+                                                   base.intent = Intent.DANGER;
+                                                   base.confirm = () => {this.deleteMachines_n_vehicles(e.id, i)}
+
+                                                   return {
+                                                       alert:base
+                                                   }
+                                               })
+                                           }
+                                       }} key={i} name={e.name} description={e.description} photoURL={e.photoURL} />
+                                    )
+                                }else {
+                                    if(this.state.CV.editable === true){
+                                    return (
+                                        <AddCardElement text="Add Inventory" onClick={() => {this.state.inventoryCreator.handleOpen(false)}} key={i} />
                                     )
                                     }else {
                                         return null

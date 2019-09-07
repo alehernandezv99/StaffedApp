@@ -1112,7 +1112,7 @@ export default class SearchStaff extends React.Component {
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                         
                             return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
-                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
+                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                            {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -1135,7 +1135,7 @@ export default class SearchStaff extends React.Component {
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
                             return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
-                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
+                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                           {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -1158,7 +1158,7 @@ export default class SearchStaff extends React.Component {
                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
                             return <CVContainer seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
-                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border"></div>}
+                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                             {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();

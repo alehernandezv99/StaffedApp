@@ -337,7 +337,7 @@ export default class StaffCreator extends React.Component{
                 progress:null
             })
         }
-            alert("The operation cannot be completed");
+      
           }, ()  =>{
               this.setState({
                   progress:null,

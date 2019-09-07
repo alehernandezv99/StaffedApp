@@ -174,7 +174,7 @@ componentWillUnmount(){
       this._mounted = true;
       $(".cp-section-2").hide();
 
-      alert(this.props.mode)
+     
       if(this.props.mode === "create"){
         if(this._mounted){
           this.setState({
