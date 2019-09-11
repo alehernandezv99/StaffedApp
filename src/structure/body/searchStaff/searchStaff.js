@@ -20,6 +20,7 @@ import TODO from "../drawerJob/TO-DO";
 import ContractDrawer from "../contractDrawer";
 import MVviewer from "./m_n_v_viewer";
 import ProposalsList from "../proposalsList";
+import ProfileViewer from "../profileViewer";
 
 
 
@@ -40,6 +41,35 @@ export default class SearchStaff extends React.Component {
             lastSeem:{},
             chat:{
                 payload:null
+            },
+            profileViewer:{
+                isOpen:false,
+                userId:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = true;
+                            base.userId = id
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = false;
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                }
             },
             MVviewer:{
                 isOpen:false,
@@ -1082,13 +1112,14 @@ export default class SearchStaff extends React.Component {
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                    <div id="portalContainer" className="text-left">
+                   {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                    {this.state.MVviewer.isOpen === true? <MVviewer isOpen={this.state.MVviewer.isOpen} handleClose={this.state.MVviewer.handleClose} name={this.state.MVviewer.data.name} description={this.state.MVviewer.data.description} photoURL={this.state.MVviewer.data.photoURL} />:null}
-                   <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
+                   <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                    {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                        {this.state.staffViewer.data !== null?<StaffViewer isOpen={this.state.staffViewer.isOpen} handleClose={this.state.staffViewer.handleClose} data={this.state.staffViewer.data}/>:null}
                    <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob openUser={this.state.profileViewer.handleOpen} editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                    {this.state.createProject.isOpen? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/> :null}
                   </div>
@@ -1193,7 +1224,7 @@ export default class SearchStaff extends React.Component {
                             <div className="tab-pane container active container-staff" id="home">
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                         
-                            return <CVContainer inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer openUser={() => {this.state.profileViewer.handleOpen(element.uid)}} inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                            {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1216,7 +1247,7 @@ export default class SearchStaff extends React.Component {
                             <div className="tab-pane container fade container-staff" id="menu1">
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
-                            return <CVContainer inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer openUser={() => {this.state.profileViewer.handleOpen(element.uid)}} inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                           {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1239,7 +1270,7 @@ export default class SearchStaff extends React.Component {
                            <div className="tab-pane container fade container-staff" id="menu2">
                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
-                            return <CVContainer inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
+                            return <CVContainer openUser={() => {this.state.profileViewer.handleOpen(element.uid)}} inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
                         }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                             {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1263,7 +1294,7 @@ export default class SearchStaff extends React.Component {
                            <div className="tab-pane container fade container-staff" id="menu3">
                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
-                            return <CVContainer seeInventory={(e) => {
+                            return <CVContainer openUser={() => {this.state.profileViewer.handleOpen(element.uid)}} seeInventory={(e) => {
                                 if(this._mounted){
                                     this.setState(state => {
                                         let base = state.MVviewer;

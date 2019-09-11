@@ -711,7 +711,7 @@ export default class Home extends React.Component {
                 currentLimit = Math.ceil(Number(limit)/arr.length);
                 
                 }else {
-                    currentLimit= 6;
+                    currentLimit= 15;
                 }
                 
                 }else {
@@ -720,7 +720,7 @@ export default class Home extends React.Component {
                     if(currentLimit < 1 || currentLimit < 0){
                         currentLimit = 1
                     }
-                    currentLimit = currentLimit === 0?6:currentLimit;
+                    currentLimit = currentLimit === 0?15:currentLimit;
                     
             }
     
@@ -767,7 +767,8 @@ export default class Home extends React.Component {
                         size:size,
                         searchBar:false,
                         lastSeemUnion:arrOfLastSeem,
-                        pending:false
+                        pending:false,
+                        loadMore: snapshot2.size < currentLimit?false:true
                     })
                 }
                 
@@ -1311,11 +1312,11 @@ export default class Home extends React.Component {
                  <div id="portalContainer" className="text-left">
                      {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                   {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
-                     <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
+                     <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                      <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat}  handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob openUser={this.state.profileViewer.handleOpen} editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat}  handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                    {this.state.createProject.isOpen? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} reloadProjects={() => {
                         if(this.state.searchBar === false){
@@ -1414,6 +1415,19 @@ export default class Home extends React.Component {
                             }
                                
                             }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
+                        </div>
+                        <div className="col-sm-4 text-left">
+                            <h4 className="text-center">Tips</h4>
+
+                            <h5 style={{color:"#3a7bd5"}}>Project Status</h5>
+                            <div className="mt-4"><span className="project-status mr-3">Hiring</span></div>
+                            <div className="mt-2"> The owner of the project is looking for a freelancer to hire </div>
+                            <div className="mt-4"><span className="project-status mr-3">In Development</span></div>
+                            <div className="mt-2"> The owner of the project already hired a freelancer and the project is in development</div>
+                            <div className="mt-4"><span className="project-status mr-3">Completed</span></div>
+                            <div className="mt-2"> The project has been successfully completed</div>
+                            <div className="mt-4"><span className="project-status mr-3">Closed</span></div>
+                            <div className="mt-2"> The project has been closed for some reason</div>
                         </div>
                     </div>
                     </div>

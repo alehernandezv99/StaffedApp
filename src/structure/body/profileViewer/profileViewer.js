@@ -488,30 +488,7 @@ export default class ProfileViewer extends React.Component {
         this.state.editPanel.handleOpen()
     }
 
-    deleteContent = (prop,index) => {
-        this.toggleLoading();
-     
-        firebase.firestore().collection("CVs").doc(this.state.CV.id).get()
-        .then(doc => {
-            let arr = doc.data()[prop];
-            arr.splice(index,1)
-            firebase.firestore().collection("CVs").doc(this.state.CV.id).update({[prop]:arr})
-            .then(() => {
-                this.addToast("Element Deleted");
-                this.loadCv();
-                this.toggleLoading();
-            })
-            .catch(e => {
-                this.addToast(e.message);
-                this.toggleLoading();
-            })
-        })
-        .catch(e => {
-            this.addToast(e.message);
-            this.toggleLoading()
-        })
-    
-    }
+ 
 
     loadInbox = (id)=> {
             firebase.firestore().collection("users").doc(id).get()
@@ -641,39 +618,12 @@ export default class ProfileViewer extends React.Component {
         this._mounted = true;
         
 
-        $(document).ready(function(){
-            // Add smooth scrolling to all links
-            $("a").on('click', function(event) {
-              // Make sure this.hash has a value before overriding default behavior
-              if (this.hash !== "") {
-                // Prevent default anchor click behavior
-                event.preventDefault();
-          
-                // Store hash
-                var hash = this.hash;
-          
-                // Using jQuery's animate() method to add smooth page scroll
-                // The optional number (800) specifies the number of milliseconds it takes to scroll to the specified area
-                $('html, body').animate({
-                  scrollTop: $(hash).offset().top - 80
-                }, 800, function(){
-          
-                  // Add hash (#) to URL when done scrolling (default click behavior)
-                  window.location.hash = hash - 80;
-                });
-              } // End if
-            
-            });
-
-        
-          });
+       
 
           firebase.auth().onAuthStateChanged((user) => {
             if (user) {
               // User is signed in.
-              if(user.emailVerified === false){
-                  this.addToast("Please Verify Your Email")
-              }
+
          
               this.loadCv();
               this.loadInbox(user.uid);
@@ -806,45 +756,9 @@ export default class ProfileViewer extends React.Component {
         }
     }
 
-    editProject = (id) => {
-        if(this._mounted){
-            this.setState(state => {
-                let base = state.createProject;
-                base.isOpen = true;
-                base.mode ="update"
-                base.id = id
-                return {
-                    createProject:base
-                }
-            })
-        }
-    }
+   
 
-    deleteMachines_n_vehicles = (id, index) => {
-        this.toggleLoading();
-        
-        firebase.firestore().collection("CVs").doc(id).get()
-        .then(doc => {
-            let data = doc.data();
-            let inventory = data.inventory;
-            inventory.splice(index,1);
-
-            firebase.firestore().collection("CVs").doc(id).update({inventory:inventory})
-            .then(() => {
-                this.toggleLoading();
-                this.addToast("Element Deleted");
-                this.searchMachines_n_vehicles();
-            })
-            .catch(e => {
-                this.addToast("Ohoh something went wrong!");
-            })
-
-        })
-        .catch(e => {
-            this.addToast("Ohoh something went wrong!")
-            
-        })
-    }
+    
 
     render() {
         return(
@@ -887,12 +801,7 @@ export default class ProfileViewer extends React.Component {
                                 }} className="rounded-circle" ></div>
 
                         
-                       {this.state.CV.editable === true? <div className="dropdown right-corner-btn">
-                              <button type="button" className="dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
-                                <div className="dropdown-menu dropdown-menu-right">
-                                <button className="dropdown-item" onClick={() => {this.state.uploadImg.handleOpen()}}>Upload</button>
-                              </div>
-                             </div>:null}
+                       
                         </div>
                     </div>
                    
@@ -903,28 +812,9 @@ export default class ProfileViewer extends React.Component {
                             <h5 className="mt-3" ref={ref => {this.title = ref}}>{this.state.user !== null?this.state.CV.description[0].title:"Loading..."}</h5>
                             <p ref={ref => {this.text = ref}}>{this.state.CV.description[0].text}</p>
 
-                            {this.state.CV.editable === true?<div className="dropdown right-corner-btn">
-                              <button type="button" className="dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">more_horiz</i></button>
-                                <div className="dropdown-menu dropdown-menu-right">
-                                <button className="dropdown-item" onClick={() => {this.openEditPanel("update",this.state.CV.id,"description",0,this.title.textContent,this.text.textContent)}}>Edit</button>
-                                <button className="dropdown-item" onClick={() => {
-                                    if(this._mounted){
-                                        this.setState(state => {
-                                            let base = state.alert;
-                                            base.isOpen = true;
-                                            base.confirm = () => {this.deleteContent("description",0); }
-                                            base.text = "Sure you want to delete this item?"
-                                            return {
-                                                alert:base
-                                            }
-                                        })
-                                    }
-                                    
-                                    }}>Delete</button>
-                              </div>
-                             </div>:null}
+                          
                             </div>
-                            :this.state.CV.editable === true?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
+                            :this.state.CV.editable === "never-this-value"?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
 
 
                             
@@ -935,7 +825,7 @@ export default class ProfileViewer extends React.Component {
                        <a className="nav-link active remove-bottom-rounded" data-toggle="tab" href="#home"><i className="material-icons align-middle">person</i> Personal</a>
                     </li>
                     {this.state.companyCV === 0?
-                    this.state.CV.editable === true?
+                    this.state.CV.editable === "never-this-value"?
                     <li className="nav-item mr-auto dropdown">
                          <a className="nav-link dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">add</i></a>
                           
@@ -950,7 +840,7 @@ export default class ProfileViewer extends React.Component {
                  </li>:<li className="nav-item "></li>}
 
                  {this.state.machines_vehicles === 0?
-                    this.state.CV.editable === true?
+                    this.state.CV.editable === "never-this-value"?
                     <li className="nav-item mr-auto dropdown">
                          <a className="nav-link dropdown-toggle remove-caret" data-toggle="dropdown"><i className="material-icons align-middle">add</i></a>
                           
@@ -1004,7 +894,7 @@ export default class ProfileViewer extends React.Component {
                                 </div>
  
                                 </div>
-                                {this.state.CV.editable === true?
+                                {this.state.CV.editable === "never-this-value"?
                                 <EditBtn btns={[{
                                     text:"Add/Remove",
                                     callback:()=> {
@@ -1031,7 +921,7 @@ export default class ProfileViewer extends React.Component {
                                     <div className="card-header" style={{position:"relative"}}>
                                        <a className="card-link" data-toggle="collapse" href="#experience"> Experience</a>
 
-                                       {this.state.CV.editable === true?
+                                       {this.state.CV.editable === "never-this-value"?
                                        <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
@@ -1041,7 +931,7 @@ export default class ProfileViewer extends React.Component {
                                   <div className="collapse show" data-parent="#accordion" id="experience">
                                    {this.state.CV.experience.length > 0?this.state.CV.experience.map((element,i) => {
                                        return (
-                                           <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => { 
+                                           <CVcontent editable={false} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"experience",i,element.title,element.text)}} delete={() => { 
                                             if(this._mounted){
                                                 this.setState(state => {
                                                     let base = state.alert;
@@ -1060,7 +950,7 @@ export default class ProfileViewer extends React.Component {
             
                                    )
                                        }):null}
-                                   {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"experience");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                                   {this.state.CV.editable === "never-this-value"? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"experience");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                                 </div>
             
                                 </div> 
@@ -1073,7 +963,7 @@ export default class ProfileViewer extends React.Component {
                         <div className="card-header" style={{position:"relative"}}>
                            <a className="card-link" data-toggle="collapse" href="#education"> Education</a>
 
-                           {this.state.CV.editable === true?
+                           {this.state.CV.editable === "never-this-value"?
                            <div className="btn-group btns-change-order">
                                           <button type="button" className="btn btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
@@ -1084,7 +974,7 @@ export default class ProfileViewer extends React.Component {
                             <div className="collapse show" id="education">
                             {this.state.CV.education.length > 0?this.state.CV.education.map((element,i) => {
                            return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"education",i,element.title,element.text)}} delete={() => {
+                               <CVcontent editable={false} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"education",i,element.title,element.text)}} delete={() => {
                                 if(this._mounted){
                                     this.setState(state => {
                                         let base = state.alert;
@@ -1103,7 +993,7 @@ export default class ProfileViewer extends React.Component {
 
                        )
                            }):null}
-                       {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"education");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                       {this.state.CV.editable === "never-this-value"? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"education");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                         </div>
                     </div>
                                 )
@@ -1114,7 +1004,7 @@ export default class ProfileViewer extends React.Component {
                                   <div className="card-header" style={{position:"relative"}}>
                                     <a className="card-link" data-toggle="collapse" href="#portfolio"> Portfolio</a>
 
-                                    {this.state.CV.editable === true?
+                                    {this.state.CV.editable === "never-this-value"?
                                     <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
@@ -1125,7 +1015,7 @@ export default class ProfileViewer extends React.Component {
                                 <div className="collapse show" id="portfolio">
                                    {this.state.CV.portfolio.length > 0?this.state.CV.portfolio.map((element,i) => {
                                     return (
-                               <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {
+                               <CVcontent editable={false} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"portfolio",i,element.title,element.text)}} delete={() => {
                                 if(this._mounted){
                                     this.setState(state => {
                                         let base = state.alert;
@@ -1144,7 +1034,7 @@ export default class ProfileViewer extends React.Component {
 
                                )
                               }):null}
-                               {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"portfolio");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                               {this.state.CV.editable === "never-this-value"? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"portfolio");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                              </div>
                             </div>
                               )
@@ -1157,7 +1047,7 @@ export default class ProfileViewer extends React.Component {
                                       <div className="card-header" style={{position:"relative"}}>
                                         <a className="card-link" data-toggle="collapse" href="#expertise"> Expertise</a>
 
-                                        {this.state.CV.editable === true?
+                                        {this.state.CV.editable === "never-this-value"?
                                         <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
@@ -1168,7 +1058,7 @@ export default class ProfileViewer extends React.Component {
                                     <div className="collapse show"  id="expertise">
                                        {this.state.CV.expertise.length > 0?this.state.CV.expertise.map((element,i) => {
                                       return (
-                                      <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {
+                                      <CVcontent editable={false} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"expertise",i,element.title,element.text)}} delete={() => {
                                         if(this._mounted){
                                             this.setState(state => {
                                                 let base = state.alert;
@@ -1187,7 +1077,7 @@ export default class ProfileViewer extends React.Component {
 
                                        )
                                     }):null}
-                                   {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"expertise");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                                   {this.state.CV.editable === "never-this-value"? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"expertise");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                                   </div>
                                  </div>
                                 )
@@ -1199,7 +1089,7 @@ export default class ProfileViewer extends React.Component {
                                       <div className="card-header" style={{position:"relative"}}>
                                         <a className="card-link" data-toggle="collapse" href="#contact"> Contact</a>
 
-                                        {this.state.CV.editable === true?
+                                        {this.state.CV.editable === "never-this-value"?
                                         <div className="btn-group btns-change-order">
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("down",index)}}>keyboard_arrow_up</i></button>
                                           <button type="button" className="btn  btn-sm"><i className="material-icons align-middle" onClick={e => {this.switchPosition("up",index)}}>keyboard_arrow_down</i></button>
@@ -1210,7 +1100,7 @@ export default class ProfileViewer extends React.Component {
                                     <div className="collapse show" id="contact">
                                        {this.state.CV.contact.length > 0?this.state.CV.contact.map((element,i) => {
                                       return (
-                                        <CVcontent editable={this.state.CV.editable} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {
+                                        <CVcontent editable={false} key={i} edit={() => {this.openEditPanel("update",this.state.CV.id,"contact",i,element.title,element.text)}} delete={() => {
                                             if(this._mounted){
                                                 this.setState(state => {
                                                     let base = state.alert;
@@ -1229,7 +1119,7 @@ export default class ProfileViewer extends React.Component {
 
                                         )
                                        }):null}
-                                        {this.state.CV.editable === true? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"contact");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
+                                        {this.state.CV.editable === "never-this-value"? <button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"contact");}}><i className="material-icons align-middle">add</i> <span>Add</span></button>: null}
                                         </div>
                         
                                    </div>
@@ -1279,14 +1169,12 @@ export default class ProfileViewer extends React.Component {
                                                 })
                                             }
                                            
-                                        }} photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} name={e.name?e.name[0].title:null} description={e.description[0].description} />
+                                        }} photoURL={e.photoURL} editable={false} onClick={() => {this.openStaff(i)}} title={e.description[0].title} name={e.name?e.name[0].title:null} description={e.description[0].description} />
                                     )
                                
                             } )}
                         </div>
-                        <div className="container text-center">
-                        <AddCardElement text="Add Staff" onClick={() => {this.state.staffCreator.handleOpen(false)}}  />
-                        </div>
+                        
                     </div>
                     :null}
 
@@ -1297,7 +1185,7 @@ export default class ProfileViewer extends React.Component {
                                 
                                    
                                     return (
-                                       <InventoryCard editable={this.state.CV.editable} edit={() => {
+                                       <InventoryCard editable={false} edit={() => {
                                            if(this._mounted){
                                                this.setState(state => {
                                                    let base = state.alert;
@@ -1344,9 +1232,7 @@ export default class ProfileViewer extends React.Component {
                                 
                             } )}
                         </div>
-                        <div className="container text-center">
-                        <AddCardElement text="Add Inventory" onClick={() => {this.state.inventoryCreator.handleOpen(false)}}  />
-                        </div>
+                        
                     </div>
                     :null}
                 </div>

@@ -1,0 +1,38 @@
+.btn-custom-3 {
+    background-color:transparent !important;
+    color:#3a7bd5 !important;
+    border-color:#3a7bd5;
+}
+
+.btn-custom-3:hover {
+    background-color: #3a7bd5 !important;
+    color:white !important;
+}
+
+.btns-change-order {
+    position: absolute;
+    top:50%;
+    right:5px;
+    transform: translate(0,-50%)
+}
+
+.cv-container {
+    background-color:transparent !important;
+    color:inherit !important;
+  }
+
+.remove-caret::after { content: none !important }
+
+
+.remove-bottom-rounded {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important
+}
+
+.cards-container {
+    display:flex;
+    flex-wrap: wrap;
+    padding:15px !important;
+    justify-content: center;
+}
+

@@ -36,8 +36,8 @@ export default class CVContainer extends React.Component{
             <div className="media border p-3">
                 {this.state.user === null?<div className="spinner-border mx-3"></div>:<img src={this.state.user[0].photoURL?this.state.user[0].photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"} alt="John Doe" className="mr-3 mt-3 rounded-circle" style={{width:"60px"}} />}
                 <div className="media-body">
-                <h4 onClick={this.props.openCV} style={{cursor:"pointer"}}>{this.state.user === null?<div className="spinner-border mx-3" style={{fontWeight:"light"}}></div>:this.props.name}</h4>
-                <h5>{this.props.description !== undefined?this.props.description.title:""}</h5>
+                <h4 onClick={this.props.openUser} style={{cursor:"pointer"}}>{this.state.user === null?<div className="spinner-border mx-3" style={{fontWeight:"light"}}></div>:this.props.name}</h4>
+                <h5 onClick={this.props.openUser} style={{cursor:"pointer"}}>{this.props.description !== undefined?this.props.description.title:""}</h5>
                 <TextCollapse text={this.props.description !== undefined?this.props.description.text:""} maxWidth={200} />
 
                 {this.props.skills?

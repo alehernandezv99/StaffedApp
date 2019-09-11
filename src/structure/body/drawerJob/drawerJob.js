@@ -1,6 +1,6 @@
 import React from "react";
 import "./drawerJob.css";
-import {Classes, Drawer,Alert, Intent} from "@blueprintjs/core";
+import {Classes, Drawer,Alert, Intent, Tooltip, Position} from "@blueprintjs/core";
 import firebase from "../../../firebaseSetUp";
 import DrawerJobLoading from "../../loading/drawerJobLoading";
 import $ from "jquery";
@@ -14,7 +14,9 @@ import EditBtn from "../profile/editBtn";
 
 import { DatePicker, TimePrecision } from "@blueprintjs/datetime";
 import { isDate } from "util";
-import { throwStatement } from "@babel/types";
+
+
+
 
 
 export default class DrawerJob extends React.Component {
@@ -53,6 +55,7 @@ export default class DrawerJob extends React.Component {
                     }
                 }
             },
+            
             TODO:[],
             project:[],
             enableProposals:false,
@@ -289,6 +292,7 @@ export default class DrawerJob extends React.Component {
 
                 batch.update(firebase.firestore().collection("proposals").doc(idProposal), {status:"accepted"})
                 batch.set(firebase.firestore().collection("contracts").doc(contractID), {
+                    id:contractID,
                     projectID:idProject,
                     involved:[doc.data().user,firebase.auth().currentUser.uid ],
                     client:firebase.auth().currentUser.uid,
@@ -299,7 +303,8 @@ export default class DrawerJob extends React.Component {
                     presentation:doc.data().presentation,
                     description:project.data().description,
                     title:project.data().title,
-                    status:"In Process"
+                    status:"In Process",
+                    isOpen:true
                 })
 
                 batch.update(firebase.firestore().collection("projects").doc(idProject), {status:"In Development"})
@@ -816,6 +821,8 @@ export default class DrawerJob extends React.Component {
     componentDidMount(){
         this._mounted = true;
 
+       
+
         firebase.firestore().collection("projects").doc(this.props.id).onSnapshot(snapshot => {
             this.fetchProjectProps();
         })
@@ -912,6 +919,11 @@ export default class DrawerJob extends React.Component {
         })
     }
 
+    capitalize = (string)  =>
+    {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
     render(){
         return(
             <div style={{position:"relative"}}>
@@ -931,6 +943,11 @@ export default class DrawerJob extends React.Component {
                     <div className="col-sm-8">
                         <div className="card">
                         <div className="text-center card-header" style={{position:"relative"}}>
+                            <div className="job-status">
+                            <div>{this.capitalize(this.state.project[0].status)}
+                        
+                            </div>
+                            </div>
                         {this.state.isOwner? <EditBtn btns={
                         [
                             {
@@ -950,35 +967,20 @@ export default class DrawerJob extends React.Component {
                                         })
                                     }
                                 }
-                            },
-                            {
-                                text:"Delete",
-                                callback:() => {
-                                    if(this._mounted){
-                                        this.setState(state => {
-                                            let base = state.alert;
-                                            base.isOpen = true;
-                                            base.confirm = () => {this.closeProject()}
-                                            base.text = "Sure you want to close this project?"
-                                            base.icon = "info-sign";
-                                            base.intent = Intent.WARNING
-
-                                            return {
-                                                alert:base
-                                            }
-                                        })
-                                    }
-                                }
                             }
                         ]
                     }/>:null}
-                            <h3>{this.state.project[0].title}</h3>
+                            <h3 className="mt-4">{this.state.project[0].title}</h3>
                         </div>
                         <div className="card-body">
-                        <div className="container-fluid mt-4">
+                        <div class="tooltip">Hover over me
+  <span class="tooltiptext">Tooltip text</span>
+</div>
+                        <div className="container-fluid mt-2">
                         <h4>Description</h4>
                         <h6 className="mt-3">{this.state.project[0].description}</h6>
                         </div>
+                        <hr/>
                         <div className="container-fluid mt-4">
                         <h4>Skills</h4>
                         <div className="skills-btns">
@@ -998,22 +1000,23 @@ export default class DrawerJob extends React.Component {
                                 })
                             }
                         </div>
+                        
                         </div>
-
+                        <hr/>
                         <div className="container-fluid mt-4">
                             <h4>Specs</h4>
                             <div className="row mt-3">
-                                <div className="col-sm-4">
-                                    <div><h5><i className="material-icons align-middle">attach_money</i> Budget</h5></div>
-                                    <div><h6 className="text-left">{this.state.project[0].budget}</h6></div>
+                                <div className="col-sm-4" style={{borderRight:"1px solid lightgray"}}>
+                                    <div><h5><i className="material-icons align-middle" >attach_money</i> Budget</h5></div>
+                                    <div><h6 className="text-left px-3">{this.state.project[0].budget}</h6></div>
                                 </div>
-                                <div className="col-sm-4">
-                                <div><h5><i className="material-icons align-middle">show_chart</i> Level</h5></div>
-                                <div><h6 className="text-left">{this.state.project[0].level}</h6></div>
+                                <div className="col-sm-4" style={{borderRight:"1px solid lightgray"}}>
+                                <div><h5><i className="material-icons align-middle" >show_chart</i> Level</h5></div>
+                                <div><h6 className="text-left px-3">{this.state.project[0].level}</h6></div>
                                 </div>
                                 <div className="col-sm-4">
                                     <div><h5><i className="material-icons align-middle">library_books</i> Proposals</h5></div>
-                                    <div><h6 className="text-left">{this.state.project[0].quantity}</h6></div>
+                                    <div><h6 className="text-left px-3">{this.state.project[0].quantity}</h6></div>
                                 </div>
                             </div>
                         </div>
@@ -1037,27 +1040,27 @@ export default class DrawerJob extends React.Component {
                     
                         {
                         this.state.isSaved === true?<div className="action-btns text-center">
-                        <button onClick={() => {this.removeFromFavorites()}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">clear</i>Remove From Favorites</button>
+                        <button onClick={() => {this.removeFromFavorites()}} className="btn btn-custom-1 mr-2 mt-3 btn-sm"><i className="material-icons align-middle">clear</i>Remove From Favorites</button>
                             </div>:
                         <div className="action-btns text-center">
-                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-2 btn-sm"><i className="material-icons align-middle">favorite</i> Mark As Favorite</button>
+                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-3 btn-sm"><i className="material-icons align-middle">favorite</i> Mark As Favorite</button>
                         </div>
                         }
                         <div className="container-fluid mt-4">
                         <h4>Created By</h4>
-                            <UserBox id={this.state.project[0].author} addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} />
+                            <UserBox id={this.state.project[0].author} openUser={() => {this.props.openUser(this.state.project[0].author)}} addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} />
                         </div>
                         <div className="container-fluid mt-4">
                         <h4><i className="material-icons align-middle">assistant_photo</i> <span>Country</span></h4>
-                        <h6 className="mt-3">{this.state.project[0].country}</h6>
+                        <h6 className="mt-3 px-4">{this.state.project[0].country}</h6>
                         </div>
-                        <div className="form-group">
+                        <div className="form-group mt-4">
                             <button type="button" className="btn btn-custom-1 btn-block mt-3" onClick={this.props.openTODO}><i className="material-icons align-middle">add</i> TO-DO</button>
                         </div>
                     </div>
                 </div>
-                 <h4 className="text-center mt-2 ">Progress</h4>
-                {this.state.TODO !== undefined? <div className="progress mx-4 mt-3 "  style={{backgroundColor:"darkgray"}}>
+                 <h4 className="text-center mt-5 text-center">Progress</h4>
+                {this.state.TODO !== undefined? <div className="progress mx-4 mt-3 "  style={{border:"1px solid gray"}}>
                    
                    <div className="progress-bar" style={{width:(() => {
                        if(this.state.TODO.length > 0){
@@ -1089,7 +1092,7 @@ export default class DrawerJob extends React.Component {
                 </div>:null}
                 {this.state.project[0].author === firebase.auth().currentUser.uid?
                 <div>
-                <h4 className="text-center mt-4 mb-2">Invitations</h4>
+                <h4 className="text-center mt-5 mb-2">Invitations</h4>
 
                 <div className="input-group mb-3 mt-3 mx-auto" style={{width:"350px"}}>
                 <input type="text" className="form-control" value={this.state.inputInvitation} onChange={(e) => {
@@ -1104,7 +1107,7 @@ export default class DrawerJob extends React.Component {
               {this.state.project[0].invitations?this.state.project[0].invitations.length > 0?
                <div className="invitations-job-drawer">
                 {this.state.project[0].invitations.map((e,i) => {
-                  return ( <UserBox key={i} addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} email={e} />)
+                  return ( <UserBox openUser={this.props.openUser} key={i} addToast={this.addToast} size={"60px"} handleStates={this.props.handleStates} email={e} />)
                 })}
                 </div>
                 :null:null }
@@ -1296,7 +1299,7 @@ export default class DrawerJob extends React.Component {
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                       {this.state.contract !== ""?
-                     <ContractModule freelancer={this.state.contract.freelancer} title={this.state.contract.title} projectID={this.state.contract.idProject} status={this.state.contract.status} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
+                     <ContractModule isOpen={this.state.contract.isOpen} openUser={this.props.openUser} id={this.state.contract.id} freelancer={this.state.contract.freelancer} title={this.state.contract.title} projectID={this.state.contract.idProject} status={this.state.contract.status} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
                           null}
                     {this.state.isOwner === true && this.state.contract === ""?    
                    <div className="container-fluid">

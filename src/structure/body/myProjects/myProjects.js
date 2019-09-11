@@ -18,6 +18,7 @@ import Chat from "../chat";
 import InboxMessages from "../InboxMessages";
 import $ from "jquery";
 import ProposalsList from "../proposalsList";
+import ProfileViewer from "../profileViewer";
 
 export default class MyProjects extends React.Component {
     constructor(props){
@@ -39,6 +40,35 @@ export default class MyProjects extends React.Component {
             loadMore:false,
             searchBar:false,
             pending:false,
+            profileViewer:{
+                isOpen:false,
+                userId:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = true;
+                            base.userId = id
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = false;
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                }
+            },
             proposalsList:{
                 isOpen:false,
                 handleOpen:() => {
@@ -821,12 +851,13 @@ export default class MyProjects extends React.Component {
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast}  payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                   <div id="portalContainer" className="text-left">
-                      <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
+                  {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
+                      <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                   <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                   {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                   <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob openUser={this.state.profileViewer.handleOpen} editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                    {this.state.createProject.isOpen ? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/> : null}
                   </div>
@@ -1314,7 +1345,7 @@ export default class MyProjects extends React.Component {
                                 date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
                             }
 
-                            return <JobModule author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="my-3">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1336,7 +1367,19 @@ export default class MyProjects extends React.Component {
                          
                         </div>
                     </div>
-                    <div className="col">
+                    <div className="col text-left">
+
+                    <h4 className="text-center mt-4">Tips</h4>
+
+<h5 style={{color:"#3a7bd5"}}>Project Status</h5>
+<div className="mt-4"><span className="project-status mr-3">Hiring</span></div>
+<div className="mt-2"> The owner of the project is looking for a freelancer to hire </div>
+<div className="mt-4"><span className="project-status mr-3">In Development</span></div>
+<div className="mt-2"> The owner of the project already hired a freelancer and the project is in development</div>
+<div className="mt-4"><span className="project-status mr-3">Completed</span></div>
+<div className="mt-2"> The project has been successfully completed</div>
+<div className="mt-4"><span className="project-status mr-3">Closed</span></div>
+<div className="mt-2"> The project has been closed for some reason</div>
                     </div>
                 </div>}
            

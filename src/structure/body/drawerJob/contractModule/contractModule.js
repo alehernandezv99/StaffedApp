@@ -3,7 +3,7 @@ import "./contractModule.css";
 import firebase from "../../../../firebaseSetUp";
 import UserBox from "../../profile/userBox";
 import EditBtn from "../../profile/editBtn";
-
+import EndContractDrawer  from "../endContractDrawer";
 
 
 export default class ContractModule extends React.Component {
@@ -11,7 +11,33 @@ export default class ContractModule extends React.Component {
         super(props);
         this.state ={
             status:"",
-            owner:false
+            owner:false,
+            endContract:{
+                isOpen:false,
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base =state.endContract;
+                            base.isOpen =false
+                            return {
+                                endContract:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.endContract;
+                            base.isOpen= true;
+
+                            return {
+                                endContract:base
+                            }
+                        })
+                    }
+                }
+            },
         }
     }
 
@@ -52,21 +78,29 @@ export default class ContractModule extends React.Component {
     render(){
         return(
             <div className="container-fluid" style={{position:"relative"}}>
-                <EditBtn btns={
+                <div id="portalContainer2">
+                    {this.state.endContract.isOpen && this.props.isOpen? <EndContractDrawer projectID={this.props.projectID} addToast={this.props.addToast} isOpen={this.state.endContract.isOpen} handleClose={this.state.endContract.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
+                </div>
+                <EditBtn btns={this.props.isOpen?
                     [
                         {
                             text:"End Contract",
-                            callback:()=> {}
+                            callback:()=> {this.state.endContract.handleOpen()}
+                        }
+                    ]:[
+                        {
+                            text:"Open a Dispute",
+                            callback:() => {}
                         }
                     ]
                 }/>
             <div className="form-group">
                 <h4>Client</h4>
-                <UserBox id={this.props.client} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
+                <UserBox id={this.props.client} openUser={this.props.openUser} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
             </div>
             <div className="form-group mt-3">
                 <h4>Freelancer</h4>
-               <UserBox id={this.props.freelancer} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
+               <UserBox id={this.props.freelancer} openUser={this.props.openUser} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
             </div>
             <div className="container-fluid">
                 <div className="card">

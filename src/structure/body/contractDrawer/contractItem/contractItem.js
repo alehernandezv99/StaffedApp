@@ -14,11 +14,11 @@ export default class ContractItem extends React.Component {
             <div className="row text-center">
                 <div className="col-xs-6 text-center">
                     <h5>Client</h5>
-                    <UserBox  id={this.props.client} handleStates={this.props.handleStates} addToast={this.props.addToast} size={"60px"} />
+                    <UserBox openUser={this.props.openUser} id={this.props.client} handleStates={this.props.handleStates} addToast={this.props.addToast} size={"60px"} />
                 </div>
                 <div className="col-xs-6 text-center">
                     <h5>Freelancer</h5>
-                    <UserBox id={this.props.freelancer} handleStates={this.props.handleStates} addToast={this.props.addToast} size={"60px"} />
+                    <UserBox openUser={this.props.openUser} id={this.props.freelancer} handleStates={this.props.handleStates} addToast={this.props.addToast} size={"60px"} />
                 </div>
             </div>
 

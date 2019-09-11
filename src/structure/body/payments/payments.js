@@ -18,6 +18,7 @@ import TODO from "../drawerJob/TO-DO";
 import Chat from "../chat";
 import ContractDrawer from "../contractDrawer";
 import ProposalsList from "../proposalsList";
+import ProfileViewer from "../profileViewer";
 
 
 export default class Payments extends React.Component {
@@ -32,6 +33,35 @@ export default class Payments extends React.Component {
             lastSeem:{},
             chat:{
                 payload:null
+            },
+            profileViewer:{
+                isOpen:false,
+                userId:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = true;
+                            base.userId = id
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = false;
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                }
             },
             proposalsList:{
                 isOpen:false,
@@ -706,19 +736,20 @@ export default class Payments extends React.Component {
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                     <div id="portalContainer">
-                    <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
+                    {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
+                    <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                     {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                     <TransactionDrawer isOpen={this.state.transactionDrawer.isOpen} handleClose={() => {this.state.transactionDrawer.handleClose()}} />
                     <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                        {this.state.balance !== null? <WithdrawModule fetchBalance={this.fetchBalance} addToast={this.addToast} balance={this.state.balance} isOpen={this.state.withdraw.isOpen} handleClose={this.state.withdraw.handleClose}/>:null}
                        {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob openUser={this.state.profileViewer.handleOpen} editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     {this.state.createProject.isOpen? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/> :null}
                     </div>
                     <div className="row">
                         <div className="col-sm-4">
-                            <UserBox size={"80px"} handleStates={this.props.handleStates} id={this.state.user[0].uid} />
+                            <UserBox size={"80px"} openUser={this.state.profileViewer.handleOpen} handleStates={this.props.handleStates} id={this.state.user[0].uid} />
                         </div>
                         <div className="col text-center">
                         <div className="card text-center my-3 mx-4">

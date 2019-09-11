@@ -27,6 +27,7 @@ import EditBtn from "./editBtn";
 import ContractDrawer from "../contractDrawer";
 import InventoryCreator from "./inventoryCreator";
 import InventoryCard from "./inventoryCard";
+import ProfileViewer from "../profileViewer";
 
 import Chat from "../chat";
 import ProposalsList from "../proposalsList";
@@ -66,6 +67,36 @@ export default class Profile extends React.Component {
 
                             return {
                                 alert:base
+                            }
+                        })
+                    }
+                }
+            },
+
+            profileViewer:{
+                isOpen:false,
+                userId:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = true;
+                            base.userId = id
+
+                            return {
+                                profileViewer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.profileViewer;
+                            base.isOpen = false;
+
+                            return {
+                                profileViewer:base
                             }
                         })
                     }
@@ -1305,15 +1336,16 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
+               {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                    {this.state.inventoryCreator.isOpen ? <InventoryCreator id={this.state.inventoryCreator.id} index={this.state.inventoryCreator.index} refresh={this.searchMachines_n_vehicles} addToast={this.addToast} isOpen={this.state.inventoryCreator.isOpen} handleClose={this.state.inventoryCreator.handleClose} mode={this.state.inventoryCreator.mode} />:null}
-               <ContractDrawer openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
+               <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                 {((this.state.companyCV !== null) &&(this.props.userId === firebase.auth().currentUser.uid) && (this.state.staffCreator.isOpen))?<StaffCreator refresh={this.searchCompanyCV} update={this.state.staffCreator.update} index={this.state.staffCreator.index} addToast={this.addToast} toggleLoading={this.toggleLoading} isOpen={this.state.staffCreator.isOpen} handleClose={this.state.staffCreator.handleClose} />:null}
                 {(this.state.companyCV !== null) && (this.state.staffViewer.data !== null)?<StaffViewer isOpen={this.state.staffViewer.isOpen} data={this.state.staffViewer.data} handleClose={this.state.staffViewer.handleClose} addToast={this.addToast} />:null}
                <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob openUser={this.state.profileViewer.handleOpen} editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                     {this.state.createProject.isOpen? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} isOpen={this.state.createProject.isOpen} handleClose={this.state.createProject.handleClose}/> :null}
 

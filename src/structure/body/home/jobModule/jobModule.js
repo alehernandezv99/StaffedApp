@@ -51,14 +51,21 @@ export default class JobModule extends React.Component {
                 cb();
             })
         })
+
+        
     }
+
+     capitalize = (string)  =>
+{
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
     render(){
         return(
             <div className="job-module text-center mt-3" style={{position:"relative",paddingTop:"10px"}}>
                 <div className="job-status">
                 
-                    <div>{this.props.status}</div>
+                    <div>{this.capitalize(this.props.status)}</div>
                     
                 </div>
                 <div className="container mt-5">

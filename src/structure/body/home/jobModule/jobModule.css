@@ -35,8 +35,8 @@
 
 .job-status {
     position: absolute;
-    top:0;
-    left: 0;
+    top:0 !important; 
+    left: 0 !important;
     background-color:#3a7bd5;
     color:white;
     width: 150px;

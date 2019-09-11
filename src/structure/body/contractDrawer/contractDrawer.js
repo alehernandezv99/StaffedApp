@@ -95,7 +95,7 @@ export default class ContractDrawer extends React.Component {
                    <div className={`${Classes.DIALOG_BODY}`}>
                        {this.state.contracts.length > 0? this.state.contracts.map((e,i) => {
                            return (
-                               <ContractItem key={i} client={e.client} freelancer={e.freelancer} title={e.title} description={e.description} price={e.price} handleStates={this.props.handleStates} onClick={() => {this.props.openContract("view contract", e.projectID)}} addToast={this.props.addToast} />
+                               <ContractItem openUser={this.props.openUser} key={i} client={e.client} freelancer={e.freelancer} title={e.title} description={e.description} price={e.price} handleStates={this.props.handleStates} onClick={() => {this.props.openContract("view contract", e.projectID)}} addToast={this.props.addToast} />
                            )
                        }):this.state.size !== null?<div className="m-2">No contracts</div>:<div className="spinner-border"></div>}
                    </div>

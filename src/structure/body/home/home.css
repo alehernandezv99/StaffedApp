@@ -48,4 +48,12 @@
     padding:2px !important;
 }
 
+.project-status {
+    background-color:#3a7bd5;
+    padding: 4px;
+    border-radius:4px;
+    color:white !important;
+    font-weight: 500;
+}
+
 
