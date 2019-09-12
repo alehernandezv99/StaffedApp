@@ -28,6 +28,7 @@ import ContractDrawer from "../contractDrawer";
 import InventoryCreator from "./inventoryCreator";
 import InventoryCard from "./inventoryCard";
 import ProfileViewer from "../profileViewer";
+import HelpDrawer from "../helpDrawer";
 
 import Chat from "../chat";
 import ProposalsList from "../proposalsList";
@@ -44,6 +45,34 @@ export default class Profile extends React.Component {
 
         this.state = {
             inputInvitation:"",
+            feedback:null,
+            helpDrawer:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.helpDrawer;
+                            base.isOpen = true;
+
+                            return {
+                                helpDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.helpDrawer;
+                            base.isOpen = false;
+
+                            return {
+                                helpDrawer:base
+                            }
+                        })
+                    }
+                }
+            },
             alert:{
                 isOpen:false,
                 text:"",
@@ -759,7 +788,9 @@ export default class Profile extends React.Component {
         firebase.firestore().collection("users").doc(this.props.userId).get()
         .then(async doc => {
            await this.setState({user:doc.data()});
-
+           
+               this.calculateFeedback();
+           
             firebase.firestore().collection("CVs").where("uid","==",this.props.userId).where("type","==","personal").get()
         .then(snapshot => {
             if(snapshot.empty){
@@ -1352,6 +1383,44 @@ export default class Profile extends React.Component {
         })
     }
 
+    calculateFeedback = () => {
+        this.toggleLoading();
+
+        firebase.firestore().collection("users").doc(this.props.userId).collection("reviews").get()
+        .then(reviews => {
+            this.toggleLoading();
+            if(!reviews.empty){
+                let acum1 = 0;
+                let j = 0
+                reviews.forEach(doc => {
+                    j++
+                    let review = doc.data()
+                    let index = 0
+                    let acum = 0
+                    Object.keys(review).forEach(key => {
+                        if(key !== "message"){
+                            index++;
+                            acum += review[key];
+                        }
+                    })
+
+                    acum1 += acum/index
+                })
+
+                let average = acum1/j
+
+                if(this._mounted){
+                    this.setState({
+                        feedback:Number(Number((average/5)*100).toFixed(2))
+                    })
+                }
+            }
+        })
+        .catch(e => {
+            this.toggleLoading();
+        })
+    }
+
     render() {
         return(
             
@@ -1494,6 +1563,12 @@ export default class Profile extends React.Component {
                                 },
                                 {
                                     href:"",
+                                    text:"Help",
+                                    key:3,
+                                    onClick:() => {this.state.helpDrawer.handleOpen()}
+                                },
+                                {
+                                    href:"",
                                     text:"Logout",
                                     onClick:()=> {firebase.auth().signOut()},
                                     key:2
@@ -1504,6 +1579,8 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
+               <HelpDrawer isOpen={this.state.helpDrawer.isOpen} handleClose={this.state.helpDrawer.handleClose} />
+               {this.state.invitationDrawer.isOpen? <InvitationDrawer addToast={this.addToast} openUser={this.state.profileViewer.handleOpen} id={this.state.invitationDrawer.id} isOpen={this.state.invitationDrawer.isOpen} handleClose={this.state.invitationDrawer.handleClose} />:null}
                {this.state.profileViewer.isOpen === true? <ProfileViewer openUser={this.state.profileViewer.handleOpen} userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                    {this.state.inventoryCreator.isOpen ? <InventoryCreator id={this.state.inventoryCreator.id} index={this.state.inventoryCreator.index} refresh={this.searchMachines_n_vehicles} addToast={this.addToast} isOpen={this.state.inventoryCreator.isOpen} handleClose={this.state.inventoryCreator.handleClose} mode={this.state.inventoryCreator.mode} />:null}
@@ -1585,7 +1662,39 @@ export default class Profile extends React.Component {
                             :this.state.CV.editable === true?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
 
 
-                            
+<div class="custom-control custom-checkbox mt-4 text-center">
+    <input type="checkbox" class="custom-control-input" checked={this.state.user.publicFeedback !== null?this.state.user.publicFeedback:true} onChange={(e) => {
+        if(this.state.user.publicFeedback === true){
+        firebase.firestore().collection("users").doc(this.state.user.uid).update({
+        publicFeedback:false
+    })
+    .then(() => {
+        this.loadCv()
+    })
+}else {
+    firebase.firestore().collection("users").doc(this.state.user.uid).update({
+        publicFeedback:true
+    })
+    .then(() => {
+        this.loadCv()
+    })
+}
+    }} id="customCheck" name="example1"/>
+    <label class="custom-control-label" for="customCheck">Public Feedback?</label>
+    
+       {this.state.user.publicFeedback !== null?this.state.feedback !== null? <div className="mt-2 text-center" style={{width:"300px", marginLeft:"50%",transform:"translate(-50%,0)"}}>
+        <div className="mt-3">
+            <h5 className="text-center mb-3">Rating</h5>
+        <div className="progress" >
+        <div className="progress-bar" style={{width:`${this.state.feedback}%`}}>{this.state.feedback?`${Number(Number(5*((this.state.feedback)/100)).toFixed(2))} / 5`:null}</div>
+     </div>
+     </div>
+       </div>:null:(() => {firebase.firestore().collection("users").doc(this.state.user.uid).update({
+           publicFeedback:true,
+       });
+       
+       })()}
+  </div>
                 </div>
 
                 <ul className="nav nav-tabs mt-3">

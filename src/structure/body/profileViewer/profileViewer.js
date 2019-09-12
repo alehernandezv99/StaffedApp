@@ -521,7 +521,9 @@ export default class ProfileViewer extends React.Component {
         firebase.firestore().collection("users").doc(this.props.userId).get()
         .then(async doc => {
            await this.setState({user:doc.data()});
-
+           if(doc.data().publicFeedback === true){
+            this.calculateFeedback();
+           }
             firebase.firestore().collection("CVs").where("uid","==",this.props.userId).where("type","==","personal").get()
         .then(snapshot => {
             if(snapshot.empty){
@@ -788,6 +790,43 @@ export default class ProfileViewer extends React.Component {
       
     }
 
+    calculateFeedback = () => {
+      
+        firebase.firestore().collection("users").doc(this.props.userId).collection("reviews").get()
+        .then(reviews => {
+      
+            if(!reviews.empty){
+                let acum1 = 0;
+                let j = 0
+                reviews.forEach(doc => {
+                    j++
+                    let review = doc.data()
+                    let index = 0
+                    let acum = 0
+                    Object.keys(review).forEach(key => {
+                        if(key !== "message"){
+                            index++;
+                            acum += review[key];
+                        }
+                    })
+
+                    acum1 += acum/index
+                })
+
+                let average = acum1/j
+
+                if(this._mounted){
+                    this.setState({
+                        feedback:Number(Number((average/5)*100).toFixed(2))
+                    })
+                }
+            }
+        })
+        .catch(e => {
+         
+        })
+    }
+
     
 
     render() {
@@ -846,7 +885,22 @@ export default class ProfileViewer extends React.Component {
                             </div>
                             :this.state.CV.editable === "never-this-value"?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
 
-
+<div class=" mt-4 text-center">
+   
+    
+       {this.state.user.publicFeedback !== null?this.state.user.publicFeedback === true? <div className="mt-2 text-center" style={{width:"300px", marginLeft:"50%",transform:"translate(-50%,0)"}}>
+        <div className="mt-3">
+        <h5 className="text-center mb-3">Rating</h5>
+        <div className="progress mt-4" >
+        <div className="progress-bar" style={{width:`${this.state.feedback}%`}}>{this.state.feedback?`${Number(Number(5*((this.state.feedback)/100)).toFixed(2))} / 5`:null}</div>
+     </div>
+     </div>
+       </div>:null:(() => {firebase.firestore().collection("users").doc(this.state.user.uid).update({
+           publicFeedback:true,
+       });
+       
+       })()}
+  </div>
                             
                 </div>
 

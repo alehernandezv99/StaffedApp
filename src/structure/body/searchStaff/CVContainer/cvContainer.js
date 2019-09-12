@@ -56,7 +56,15 @@ export default class CVContainer extends React.Component{
         return(<div className="mt-3 CV-container" >
           
             <div className="media border p-3">
-                {this.state.user === null?<div className="spinner-border mx-3"></div>:<img src={this.state.user[0].photoURL?this.state.user[0].photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"} alt="John Doe" className="mr-3 mt-3 rounded-circle" style={{width:"60px"}} />}
+                {this.state.user === null?<div className="spinner-border mx-3"></div>:<div style={{backgroundImage:`url(${this.state.user[0].photoURL?this.state.user[0].photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"50px",
+                                    height:"50px",
+                                    marginRight:"20px"
+                        
+                                }} className="rounded-circle" ></div>}
                 <div className="media-body">
                 <h4 onClick={this.props.openUser} style={{cursor:"pointer"}}>{this.state.user === null?<div className="spinner-border mx-3" style={{fontWeight:"light"}}></div>:this.props.name}</h4>
                 <h5 onClick={this.props.openUser} style={{cursor:"pointer"}}>{this.props.description !== undefined?this.props.description.title:""}</h5>
@@ -113,7 +121,14 @@ export default class CVContainer extends React.Component{
             {this.props.type === "machines&vehicles"?this.props.inventory.length > 0? this.props.inventory.map((e,i) => {
                 if(i <= 1){
                  return(   <div className="media p-3" key={i}>
-                        <img src={e.photoURL?e.photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"} className="mr-3 mt-3" style={{width:"45px"}}/>
+                        <div style={{backgroundImage:`url(${e.photoURL?e.photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"50px",
+                                    height:"50px",
+                                    marginRight:"20px"
+                                }} className="rounded-circle" ></div>
                           <div className="media-body">
                            <h4>{e.name}</h4>
                            <TextCollapse text={e.description} maxWidth={150} />
@@ -134,7 +149,15 @@ export default class CVContainer extends React.Component{
                         if(i > 1){
                             return(
                         <div className="media p-3" key={i}>
-                        <img src={e.photoURL?e.photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"} className="mr-3 mt-3" style={{width:"45px"}}/>
+                       <div style={{backgroundImage:`url(${e.photoURL?e.photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"50px",
+                                    height:"50px",
+                                    marginRight:"20px"
+                       
+                                }} className="rounded-circle" ></div>
                           <div className="media-body">
                            <h4>{e.name}</h4>
                            <TextCollapse text={e.description} maxWidth={150} />

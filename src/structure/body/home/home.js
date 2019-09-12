@@ -18,6 +18,7 @@ import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
 import InboxMessages from "../InboxMessages";
 import ProposalsList from "../proposalsList";
 import ProfileViewer from "../profileViewer";
+import HelpDrawer from "../helpDrawer";
 
 import InvitationDrawer from "../invitationDrawer";
 
@@ -63,6 +64,33 @@ export default class Home extends React.Component {
                 min:6,
                 max:12,
                 value:15
+            },
+            helpDrawer:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.helpDrawer;
+                            base.isOpen = true;
+
+                            return {
+                                helpDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.helpDrawer;
+                            base.isOpen = false;
+
+                            return {
+                                helpDrawer:base
+                            }
+                        })
+                    }
+                }
             },
             invitationDrawer:{
                 isOpen:false,
@@ -1178,6 +1206,12 @@ export default class Home extends React.Component {
                                 },
                                 {
                                     href:"",
+                                    text:"Help",
+                                    key:3,
+                                    onClick:() => {this.state.helpDrawer.handleOpen()}
+                                },
+                                {
+                                    href:"",
                                     text:"Logout",
                                     onClick:()=> {firebase.auth().signOut()},
                                     key:2
@@ -1342,6 +1376,7 @@ export default class Home extends React.Component {
                     <Chat addToast={this.addToast} payload={this.state.chat.payload} handleStates={this.props.handleStates} resetPayload={this.resetPayload}/>
                        </div>
                  <div id="portalContainer" className="text-left">
+                     <HelpDrawer isOpen={this.state.helpDrawer.isOpen} handleClose={this.state.helpDrawer.handleClose} />
                      {this.state.invitationDrawer.isOpen? <InvitationDrawer addToast={this.addToast} openUser={this.state.profileViewer.handleOpen} id={this.state.invitationDrawer.id} isOpen={this.state.invitationDrawer.isOpen} handleClose={this.state.invitationDrawer.handleClose} />:null}
                      {this.state.profileViewer.isOpen === true? <ProfileViewer openUser={this.state.profileViewer.handleOpen} userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                   {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
@@ -1450,17 +1485,7 @@ export default class Home extends React.Component {
                             }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                         </div>
                         <div className="col-sm-4 text-left">
-                            <h4 className="text-center">Tips</h4>
-
-                            <h5 style={{color:"#3a7bd5"}}>Project Status</h5>
-                            <div className="mt-4"><span className="project-status mr-3">Hiring</span></div>
-                            <div className="mt-2"> The owner of the project is looking for a freelancer to hire </div>
-                            <div className="mt-4"><span className="project-status mr-3">In Development</span></div>
-                            <div className="mt-2"> The owner of the project already hired a freelancer and the project is in development</div>
-                            <div className="mt-4"><span className="project-status mr-3">Completed</span></div>
-                            <div className="mt-2"> The project has been successfully completed</div>
-                            <div className="mt-4"><span className="project-status mr-3">Closed</span></div>
-                            <div className="mt-2"> The project has been closed for some reason</div>
+                          
                         </div>
                     </div>
                     </div>

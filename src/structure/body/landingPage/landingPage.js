@@ -217,7 +217,7 @@ export default class LandingPage extends React.Component {
                   activeCandidancies:[],
                   cards:40,
                   country:this.state.signUpData.country,
-                  isOnline:true
+                  isOnline:true,
               }
               
 

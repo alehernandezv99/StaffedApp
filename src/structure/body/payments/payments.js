@@ -19,7 +19,7 @@ import Chat from "../chat";
 import ContractDrawer from "../contractDrawer";
 import ProposalsList from "../proposalsList";
 import ProfileViewer from "../profileViewer";
-
+import HelpDrawer from "../helpDrawer";
 import InvitationDrawer from "../invitationDrawer";
 
 
@@ -35,6 +35,33 @@ export default class Payments extends React.Component {
             lastSeem:{},
             chat:{
                 payload:null
+            },
+            helpDrawer:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.helpDrawer;
+                            base.isOpen = true;
+
+                            return {
+                                helpDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.helpDrawer;
+                            base.isOpen = false;
+
+                            return {
+                                helpDrawer:base
+                            }
+                        })
+                    }
+                }
             },
             invitationDrawer:{
                 isOpen:false,
@@ -752,6 +779,12 @@ export default class Payments extends React.Component {
                                 },
                                 {
                                     href:"",
+                                    text:"Help",
+                                    key:3,
+                                    onClick:() => {this.state.helpDrawer.handleOpen()}
+                                },
+                                {
+                                    href:"",
                                     text:"Logout",
                                     onClick:()=> {firebase.auth().signOut()},
                                     key:2
@@ -768,6 +801,8 @@ export default class Payments extends React.Component {
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                     <div id="portalContainer">
+                    {this.state.invitationDrawer.isOpen? <InvitationDrawer addToast={this.addToast} openUser={this.state.profileViewer.handleOpen} id={this.state.invitationDrawer.id} isOpen={this.state.invitationDrawer.isOpen} handleClose={this.state.invitationDrawer.handleClose} />:null}
+                    <HelpDrawer isOpen={this.state.helpDrawer.isOpen} handleClose={this.state.helpDrawer.handleClose} />
                     {this.state.profileViewer.isOpen === true? <ProfileViewer openUser={this.state.profileViewer.handleOpen} userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                     <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                     {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
