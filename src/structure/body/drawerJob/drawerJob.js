@@ -1162,7 +1162,7 @@ export default class DrawerJob extends React.Component {
                         <DatePicker
                         className="pr-2"
                               minDate={new Date()}
-                              maxDate={new Date(new Date().setMonth(new Date().getMonth()+20))}
+                              maxDate={new Date(2030,1,1)}
                         
                              onChange={(newDate) => this.setValue("proposal","deadline",newDate,)}
                              value={this.state.proposal.deadline.value}
@@ -1249,7 +1249,7 @@ export default class DrawerJob extends React.Component {
                         <div className="text-left">
                         <DatePicker
                               minDate={this.state.proposalFetched.created.value}
-                              maxDate={new Date(new Date().setMonth(new Date().getMonth()+20))}
+                              maxDate={new Date(2030,1,1)}
                           
                              onChange={async(newDate) => { await this.setValue("proposalFetched","deadline",newDate,); this.checkChange(newDate, this.state.proposalFetched, true)}}
                              value={this.state.proposalFetched.deadline.value}

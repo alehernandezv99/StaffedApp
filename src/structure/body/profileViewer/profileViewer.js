@@ -19,6 +19,7 @@ import checkCriteria from "../../../utils/checkCriteria";
 import EditBtn from "../profile/editBtn";
 
 import InventoryCard from "../profile/inventoryCard";
+import UserBox from "../profile/userBox";
 
 
 export default class ProfileViewer extends React.Component {
@@ -707,6 +708,7 @@ export default class ProfileViewer extends React.Component {
                         companyCV:cv.data()
                     })
                 })
+                this.getCompanyStaff();
             }else {
                 this.setState({
                     companyCV:0
@@ -756,7 +758,35 @@ export default class ProfileViewer extends React.Component {
         }
     }
 
-   
+    getCompanyStaff = () => {
+        firebase.firestore().collection("invitations").where("from","==",this.props.userId).where("type","==","Company Staff").where("status","==","accepted").get().then(snap => {
+            let staff = [];
+
+            snap.forEach(doc => {
+                staff.push({
+                    user:doc.data().to,
+                    status:doc.data().status,
+                    id:doc.data().id
+                })
+            })
+
+            if(this._mounted){
+                this.setState(state => {
+                    let base = state.companyCV;
+                    base.staff = staff;
+
+                    return {
+                        companyCV:base
+                    }
+                })
+            }
+        })
+        .catch(e => {
+            console.log(e);
+        })
+        
+      
+    }
 
     
 
@@ -1133,46 +1163,18 @@ export default class ProfileViewer extends React.Component {
                     {(this.state.companyCV !== null) && (this.state.companyCV !== 0)?
                     <div className="tab-pane container cv-container fade" id="menu1">
                         <div className="cards-container">
-                            {this.state.companyCV.staff.map((e,i) => {
+                        {this.state.companyCV.staff.map((e,i) => {
                                 
-                                    return (
-                                       <StaffCard key={i} edit={() => {
-                                           if(this._mounted){
-                                               this.setState(state => {
-                                                let base = state.alert;
-                                                base.text  ="Sure you want to edit this item?";
-                                                base.isOpen = true;
-                                                base.icon ="info-sign";
-                                                base.intent = Intent.WARNING
-                                                base.confirm = () => {
-                                                    this.editStaff(i)
-                                                }
-                                                return {
-                                                    alert:base
-                                                }
-                                               })
-                                           }
-                                           
-                                        }} skills={e.skills} delete = {() => {
-                                            if(this._mounted){
-                                                this.setState(state => {
-                                                    let base = state.alert;
-                                                    base.text = "Sure you want to delete this item?";
-                                                    base.isOpen = true;
-                                                    base.icon = "trash";
-                                                    base.intent = Intent.DANGER;
-                                                    base.confirm = () => { this.removeStaff(i)}
- 
-                                                    return {
-                                                        alert:base
-                                                    }
-                                                })
-                                            }
-                                           
-                                        }} photoURL={e.photoURL} editable={false} onClick={() => {this.openStaff(i)}} title={e.description[0].title} name={e.name?e.name[0].title:null} description={e.description[0].description} />
-                                    )
-                               
-                            } )}
+                                return (
+                                   <div >
+                                    <div >
+                                      <UserBox margin={"m-2"} key={i} id={e.user} openUser={this.props.openUser} size={"50px"} addToast={this.addToast}/>
+                                   </div>
+                                   
+                                   </div>
+                                )
+                           
+                        } )}
                         </div>
                         
                     </div>

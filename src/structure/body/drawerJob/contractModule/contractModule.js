@@ -110,11 +110,13 @@ export default class ContractModule extends React.Component {
                             <h4>Description</h4>
                             <h6>{this.props.description}</h6>
                         </div>
-                        <div className="form-group">
+                        <hr />
+                        <div className="form-group mt-2">
                             <h4>Price</h4>
                             <h6>{this.props.price}$</h6>
                         </div>
-                        <div className="form-group">
+                        <hr />
+                        <div className="form-group mt-2">
                             <h4>Deadline</h4>
                             <h6>{this.props.deadline.toDate().toDateString()}</h6>
                         </div>
@@ -131,7 +133,7 @@ export default class ContractModule extends React.Component {
                     :null}
                     {this.state.status === "billed"?<div className="m-3"><i className="material-icons align-middle">done</i> <span>Payment Complete</span></div>:null}
                     <div className="card-footer">
-                        <button type="button" className="btn btn-custom-1 mt-3" onClick={this.props.openProposal}>View Proposal</button>
+                        <button type="button" className="btn btn-custom-1 mt-1" onClick={this.props.openProposal}>View Proposal</button>
                     </div>
                 </div>
             </div>

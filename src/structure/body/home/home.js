@@ -19,11 +19,13 @@ import InboxMessages from "../InboxMessages";
 import ProposalsList from "../proposalsList";
 import ProfileViewer from "../profileViewer";
 
+import InvitationDrawer from "../invitationDrawer";
+
 //Chat 
 import Chat from "../chat";
 
 import "./home.css";
-import { stat } from "fs";
+
 
 
 
@@ -61,6 +63,34 @@ export default class Home extends React.Component {
                 min:6,
                 max:12,
                 value:15
+            },
+            invitationDrawer:{
+                isOpen:false,
+                id:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.invitationDrawer;
+                            base.isOpen =true;
+                             base.id = id
+                            return {
+                                invitationDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.invitationDrawer;
+                            base.isOpen = false;
+
+                            return{
+                                invitationDrawer:base
+                            }
+                        })
+                    }
+                }
             },
             inbox:{
                 count:0,
@@ -363,6 +393,8 @@ export default class Home extends React.Component {
             })
         }else if(action.type === "see more"){
             this.state.inboxDrawer.handleOpen()
+        }else if (action.type === "Invitation"){
+            this.state.invitationDrawer.handleOpen(action.id)
         }
     }
     }
@@ -1310,7 +1342,8 @@ export default class Home extends React.Component {
                     <Chat addToast={this.addToast} payload={this.state.chat.payload} handleStates={this.props.handleStates} resetPayload={this.resetPayload}/>
                        </div>
                  <div id="portalContainer" className="text-left">
-                     {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
+                     {this.state.invitationDrawer.isOpen? <InvitationDrawer addToast={this.addToast} openUser={this.state.profileViewer.handleOpen} id={this.state.invitationDrawer.id} isOpen={this.state.invitationDrawer.isOpen} handleClose={this.state.invitationDrawer.handleClose} />:null}
+                     {this.state.profileViewer.isOpen === true? <ProfileViewer openUser={this.state.profileViewer.handleOpen} userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                   {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                      <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}

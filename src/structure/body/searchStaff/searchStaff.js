@@ -22,6 +22,8 @@ import MVviewer from "./m_n_v_viewer";
 import ProposalsList from "../proposalsList";
 import ProfileViewer from "../profileViewer";
 
+import InvitationDrawer from "../invitationDrawer";
+
 
 
 
@@ -41,6 +43,34 @@ export default class SearchStaff extends React.Component {
             lastSeem:{},
             chat:{
                 payload:null
+            },
+            invitationDrawer:{
+                isOpen:false,
+                id:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.invitationDrawer;
+                            base.isOpen =true;
+                             base.id = id
+                            return {
+                                invitationDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.invitationDrawer;
+                            base.isOpen = false;
+
+                            return{
+                                invitationDrawer:base
+                            }
+                        })
+                    }
+                }
             },
             profileViewer:{
                 isOpen:false,
@@ -369,6 +399,8 @@ export default class SearchStaff extends React.Component {
             })
         }else if(action.type === "see more"){
             this.state.inboxDrawer.handleOpen()
+        }else if (action.type === "Invitation"){
+            this.state.invitationDrawer.handleOpen(action.id)
         }
     }
     }
@@ -1112,7 +1144,7 @@ export default class SearchStaff extends React.Component {
                     <Chat handleStates={this.props.handleStates} addToast={this.addToast} payload={this.state.chat.payload} resetPayload={this.resetPayload} addToast={this.addToast} />
                        </div>
                    <div id="portalContainer" className="text-left">
-                   {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
+                   {this.state.profileViewer.isOpen === true? <ProfileViewer openUser={this.state.profileViewer.handleOpen} userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                    {this.state.MVviewer.isOpen === true? <MVviewer isOpen={this.state.MVviewer.isOpen} handleClose={this.state.MVviewer.handleClose} name={this.state.MVviewer.data.name} description={this.state.MVviewer.data.description} photoURL={this.state.MVviewer.data.photoURL} />:null}
                    <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
                    {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}

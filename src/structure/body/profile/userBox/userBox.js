@@ -70,7 +70,7 @@ export default class UserBox extends React.Component{
 
     render(){
         return(
-            <div className="m-4"  onClick={(e) => {e.preventDefault(); this.props.openUser(this.state.user.uid)}}>
+            <div className={this.props.margin?this.props.margin:"m-4"}  onClick={(e) => {e.preventDefault(); this.props.openUser(this.state.user.uid)}}>
                 {this.state.user === null?<div className="spinner-border"></div>:
             <div className="user-box">
                 <div style={{

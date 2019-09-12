@@ -31,6 +31,9 @@ import ProfileViewer from "../profileViewer";
 
 import Chat from "../chat";
 import ProposalsList from "../proposalsList";
+import UserBox from "./userBox";
+
+import InvitationDrawer from "../invitationDrawer";
 
 export default class Profile extends React.Component {
     constructor(props){
@@ -40,6 +43,7 @@ export default class Profile extends React.Component {
         this.checkCriteria = checkCriteria;
 
         this.state = {
+            inputInvitation:"",
             alert:{
                 isOpen:false,
                 text:"",
@@ -73,6 +77,34 @@ export default class Profile extends React.Component {
                 }
             },
 
+            invitationDrawer:{
+                isOpen:false,
+                id:"",
+                handleOpen:(id) => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.invitationDrawer;
+                            base.isOpen =true;
+                             base.id = id
+                            return {
+                                invitationDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.invitationDrawer;
+                            base.isOpen = false;
+
+                            return{
+                                invitationDrawer:base
+                            }
+                        })
+                    }
+                }
+            },
             profileViewer:{
                 isOpen:false,
                 userId:"",
@@ -567,6 +599,8 @@ export default class Profile extends React.Component {
             })
         }else if(action.type === "see more"){
             this.state.inboxDrawer.handleOpen()
+        }else if (action.type === "Invitation"){
+            this.state.invitationDrawer.handleOpen(action.id)
         }
     }
     }
@@ -1054,6 +1088,7 @@ export default class Profile extends React.Component {
                         companyCV:cv.data()
                     })
                 })
+                this.getCompanyStaff();
             }else {
                 this.setState({
                     companyCV:0
@@ -1181,6 +1216,139 @@ export default class Profile extends React.Component {
         .catch(e => {
             this.addToast("Ohoh something went wrong!")
             
+        })
+    }
+
+    getCompanyStaff = () => {
+        firebase.firestore().collection("invitations").where("from","==",firebase.auth().currentUser.uid).where("type","==","Company Staff").onSnapshot(snap => {
+            let staff = [];
+
+            snap.forEach(doc => {
+                staff.push({
+                    user:doc.data().to,
+                    status:doc.data().status,
+                    id:doc.data().id
+                })
+            })
+
+            if(this._mounted){
+                this.setState(state => {
+                    let base = state.companyCV;
+                    base.staff = staff;
+
+                    return {
+                        companyCV:base
+                    }
+                })
+            }
+        })
+      
+    }
+
+    inviteEmail = () => {
+        this.toggleLoading();
+        if(this.state.inputInvitation !== firebase.auth().currentUser.email){
+        firebase.firestore().collection("users").where("email","==",this.state.inputInvitation).get()
+        .then(snap => {
+            if(!snap.empty){
+
+                let id = ""
+
+                snap.forEach(doc => {
+                    id = doc.id
+                })
+
+                firebase.firestore().collection("invitations").where("from","==",firebase.auth().currentUser.uid).where("to","==",id).where("type","==","Company Staff").get()
+                .then(snap2 => {
+
+                    if(snap2.empty){
+                    snap.forEach(doc => {
+                        let batch = firebase.firestore().batch();
+                        let invitationID = firebase.firestore().collection("invitations").doc().id
+                        batch.set(firebase.firestore().collection("invitations").doc(invitationID), {
+                            id:invitationID,
+                            from:firebase.auth().currentUser.uid,
+                            to:doc.id,
+                            created:firebase.firestore.Timestamp.now(),
+                            type:"Company Staff",
+                            status:"pending"
+                        })
+                        let inboxID = firebase.firestore().collection("users").doc(doc.id).collection("inbox").doc().id
+                        batch.set(firebase.firestore().collection("users").doc(doc.id).collection("inbox").doc(inboxID), {
+                            state:"unread",
+                            action:{
+                                id:invitationID,
+                                type:"Invitation"
+                            },
+                            message:`The user ${firebase.auth().currentUser.email} invited you to become part of his company staff`,
+                            sent:firebase.firestore.Timestamp.now(),
+                            id:inboxID
+                        })
+                        let inboxID2 = firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).collection("inbox").doc().id
+                        batch.set(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).collection("inbox").doc(inboxID2), {
+                            state:"unread",
+                            action:{
+                                id:invitationID,
+                                type:"Invitation"
+                            },
+                            message:`You invited the user ${doc.data().email} to become part of your company staff`,
+                            sent:firebase.firestore.Timestamp.now(),
+                            id:inboxID2
+                        })
+    
+                        batch.commit()
+                        .then(() => {
+                            this.addToast("Invitation Sent!");
+                            this.toggleLoading();
+
+                            if(this._mounted){
+                                this.setState({
+                                    inputInvitation:""
+                                })
+                            }
+
+                            
+                        })
+                        .catch(e => {
+                            this.addToast("Ohoh something went wrong!");
+                            this.toggleLoading();
+                        })
+                    })
+                }else {
+                    this.addToast("User already invited to become part of your company staff");
+                    this.toggleLoading();
+                }
+                })
+                .catch(e => {
+                    this.addToast("Ohoh something went wrong!");
+                    this.toggleLoading();
+                })
+
+            }else {
+                this.addToast("User not exist");
+                this.toggleLoading();
+            }
+        })
+        .catch(e => {
+            this.addToast("Ohoh something went wrong!");
+            this.toggleLoading();
+        })
+    }else{
+        this.addToast("You can't invite you yourself");
+        this.toggleLoading()
+    }
+    }
+
+    cancelInvitation = (id) => {
+        this.toggleLoading();
+        firebase.firestore().collection("invitations").doc(id).delete()
+        .then(() => {
+            this.addToast("Invitation Cancelled")
+            this.toggleLoading();
+        })
+        .catch(e => {
+            this.addToast("Ohoh something went wrong!");
+            this.toggleLoading();
         })
     }
 
@@ -1336,7 +1504,7 @@ export default class Profile extends React.Component {
                 }
                 />
                <div id="portalContainer" className="text-left">
-               {this.state.profileViewer.isOpen === true? <ProfileViewer userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
+               {this.state.profileViewer.isOpen === true? <ProfileViewer openUser={this.state.profileViewer.handleOpen} userId={this.state.profileViewer.userId} isOpen={this.state.profileViewer.isOpen} handleClose={this.state.profileViewer.handleClose} />:null}
                {this.state.proposalsList.isOpen === true?  <ProposalsList openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} addToast={this.addToast} isOpen={this.state.proposalsList.isOpen} handleClose={this.state.proposalsList.handleClose} />:null}
                    {this.state.inventoryCreator.isOpen ? <InventoryCreator id={this.state.inventoryCreator.id} index={this.state.inventoryCreator.index} refresh={this.searchMachines_n_vehicles} addToast={this.addToast} isOpen={this.state.inventoryCreator.isOpen} handleClose={this.state.inventoryCreator.handleClose} mode={this.state.inventoryCreator.mode} />:null}
                <ContractDrawer openUser={this.state.profileViewer.handleOpen} openContract={(type, id) => {this.handleInboxEvent({type:type, id:id})}} isOpen={this.state.contractDrawer.isOpen} handleClose={this.state.contractDrawer.handleClose} addToast={this.addToast} handleStates={this.props.handleStates} />
@@ -1732,51 +1900,52 @@ export default class Profile extends React.Component {
                     </div>
                     {(this.state.companyCV !== null) && (this.state.companyCV !== 0)?
                     <div className="tab-pane container cv-container fade" id="menu1">
+                        <div className="form-group mt-3">
+
+                        <div className="input-group mb-3 mt-3 mx-auto" style={{width:"600px"}}>
+                <input type="text" className="form-control" value={this.state.inputInvitation} onChange={(e) => {
+                    this.setState({
+                        inputInvitation:e.target.value
+                    })
+                }} placeholder="Enter Email" />
+                  <div className="input-group-append ">
+                  <button className="btn btn-custom-1" type="button" onClick={() => {this.inviteEmail()}}><i className="material-icons align-middle" style={{fontSize:"15px"}}>add</i>Send invitation</button> 
+               </div>
+              </div>
+                        </div>
                         <div className="cards-container">
                             {this.state.companyCV.staff.map((e,i) => {
                                 
                                     return (
-                                       <StaffCard key={i} edit={() => {
-                                           if(this._mounted){
-                                               this.setState(state => {
-                                                let base = state.alert;
-                                                base.text  ="Sure you want to edit this item?";
-                                                base.isOpen = true;
-                                                base.icon ="info-sign";
-                                                base.intent = Intent.WARNING
-                                                base.confirm = () => {
-                                                    this.editStaff(i)
-                                                }
-                                                return {
-                                                    alert:base
-                                                }
-                                               })
-                                           }
-                                           
-                                        }} skills={e.skills} delete = {() => {
-                                            if(this._mounted){
-                                                this.setState(state => {
-                                                    let base = state.alert;
-                                                    base.text = "Sure you want to delete this item?";
-                                                    base.isOpen = true;
-                                                    base.icon = "trash";
-                                                    base.intent = Intent.DANGER;
-                                                    base.confirm = () => { this.removeStaff(i)}
- 
-                                                    return {
-                                                        alert:base
-                                                    }
-                                                })
-                                            }
-                                           
-                                        }} photoURL={e.photoURL} editable={this.props.userId === firebase.auth().currentUser.uid} onClick={() => {this.openStaff(i)}} title={e.description[0].title} name={e.name?e.name[0].title:null} description={e.description[0].description} />
+                                       <div >
+                                           <div style={{opacity:e.status === "pending"?"0.5":"1"}}>
+                                           {e.status === "pending"? <div className="text-center">Invitation {e.status}</div>:null}
+                                       <UserBox margin={"m-2"} key={i} id={e.user} openUser={() => {this.state.profileViewer.handleOpen(e.user)}} size={"50px"} addToast={this.addToast}/>
+                                       </div>
+                                       {e.status === "pending"?<div className="flex-container text-center p-1">
+                                           <button type="button" className="btn btn-danger btn-sm" onClick={() => {
+                                               if(this._mounted){
+                                                   this.setState(state => {
+                                                       let base = state.alert;
+                                                       base.isOpen = true;
+                                                       base.icon ="info-sign"
+                                                       base.intent = Intent.WARNING
+                                                       base.text = "Sure you want to cancel this invitation?"
+                                                       base.confirm = () => {this.cancelInvitation(e.id)}
+
+                                                       return {
+                                                           alert:base
+                                                       }
+                                                   })
+                                               }
+                                           }}><i className="material-icons align-middle">clear</i> Cancel Invitation</button>
+                                       </div>:null}
+                                       </div>
                                     )
                                
                             } )}
                         </div>
-                        <div className="container text-center">
-                        <AddCardElement text="Add Staff" onClick={() => {this.state.staffCreator.handleOpen(false)}}  />
-                        </div>
+                      
                     </div>
                     :null}
 
