@@ -112,9 +112,7 @@ export default class InvitationDrawer extends React.Component {
             firebase.firestore().collection("invitations").where("status","==","pending").where("id","==",this.props.id).get()
         .then(snap => {
             if(!snap.empty){
-            firebase.firestore().collection("invitations").doc(this.props.id).update({
-                status:"decline"
-            })
+            firebase.firestore().collection("invitations").doc(this.props.id).delete()
             .then(() => {
                 this.props.addToast("Invitation Declined");
                 this.props.handleClose();

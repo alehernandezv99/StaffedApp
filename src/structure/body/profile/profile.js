@@ -1918,7 +1918,28 @@ export default class Profile extends React.Component {
                                 
                                     return (
                                        <div >
-                                           <div style={{opacity:e.status === "pending"?"0.5":"1"}}>
+                                           <div className="p-4" style={{opacity:e.status === "pending"?"0.5":"1", position:"relative"}}>
+                                               {e.status === "accepted"?<EditBtn btns={[
+                                                   {
+                                                       text:"Remove From Staff",
+                                                       callback: () => {
+                                                        if(this._mounted){
+                                                            this.setState(state => {
+                                                                let base = state.alert;
+                                                                base.isOpen = true;
+                                                                base.icon ="info-sign"
+                                                                base.intent = Intent.WARNING
+                                                                base.text = "Sure you want to cancel this invitation?"
+                                                                base.confirm = () => {this.cancelInvitation(e.id)}
+         
+                                                                return {
+                                                                    alert:base
+                                                                }
+                                                            })
+                                                        }
+                                                    }
+                                                   }
+                                               ]} />:null}
                                            {e.status === "pending"? <div className="text-center">Invitation {e.status}</div>:null}
                                        <UserBox margin={"m-2"} key={i} id={e.user} openUser={() => {this.state.profileViewer.handleOpen(e.user)}} size={"50px"} addToast={this.addToast}/>
                                        </div>

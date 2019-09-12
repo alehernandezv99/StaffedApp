@@ -3,6 +3,7 @@ import "./cvContainer.css";
 import TextCollapse from "../../profile/textCollapse";
 import firebase from "../../../../firebaseSetUp";
 import $ from "jquery";
+import UserBox from "../../profile/userBox";
 
 export default class CVContainer extends React.Component{
     constructor(props){
@@ -11,7 +12,8 @@ export default class CVContainer extends React.Component{
         this.id2 = `inventory-container-${Math.ceil(Math.random()*100000)}`
         this.state = {
             user:null,
-            open:false
+            open:false,
+            staff:[]
         }
     }
     componentWillUnmount(){
@@ -27,6 +29,26 @@ export default class CVContainer extends React.Component{
                 user:[snapshot.data()]
             })
         }
+        })
+
+        firebase.firestore().collection("invitations").where("from","==",this.props.id).where("status","==","accepted").get()
+        .then(snap => {
+          
+            if(!snap.empty){
+                let staff = [];
+
+                snap.forEach(doc => {
+                    staff.push({
+                        user:doc.data().to,
+                        id:doc.data().id
+                    })
+                })
+                if(this._mounted){
+                    this.setState({
+                        staff:staff
+                    })
+                }
+            }
         })
     }
 
@@ -50,43 +72,25 @@ export default class CVContainer extends React.Component{
            :null }
 
        
-            {this.props.type === "company"?this.props.staff.length > 0?<div className="text-center"><h4>Staff</h4></div>:null:null}
-            {this.props.type === "company"?this.props.staff.length > 0? this.props.staff.map((e,i) => {
+            {this.props.type === "company"?this.state.staff.length > 0?<div className="text-center"><h4>Staff</h4></div>:null:null}
+            {this.props.type === "company"?this.state.staff.length > 0? this.state.staff.map((e,i) => {
                 if(i <= 1){
                  return(   <div className="media p-3" key={i}>
-                        <img src={e.photoURL?e.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"} className="mr-3 mt-3 rounded-circle" style={{width:"45px"}}/>
-                          <div className="media-body">
-                           <h4>{e.name?e.name[0].title:null}</h4>
-                           <h5>{e.description?e.description[0].title:null}</h5>
-                           <p>{e.description?e.description[0].description:null}</p>
-
-                           <div className="form-group">
-                               <button type="button" onClick={() => {this.props.seeStaff(e)}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">list</i> See More</button>
-                           </div>
-                         </div>
+                        <UserBox margin={"m-2"} key={i} id={e.user} openUser={this.props.openUser} size={"50px"} addToast={this.addToast}/>
                     </div>
                  )
                 }
                 }):null:null}
 
         
-                {this.props.type === "company"?this.props.staff.length > 2?
+                {this.props.type === "company"?this.state.staff.length > 2?
                  <div id={this.id} style={{display:"none"}}>
-                { this.props.staff.map((e,i) => {
+                { this.state.staff.map((e,i) => {
                         if(i > 1){
                             return(
-                        <div className="media p-3" key={i}>
-                        <img src={e.photoURL?e.photoURL:"https://www.w3schools.com/bootstrap4/img_avatar1.png"} className="mr-3 mt-3 rounded-circle" style={{width:"45px"}}/>
-                          <div className="media-body">
-                           <h4>{e.name?e.name[0].title:null}</h4>
-                           <h4>{e.description?e.description[0].title:null}</h4>
-                           <p>{e.description?e.description[0].description:null}</p>
-
-                           <div className="form-group">
-                               <button type="button" onClick={() => {this.props.seeStaff(e)}} className="btn btn-custom-1 btn-sm"><i className="material-icons align-middle">list</i> See More</button>
-                           </div>
-                         </div>
-                    </div>
+                                <div className="media p-3" key={i}>
+                                <UserBox margin={"m-2"} key={i} id={e.user} openUser={this.props.openUser} size={"50px"} addToast={this.addToast}/>
+                            </div>
                             )
                         }
                     })
