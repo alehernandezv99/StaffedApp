@@ -843,36 +843,7 @@ export default class MyProjects extends React.Component {
                                 onClick:() => {}
                             }]
                         },
-                        {
-                            type:"dropdown",
-                            text:"contracts",
-                            icon:"assignment",
-                            key:3,
-                            href:"",
-                            dropdownItems:this.state.contracts.length > 0? this.state.contracts.concat({
-                                href:"",
-                                title:"See More",
-                                key:8,
-                                onClick:() => {}
-                            }).map((e,i) => {
-                              
-                                return {
-                                    href:"",
-                                    text:e.title,
-                                    key:i,
-                                    onClick:() => {e.projectID !== undefined? this.handleInboxEvent({
-                                        type:"view contract",
-                                        id:e.projectID
-                                    }): this.state.contractDrawer.handleOpen()}
-                                }
-                            }):[{
-                                href:"",
-                                text:"No Contracts",
-                                key:1,
-                                onClick:() => {}
-                            }] ,
-                            onClick:() => {}
-                        },
+                        
                         {
                             type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].displayName?this.state.user[0].displayName:this.state.user[0].email,
@@ -958,7 +929,7 @@ export default class MyProjects extends React.Component {
                                <a className="nav-link active" data-toggle="pill" onClick={()=> {let callback = () => { this.findMyProjects("involved",this.state.pageSize.value)}; callback(); this.setState({currentFilter:callback})}} href="#all">All</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() => this.findMyProjects("involved",this.state.pageSize.value,false,"author",firebase.auth().currentUser.uid); callback(); this.setState({currentFilter:callback})}} href="#createdByMe">Created By Me</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() => this.findMyProjects("involved",this.state.pageSize.value,false,"status","hiring"); callback(); this.setState({currentFilter:callback})}} href="#createdByMe">Hiring</a>
                             </li>
                             <li className="nav-item">
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("involved",this.state.pageSize.value,false,"status","In Development"); callback(); this.setState({currentFilter:callback})}} href="#inDevelopment">In Development</a>
@@ -967,7 +938,7 @@ export default class MyProjects extends React.Component {
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("involved",this.state.pageSize.value,false,"status","Completed"); callback(); this.setState({currentFilter:callback})}} href="#completed">Completed</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("applicants",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#applied">Applied</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("applicants",this.state.pageSize.value, false,"status","Cancelled"); callback(); this.setState({currentFilter:callback})}} href="#applied">Cancelled</a>
                            </li>
                            <li className="nav-item mr-auto">
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("references",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#archived">Favorites</a>

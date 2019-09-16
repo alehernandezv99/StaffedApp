@@ -734,36 +734,7 @@ export default class Payments extends React.Component {
                                 onClick:() => {}
                             }]
                         },
-                        {
-                            type:"dropdown",
-                            text:"contracts",
-                            icon:"assignment",
-                            key:3,
-                            href:"",
-                            dropdownItems:this.state.contracts.length > 0? this.state.contracts.concat({
-                                href:"",
-                                title:"See More",
-                                key:8,
-                                onClick:() => {}
-                            }).map((e,i) => {
-                              
-                                return {
-                                    href:"",
-                                    text:e.title,
-                                    key:i,
-                                    onClick:() => {e.projectID !== undefined? this.handleInboxEvent({
-                                        type:"view contract",
-                                        id:e.projectID
-                                    }): this.state.contractDrawer.handleOpen()}
-                                }
-                            }):[{
-                                href:"",
-                                text:"No Contracts",
-                                key:1,
-                                onClick:() => {}
-                            }] ,
-                            onClick:() => {}
-                        },
+                      
                         {
                             type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].displayName?this.state.user[0].displayName:this.state.user[0].email,

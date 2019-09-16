@@ -480,17 +480,12 @@ export default class Home extends React.Component {
         await this.setState(state => {
           let base = state.skills;
           skills.push(skill);
-          if(this.checkCriteria(skills, criteria).check){
+         
           base.skillsSelected.value = skills;
           if(this._mounted){
           return({skills:base, projects:[], projectsId:[]});
           }
-          }else {
-            this.addToast(this.checkCriteria(skills, criteria, "skills").message);
-            if(this._mounted){
-            return ({});
-            }
-          }
+        
         })
 
         if(this.state.skills.exclusive === false){
@@ -528,7 +523,7 @@ export default class Home extends React.Component {
                 let skills = base.skillsSelected["value"];
       
                 if((skills.includes(event.target.value) === false)){
-                  if(skillsArr.includes(event.target.value)){
+                 
                     skills.push(event.target.value);
                     let skillsObj = {value:skills, criteria:this.state.skills.skillsSelected.criteria}
                      base.skillsSelected = skillsObj;
@@ -536,15 +531,19 @@ export default class Home extends React.Component {
                     this.skillInput.value = "";
                     return({skills:base})
                     
-                  }else {
-                    this.addToast(`The skill "${event.target.value}" is not registered`);
-                  }
+              
     
                 }else {
                   this.addToast("You cannot select two repeated skills")
                   return {}
                 }
                 })
+
+                if(this.state.skills.exclusive === false){
+                    this.reloadProjectsFixed(this.state.pageSize.value,"skills", this.state.skills.skillsSelected.value);
+                    }else {
+                        this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", this.state.skills.skillsSelected.value);
+                    }
                 
                
               })
@@ -1161,36 +1160,7 @@ export default class Home extends React.Component {
                                 onClick:() => {}
                             }]
                         },
-                        {
-                            type:"dropdown",
-                            text:"contracts",
-                            icon:"assignment",
-                            key:3,
-                            href:"",
-                            dropdownItems:this.state.contracts.length > 0? this.state.contracts.concat({
-                                href:"",
-                                title:"See More",
-                                key:8,
-                                onClick:() => {}
-                            }).map((e,i) => {
-                              
-                                return {
-                                    href:"",
-                                    text:e.title,
-                                    key:i,
-                                    onClick:() => {e.projectID !== undefined? this.handleInboxEvent({
-                                        type:"view contract",
-                                        id:e.projectID
-                                    }): this.state.contractDrawer.handleOpen()}
-                                }
-                            }):[{
-                                href:"",
-                                text:"No Contracts",
-                                key:1,
-                                onClick:() => {}
-                            }] ,
-                            onClick:() => {}
-                        },
+                       
                         {
                             type:"dropdown",
                             text:this.state.user === null?"Loading...":this.state.user[0].displayName?this.state.user[0].displayName:this.state.user[0].email,

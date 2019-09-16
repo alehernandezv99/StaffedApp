@@ -67,13 +67,10 @@ export default class CreateProject extends React.Component{
     this.setState(state => {
       let formA = state.formA;
       skills.push(skill);
-      if(this.checkCriteria(skills, criteria).check){
+   
       formA.skills.value = skills;
       return({formA:formA});
-      }else {
-        this.addToast(this.checkCriteria(skills, criteria).message);
-        return ({});
-      }
+      
     })
   }
   }else {
@@ -108,7 +105,7 @@ bindSkillInput = () => {
         let skills = formA.skills["value"];
 
         if((skills.includes(event.target.value) === false)){
-          if(skillsArr.includes(event.target.value)){
+         
             skills.push(event.target.value);
             let skillsObj = {value:skills, criteria:this.state.formA.skills.criteria}
             formA.skills = skillsObj;
@@ -116,9 +113,7 @@ bindSkillInput = () => {
             this.skillInput.value = "";
             return({formA:formA})
            
-          }else {
-            this.addToast(`The skill "${event.target.value}" is not registered`);
-          }
+         
 
         }else {
           this.addToast("You cannot select two repeated skills")
