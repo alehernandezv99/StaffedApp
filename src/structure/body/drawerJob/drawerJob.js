@@ -1040,7 +1040,7 @@ export default class DrawerJob extends React.Component {
                     
                         {
                         this.state.isSaved === true?<div className="action-btns text-center">
-                        <button onClick={() => {this.removeFromFavorites()}} className="btn btn-custom-1 mr-2 mt-3 btn-sm"><i className="material-icons align-middle">clear</i>Remove From Favorites</button>
+                        <button onClick={() => {this.removeFromFavorites()}} className="btn btn-custom-1 mr-2 mt-3 btn-sm"><i className="material-icons align-middle">favorite_border</i>Remove From Favorites</button>
                             </div>:
                         <div className="action-btns text-center">
                     <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-3 btn-sm"><i className="material-icons align-middle">favorite</i> Mark As Favorite</button>

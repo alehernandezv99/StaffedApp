@@ -699,7 +699,7 @@ export default class SearchStaff extends React.Component {
                  
                       this.setState({
                         CVs:this.state.CVs.concat(newProjects),
-                        size:size === 0?null:size,
+                        size:size === 0?0:size,
                         searchBar:false,
                         lastSeemUnion:arrOfLastSeem,
                         pending:false,
@@ -771,7 +771,7 @@ export default class SearchStaff extends React.Component {
             let projects = [];
             
             if(!(size > 0)){
-                size = null
+                size = 0
             }
            
             snapshot2.forEach(doc => {
@@ -794,6 +794,8 @@ export default class SearchStaff extends React.Component {
         }else {
             if(this._mounted){
                 this.setState({
+                    CVs:[],
+                    size:0,
                     pending:false,
                     loadMore:false
                 })
@@ -1262,7 +1264,7 @@ export default class SearchStaff extends React.Component {
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                         
                             return <CVContainer openUser={() => {this.state.profileViewer.handleOpen(element.uid)}} inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
-                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
+                        }):this.state.size !== null?<div className="mt-3 text-center">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                            {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -1285,7 +1287,7 @@ export default class SearchStaff extends React.Component {
                             {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
                             return <CVContainer openUser={() => {this.state.profileViewer.handleOpen(element.uid)}} inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
-                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
+                        }):this.state.size !== null?<div className="mt-3 text-center">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                           {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -1308,7 +1310,7 @@ export default class SearchStaff extends React.Component {
                            {this.state.CVs.length > 0?this.state.CVs.map((element,i) => {
                             
                             return <CVContainer openUser={() => {this.state.profileViewer.handleOpen(element.uid)}} inventory={element.inventory?element.inventory:null}  seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
-                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
+                        }):this.state.size !== null?<div className="mt-3 text-center">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                             {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();
@@ -1343,7 +1345,7 @@ export default class SearchStaff extends React.Component {
                                     })
                                 }
                             }} inventory={element.inventory?element.inventory:null} seeStaff={this.seeStaff} staff={element.staff?element.staff:null} skills={element.skills?element.skills:null} type={element.type} email={element.uemail?element.uemail:""} openCV={()=> {this.props.handleStates(3,element.uid)}} key={i} description={element.description[0]} name={element.username?element.username:""} id={element.uid} />
-                        }):this.state.size !== null?<div className="">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
+                        }):this.state.size !== null?<div className="mt-3 text-center">No Results</div>:<div className="spinner-border mt-3 mb-5"></div>}
 
                             {this.state.CVs.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
                                e.preventDefault();

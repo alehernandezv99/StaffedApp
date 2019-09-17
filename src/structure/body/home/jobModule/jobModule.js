@@ -7,10 +7,58 @@ export default class JobModule extends React.Component {
     constructor(props){
         super(props);
         this.performTransaction = this.performTransaction.bind(this);
+        this.state = {
+            isSaved:false
+        }
     }
 
     addToast = (message) => {
         this.props.addToast(message);
+    }
+
+    componentDidMount() {
+
+        this.setState({
+            isSaved:this.props.isSaved
+        })
+    }
+
+    performTransactionRemove = (collection, prop,id, value, type, messageSucess, messageFailure,cb) => {
+        cb();
+        firebase.firestore().collection(collection).doc(id).get()
+        .then(doc => {
+            let data = doc.data()[prop];
+          
+            if(type === "string"){
+                data = value;
+            }
+            if(type === "number"){
+                data = value
+            }
+            let references = [];
+            if(doc.data().references !== undefined){
+                references = doc.data().references
+            }
+            for(let i =0 ; i < references.length; i++){
+                if(references[i] === firebase.auth().currentUser.email){
+                    references.splice(i,1)
+                }
+            }
+            firebase.firestore().collection(collection).doc(this.props.id).update({
+                references:references,
+            })
+            .then((result) => {
+                this.addToast(messageSucess);
+                cb()
+                this.setState({
+                    isSaved:false
+                })
+            })
+            .catch(e => {
+                this.addToast(messageFailure);
+                cb();
+            })
+        })
     }
 
     performTransaction(collection, prop,id, value, type, messageSucess, messageFailure,cb){
@@ -18,18 +66,15 @@ export default class JobModule extends React.Component {
         firebase.firestore().collection(collection).doc(id).get()
         .then(doc => {
             let data = doc.data()[prop];
-            if(type === "array"){
-                if(!(data.includes(value))){
-                data.push(value);
-                }else {
-                    this.addToast("The value already exist in the list")
-                }
-            }
+     
             if(type === "string"){
                 data = value;
             }
             if(type === "number"){
                 data = value
+            }
+            if(doc.data()[prop].includes(firebase.auth().currentUser.email) === false){
+                data.push(firebase.auth().currentUser.email)
             }
             let involved = [];
             if(doc.data().involved !== undefined){
@@ -45,6 +90,9 @@ export default class JobModule extends React.Component {
             .then((result) => {
                 this.addToast(messageSucess);
                 cb()
+                this.setState({
+                    isSaved:true
+                })
             })
             .catch(e => {
                 this.addToast(messageFailure);
@@ -82,7 +130,7 @@ export default class JobModule extends React.Component {
                 })}
                 </div>
                 <div className="col text-right">
-                    {this.props.isSaved === true?null:
+                    {this.state.isSaved === true? <button className="btn btn-custom-1 mr-2 mt-2 btn-sm" title="Remove From Favorites" onClick={() => {this.performTransactionRemove("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Removed From Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite_border</i></button>:
                     <button className="btn btn-custom-1 mr-2 mt-2 btn-sm" title="Mark As Favorite" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Added To Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite</i></button>
                     }
                 </div>
