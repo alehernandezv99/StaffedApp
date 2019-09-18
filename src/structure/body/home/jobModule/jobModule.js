@@ -130,8 +130,8 @@ export default class JobModule extends React.Component {
                 })}
                 </div>
                 <div className="col text-right">
-                    {this.state.isSaved === true? <button className="btn btn-custom-1 mr-2 mt-2 btn-sm" title="Remove From Favorites" onClick={() => {this.performTransactionRemove("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Removed From Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite_border</i></button>:
-                    <button className="btn btn-custom-1 mr-2 mt-2 btn-sm" title="Mark As Favorite" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Added To Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite</i></button>
+                    {this.state.isSaved === true? <button className="btn  mr-2 mt-2 btn-sm" title="Remove From Favorites" onClick={() => {this.performTransactionRemove("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Removed From Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite</i></button>:
+                    <button className="btn mr-2 mt-2 btn-sm" title="Mark As Favorite" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Added To Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite_border</i></button>
                     }
                 </div>
                 </div>

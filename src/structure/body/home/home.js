@@ -796,24 +796,30 @@ export default class Home extends React.Component {
 
                 let arrOfLastSeem = newLastSeem === undefined?[]:newLastSeem
                 arrOfLastSeem.push(snapshot2.docs[snapshot2.docs.length - 1])
+
+                let newProjects = projects?projects:[];
+                let checkSize = 0;
+                let deficit = 0;
                 snapshot2.forEach(document => {
                     if(!(currentIds.includes(document.data().id))){
                         currentSize++;
                         currentIds.push(document.data().id);
+                        newProjects.push(document.data());
+                        deficit++
+                    }else {
+                        checkSize++;
                     }
                 })
                
-                let newProjects = projects?projects:[];
-                let checkSize = 0;
-                let deficit = 0;
-                snapshot2.forEach(doc => {
+                
+               /* snapshot2.forEach(doc => {
                     if(currentIds.includes(doc.data().id)){
                         checkSize++;
                     newProjects.push(doc.data());
                     }else {
                         deficit++
                     }
-                })
+                })*/
                 
                 let newDeficit = acumDeficit !== undefined?acumDeficit + deficit:deficit;
     

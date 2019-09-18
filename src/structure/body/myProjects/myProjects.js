@@ -358,7 +358,7 @@ export default class MyProjects extends React.Component {
            }
         }
         let lastSeem = this.state.lastSeem;
-        let ref = firebase.firestore().collection("projects").where("keywords","array-contains",string.toLowerCase())
+        let ref = firebase.firestore().collection("projects").where("keywords","array-contains",string.toLowerCase()).orderBy("created","desc")
         if(page){
             ref = ref.startAfter(lastSeem).limit(this.state.pageSize.value)
         }else {
@@ -463,6 +463,8 @@ export default class MyProjects extends React.Component {
             if(field){
                 ref2 =ref2.where(field,"==",element)
             }
+
+            ref2 = ref2.orderBy("created","desc")
             //ref2 = ref2.orderBy("created","desc")
             if(page){
                 ref2 = ref2.startAfter(lastSeem).limit(limit).get()
@@ -504,9 +506,11 @@ export default class MyProjects extends React.Component {
             
                 })
                 .catch(e => {
+                    console.log(e)
                     if(this._mounted){
                         this.setState({
-                            pending:true
+                            pending:false,
+                            loadMore:false
                         })
                     }
                 })
@@ -938,7 +942,7 @@ export default class MyProjects extends React.Component {
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("involved",this.state.pageSize.value,false,"status","Completed"); callback(); this.setState({currentFilter:callback})}} href="#completed">Completed</a>
                             </li>
                             <li className="nav-item">
-                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("applicants",this.state.pageSize.value, false,"status","Cancelled"); callback(); this.setState({currentFilter:callback})}} href="#applied">Cancelled</a>
+                               <a className="nav-link" data-toggle="pill" onClick={()=> {let callback =() =>this.findMyProjects("involved",this.state.pageSize.value, false,"status","Cancelled"); callback(); this.setState({currentFilter:callback})}} href="#applied">Cancelled</a>
                            </li>
                            <li className="nav-item mr-auto">
                                <a className="nav-link" data-toggle="pill" onClick={()=> {let callback = () =>this.findMyProjects("references",this.state.pageSize.value); callback(); this.setState({currentFilter:callback})}} href="#archived">Favorites</a>

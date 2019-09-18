@@ -383,11 +383,13 @@ componentWillUnmount(){
       for(let i =0; i < skills.length; i++){
         skillsExclusive[skills[i]]  =  true;
       }
+
+      
       
       let data = {
         title:formA.title["value"],
         skillsExclusive:skillsExclusive,
-        keywords:KeywordsGeneration.generateKeywords(formA.title["value"]).concat([""]),
+        keywords:KeywordsGeneration.generateKeywords(formA.title["value"]).concat([""]).concat.apply([],skills.map((e => KeywordsGeneration.generateKeywords(e)))).concat(KeywordsGeneration.generateKeywords(formA.category["value"])).concat(KeywordsGeneration.generateKeywords(formA.subCategory["value"])).concat(KeywordsGeneration.generateKeywords(formB.level["value"])).concat([""]).concat(KeywordsGeneration.generateKeywords(formA.title["value"])),
         description:formA.description["value"],
         skills:skills,
         category:formA.category["value"],
