@@ -72,7 +72,7 @@ export default class CVContainer extends React.Component{
 
                 {this.props.skills?
             
-            <div className="form-group">
+            <div className="form-group" style={{display:"none"}}>
                     {this.props.skills.map((skill, index) => {
                                   return <button type="button" key={index} className="btn btn-custom-2 btn-sm ml-2">{skill}</button>
                                 })}

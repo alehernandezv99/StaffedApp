@@ -942,7 +942,7 @@ export default class ProfileViewer extends React.Component {
                 <div className="tab-content">
                     <div className="tab-pane container cv-container active" id="home">
                     <div className="container-fluid"> 
-                    <div className="container text-center">
+                    <div className="container text-center" style={{display:"none"}}>
                         <div className="form-group mb-4" style={{position:"relative"}}>
                             <h4 className="text-center mb-2 mt-3">Skills</h4>
                                 <div >

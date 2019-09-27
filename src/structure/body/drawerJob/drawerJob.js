@@ -19,6 +19,7 @@ import { isDate } from "util";
 
 
 
+
 export default class DrawerJob extends React.Component {
     constructor(props){
         super(props);
@@ -231,6 +232,7 @@ export default class DrawerJob extends React.Component {
                 presentation:this.state.proposalFetched.presentation.value,
                 deadline:this.state.proposalFetched.deadline.value,
                 updated:firebase.firestore.Timestamp.now(),
+                state:"unread"
             }
          
             firebase.firestore().collection("proposals").where("projectID","==",this.props.id).where("user","==",firebase.auth().currentUser.uid).get()
@@ -533,9 +535,11 @@ export default class DrawerJob extends React.Component {
             status:"pending",
             deadline:this.state.proposal.deadline.value,
             created:firebase.firestore.Timestamp.now(),
+            uodated:firebase.firestore.Timestamp.now(),
             id:firebase.firestore().collection("proposals").doc().id,
             projectID:this.state.project[0].id,
-            title:this.state.project[0].title
+            title:this.state.project[0].title,
+            state:"unread"
         }
 
         
@@ -549,7 +553,19 @@ export default class DrawerJob extends React.Component {
          let batch = firebase.firestore().batch();
          //batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid), {proposals:previewPorposals})
          batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid),{cards:newCards} )
-          
+
+         let inboxID = firebase.firestore().collection("users").doc(this.state.project[0].author).collection("inbox").doc().id
+          batch.set(firebase.firestore().collection("users").doc(this.state.project[0].author).collection("inbox").doc(inboxID), {
+              action:{
+                  type:"view proposal",
+                  id:this.state.project[0].id,
+                  id2:data.id
+              },
+              id:inboxID,
+              message:`The user ${firebase.auth().currentUser.email} made you a proposal in the project ${this.state.project[0].title}`,
+              sent:firebase.firestore.Timestamp.now(),
+              state:"unread"
+          } )
         firebase.firestore().collection("proposals").where("projectID","==",this.props.id).where("user","==",firebase.auth().currentUser.uid).get()
         .then(snapshot => {
             if(snapshot.empty){
@@ -816,6 +832,11 @@ export default class DrawerJob extends React.Component {
 
      componentWillUnmount() {
         this._mounted = false;
+
+        if(this.projectListener !== undefined){
+            //Clear the listener
+            this.projectListener();
+        }
      }
 
     componentDidMount(){
@@ -823,7 +844,7 @@ export default class DrawerJob extends React.Component {
 
        
 
-        firebase.firestore().collection("projects").doc(this.props.id).onSnapshot(snapshot => {
+       this.projectListener =  firebase.firestore().collection("projects").doc(this.props.id).onSnapshot(snapshot => {
             this.fetchProjectProps();
         })
        
@@ -980,28 +1001,7 @@ export default class DrawerJob extends React.Component {
                         <h4>Description</h4>
                         <h6 className="mt-3">{this.state.project[0].description}</h6>
                         </div>
-                        <hr/>
-                        <div className="container-fluid mt-4">
-                        <h4>Skills</h4>
-                        <div className="skills-btns">
-                            {
-                                (() => {
-                                    let skillsObj = this.state.project[0].skills;
-                                    let skillsArr = []
-                                    Object.keys(skillsObj).forEach((key,i) => {
-                                        skillsArr.push({
-                                            text:skillsObj[key],
-                                            key:i
-                                        })
-                                    })
-                                    return skillsArr;
-                                })().map(element => {
-                                    return (<button key={element.key} type="button" className="btn btn-sm btn-custom-2 mr-1 mt-2">{element.text}</button>)
-                                })
-                            }
-                        </div>
-                        
-                        </div>
+                     
                         <hr/>
                         <div className="container-fluid mt-4">
                             <h4>Specs</h4>
@@ -1033,8 +1033,8 @@ export default class DrawerJob extends React.Component {
                         :
                         this.state.contract === ""?
                             this.state.proposalFetched.price !== undefined?
-                        <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-3")}}><i className="material-icons align-middle">create</i> Edit Proposal</button>:
-                        this.state.enableProposals === true?<button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-2")}}><i className="material-icons align-middle">add</i> Proposal</button>:null
+                        <button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-3")}}><i className="material-icons align-middle">create</i> Edit Bid</button>:
+                        this.state.enableProposals === true?<button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-2")}}><i className="material-icons align-middle">add</i> Bid</button>:null
                         :<button type="button" className="btn btn-custom-1 btn-block" onClick={() => {this.changePage("#dj-section-1","#dj-section-4")}}><i className="material-icons align-middle">subject</i>Contract</button>
                         }
                     
@@ -1120,7 +1120,7 @@ export default class DrawerJob extends React.Component {
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-2","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                     <div className="card">
                         <div className="card-header">
-                            <h3>Proposal</h3>
+                            <h3>Bid</h3>
                         </div>
                     <div className="card-body">
                       <div className="form-group">
@@ -1208,7 +1208,7 @@ export default class DrawerJob extends React.Component {
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-3","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                     <div className="card">
                         <div className="card-header">
-                            <h3>Proposal</h3>
+                            <h3>Bid</h3>
                         </div>
                     <div className="card-body">
                       <div className="form-group">

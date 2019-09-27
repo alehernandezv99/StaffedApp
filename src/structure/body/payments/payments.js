@@ -21,6 +21,7 @@ import ProposalsList from "../proposalsList";
 import ProfileViewer from "../profileViewer";
 import HelpDrawer from "../helpDrawer";
 import InvitationDrawer from "../invitationDrawer";
+import $ from "jquery";
 
 
 export default class Payments extends React.Component {
@@ -33,6 +34,7 @@ export default class Payments extends React.Component {
             loadMore:false,
             pending:false,
             lastSeem:{},
+            proposalsUnread:0,
             chat:{
                 payload:null
             },
@@ -447,7 +449,27 @@ export default class Payments extends React.Component {
         .catch(e => {
             this.addToast("Ohoh something went wrong :(")
         })
-        firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
+
+        if(this.inboxListener !== undefined){
+            this.inboxListener(); //Clear the listener
+        }
+    
+        if(this.proposalsListener !== undefined){
+            this.proposalsListener() //Clear hte listener
+        }
+
+        this.proposalsListener =  firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).onSnapshot(snap => {
+            let count = snap.size
+       
+            if(this._mounted){
+                this.setState({
+                    proposalsUnread:count
+                })
+            }
+
+           
+        })
+        this.inboxListener = firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
                
             let count = 0
             let elements = [];
@@ -499,8 +521,8 @@ export default class Payments extends React.Component {
             this.setState(state => {
                 let base = state.proposalsViewer;
                 base.isOpen = true;
-                base.projectId = action.id;
-                base.proposalId = action.id2;
+                base.projectID = action.id;
+                base.proposalID = action.id2;
 
                 return ({proposalsViewer:base});
             })
@@ -581,8 +603,34 @@ export default class Payments extends React.Component {
         })
     }
 
+    componentDidUpdate(){
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
+    }
+
     componentDidMount(){
         this._mounted = true;
+
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -706,11 +754,24 @@ export default class Payments extends React.Component {
                             key:6
                         },
                         {
-                            type:"link",
+                            type:"link badge",
                             text:"Proposals",
                             href:"",
-                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            onClick:() => {this.state.proposalsList.handleOpen(); firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).get()
+                        .then((snap) => {
+
+                            if(!snap.empty){
+                            let batch = firebase.firestore().batch();
+
+                            snap.forEach(doc => {
+                                batch.update(firebase.firestore().collection("proposals").doc(doc.id), {state:"read"})
+                            })
+
+                            batch.commit();
+                        }
+                        })},
                             icon:"list",
+                            count:this.state.proposalsUnread,
                             key:2
                         },
                         {

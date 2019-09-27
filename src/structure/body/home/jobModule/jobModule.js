@@ -124,7 +124,7 @@ export default class JobModule extends React.Component {
                     <p>{this.props.description}</p>
                 </div>
                 <div className="mt-2 row">
-                <div className="col-sm-8 text-left">
+                <div className="col-sm-8 text-left" style={{display:"none"}}>
                 {this.props.skills.map(element => {
                     return (<button type="button" key={element.key} className="btn btn-custom-2 btn-sm mr-1 mt-2">{element.text}</button>)
                 })}

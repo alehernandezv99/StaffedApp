@@ -78,6 +78,8 @@ export default class EndContractDrawer extends React.Component {
 
     submit= () => {
         this.toggleLoading();
+        if(checkCriteria(this.state.reason.value, this.state.reason.criteria, "Reason").check && checkCriteria(this.state.experience.value, this.state.experience.criteria, "Experience").check){
+       
         firebase.firestore().collection("contracts").doc(this.props.id).get()
         .then(doc => {
             if(doc.exists){
@@ -95,7 +97,6 @@ export default class EndContractDrawer extends React.Component {
                         closeDetails:data
                     })
 
-                    if(this.state.reason.value === "Successfully Completed"){
 
                     let targetUser ="";
 
@@ -115,9 +116,9 @@ export default class EndContractDrawer extends React.Component {
                     let idReview = firebase.firestore().collection("users").doc(targetUser).collection("reviews").doc().id
                     batch.set(firebase.firestore().collection("users").doc(targetUser).collection("reviews").doc(idReview), review)
                     batch.update(firebase.firestore().collection("projects").doc(this.props.projectID), {
-                        status:this.state.reason.value === "Successfully Completed"?"Completed":"Closed"
+                        status:this.state.reason.value === "Successfully Completed"?"Completed":"Cancelled"
                     })
-                }
+                
 
 
                 batch.commit()
@@ -137,6 +138,23 @@ export default class EndContractDrawer extends React.Component {
             this.props.addToast("Ohoh something went wrong");
             this.toggleLoading();
         })
+    }else {
+        this.toggleLoading()
+        let messages = []
+        if(!checkCriteria(this.state.reason.value, this.state.reason.criteria, "Reason").check){
+            messages.push(checkCriteria(this.state.reason.value, this.state.reason.criteria, "Reason").message)
+        }
+
+        if(!checkCriteria(this.state.experience.value, this.state.experience.criteria, "Experience").check){
+            messages.push(checkCriteria(this.state.experience.value, this.state.experience.criteria, "Experience").message)
+        }
+
+        for(let i = 0; i < messages.length; i++){
+            this.props.addToast(messages[i])
+        }
+
+        ;
+    }
     }
 
     handleChangeValue = (field ,value, reference, customMSG) => {

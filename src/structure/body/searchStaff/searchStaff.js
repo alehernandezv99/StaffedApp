@@ -44,6 +44,7 @@ export default class SearchStaff extends React.Component {
             chat:{
                 payload:null
             },
+            proposalsUnread:0,
             helpDrawer:{
                 isOpen:false,
                 handleOpen:() => {
@@ -277,7 +278,7 @@ export default class SearchStaff extends React.Component {
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
-                exclusive:false,
+                exclusive:true,
                 currentPage:0
             },
             inboxDrawer:{
@@ -419,8 +420,8 @@ export default class SearchStaff extends React.Component {
             this.setState(state => {
                 let base = state.proposalsViewer;
                 base.isOpen = true;
-                base.projectId = action.id;
-                base.proposalId = action.id2;
+                base.projectID = action.id;
+                base.proposalID = action.id2;
 
                 return ({proposalsViewer:base});
             })
@@ -433,9 +434,27 @@ export default class SearchStaff extends React.Component {
     }
 
     updateUser = async(id) =>{
+        if(this.inboxListener !== undefined){
+            this.inboxListener(); //Clear the listener
+        }
+    
+        if(this.proposalsListener !== undefined){
+            this.proposalsListener() //Clear hte listener
+        }
         firebase.firestore().collection("users").doc(id).get()
         .then(async doc => {
-           firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
+            this.proposalsListener =  firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).onSnapshot(snap => {
+                let count = snap.size
+           
+                if(this._mounted){
+                    this.setState({
+                        proposalsUnread:count
+                    })
+                }
+
+               
+            })
+          this.inboxListener =  firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
                
             let count = 0
             let elements = [];
@@ -671,24 +690,30 @@ export default class SearchStaff extends React.Component {
              let size = sizeAcum !== undefined?sizeAcum + currentSize:currentSize;
              let arrOfLastSeem = newLastSeem === undefined?[]:newLastSeem
                 arrOfLastSeem.push(snapshot2.docs[snapshot2.docs.length - 1])
+
+                let newProjects = projects?projects:[];
+                let checkSize = 0;
+                let deficit = 0;
                 snapshot2.forEach(document => {
                     if(!(currentIds.includes(document.data().id))){
                         currentSize++;
                         currentIds.push(document.data().id);
+                        newProjects.push(document.data());
+                        deficit++
+                    }else {
+                        checkSize++
                     }
                 })
                
-                let newProjects = projects?projects:[];
-                let checkSize = 0;
-                let deficit = 0;
-                snapshot2.forEach(doc => {
+                
+               /* snapshot2.forEach(doc => {
                     if(currentIds.includes(doc.data().id)){
                         checkSize++;
                     newProjects.push(doc.data());
                     }else {
                         deficit++
                     }
-                })
+                })*/
                 
                 let newDeficit = acumDeficit !== undefined?acumDeficit + deficit:deficit;
     
@@ -819,7 +844,33 @@ export default class SearchStaff extends React.Component {
         $("a").off("click");
     }
 
+    componentDidUpdate(){
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
+    }
+
     componentDidMount(){
+
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
 
         $(document).ready(function(){
             // Add smooth scrolling to all links
@@ -1083,11 +1134,24 @@ export default class SearchStaff extends React.Component {
                             key:6
                         },
                         {
-                            type:"link",
+                            type:"link badge",
                             text:"Proposals",
                             href:"",
-                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            onClick:() => {this.state.proposalsList.handleOpen(); firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).get()
+                        .then((snap) => {
+
+                            if(!snap.empty){
+                            let batch = firebase.firestore().batch();
+
+                            snap.forEach(doc => {
+                                batch.update(firebase.firestore().collection("proposals").doc(doc.id), {state:"read"})
+                            })
+
+                            batch.commit();
+                        }
+                        })},
                             icon:"list",
+                            count:this.state.proposalsUnread,
                             key:2
                         },
                         {
@@ -1172,9 +1236,9 @@ export default class SearchStaff extends React.Component {
                                 });
                                 this.state.skills.exclusive?this.fetchCVsExclusive(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value):this.fetchCVsUnion(this.state.pageSize.value,this.state.type,this.state.skills.skillsSelected.value)}}  />
                         </div>
-                        <div className="form-group mt-2 text-left">
+                        <div className="form-group mt-2 "  style={{width:"300px",display:"none"}}>
                         <div className="text-left">Skills</div>
-                            <div className="custom-control custom-switch mt-2" onClick={(e) => {
+                            <div className="custom-control custom-switch mt-2 text-center" onClick={(e) => {
                                  if(this._mounted){
                                      this.setState(state => {
                                          let base = state.skills;
@@ -1186,8 +1250,8 @@ export default class SearchStaff extends React.Component {
                                      })
                                  }
                              }}>
-                             <input type="checkbox" className="custom-control-input" checked={this.state.skills.exclusive} onChange={()=>{}} />
-                             <label className="custom-control-label">Exclusive?</label>
+                             <input type="checkbox" className="custom-control-input mt-2"   checked={this.state.skills.exclusive} onChange={()=>{}} />
+                             <label className="custom-control-label text-center">Exclusive?</label>
                              </div>
 
                                 {this.state.skills.skillsSelected.value.map((skill, index) => {
@@ -1212,8 +1276,8 @@ export default class SearchStaff extends React.Component {
                         <div className="col-sm-8">
                         
                             <div className="container">
-                            <div className="form-group mx-5">
-                            <div className="input-group mb-3 mt-3 mx-auto " >
+                            <div className="form-group ">
+                            <div className="input-group mb-3 mt-3" >
                           <input type="text" className="form-control" onChange={(e) => {this.setState({queryString:e.target.value})}} placeholder="Search" />
                             <div className="input-group-append">
                             <button className="btn btn-custom-1" type="button" onClick={() => {

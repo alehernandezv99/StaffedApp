@@ -30,6 +30,8 @@ import "./home.css";
 
 
 
+
+
 export default class Home extends React.Component {
     constructor(props){
         super(props);
@@ -44,6 +46,7 @@ export default class Home extends React.Component {
             chat:{
                 payload:null
             },
+            proposalsUnread:0,
             loadMore:true,
             searchBar:true,
             lastSeemUnion:[],
@@ -128,7 +131,7 @@ export default class Home extends React.Component {
             skills:{
                 skillsSelected:{value:[], criteria:{type:"array", min:1, max:5}},
                 skillsFetched:[],
-                exclusive:false,
+                exclusive:true,
             },
             profileViewer:{
                 isOpen:false,
@@ -411,11 +414,12 @@ export default class Home extends React.Component {
                 return {drawerJob:base}
             })
         }else if(action.type === "view proposal"){
+    
             this.setState(state => {
                 let base = state.proposalsViewer;
                 base.isOpen = true;
-                base.projectId = action.id;
-                base.proposalId = action.id2;
+                base.projectID = action.id;
+                base.proposalID = action.id2;
 
                 return ({proposalsViewer:base});
             })
@@ -504,6 +508,12 @@ export default class Home extends React.Component {
         }else {
             $(".inbox").show();
         }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
       }
 
       bindSkillsInput = () => {
@@ -569,6 +579,11 @@ export default class Home extends React.Component {
             $(".inbox").hide();
         }else {
             $(".inbox").show();
+        }
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
         }
 
         $(document).ready(function(){
@@ -968,10 +983,30 @@ export default class Home extends React.Component {
 
 
    async updateUser(id){
+
+    if(this.inboxListener !== undefined){
+        this.inboxListener(); //Clear the listener
+    }
+
+    if(this.proposalsListener !== undefined){
+        this.proposalsListener() //Clear hte listener
+    }
        
         firebase.firestore().collection("users").doc(id).get()
         .then(async doc => {
-           firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").limit(6).onSnapshot(messages => {
+            this.proposalsListener =  firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).onSnapshot(snap => {
+                let count = snap.size
+           
+                if(this._mounted){
+                    this.setState({
+                        proposalsUnread:count
+                    })
+                }
+
+               
+            })
+
+           this.inboxListener =  firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").limit(6).onSnapshot(messages => {
                
             let count = 0
             let elements = [];
@@ -1012,18 +1047,18 @@ export default class Home extends React.Component {
 
            if(this._mounted){
              this.setState(state => {
-                let skills = state.skills;
+             /*   let skills = state.skills;
                 let skillsUser = doc.data().skills;
                 skills.skillsSelected.value = skillsUser;
-                let objOfSkills = {};
+                let objOfSkills = {};*/
                 if(state.skills.exclusive === false){
-                this.reloadProjectsFixed(this.state.pageSize.value,"skills", skillsUser); 
+                this.reloadProjectsFixed(this.state.pageSize.value,"skills", []); 
                 }else {
-                    this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", skillsUser); 
+                    this.reloadProjectsExclusive(this.state.pageSize.value,"skillsExclusive", []); 
                 }
                 return {
                 user:[doc.data()],
-                skills:skills,
+                //skills:skills,
                 }
             })
         }
@@ -1138,11 +1173,24 @@ export default class Home extends React.Component {
                             key:6
                         },
                         {
-                            type:"link",
+                            type:"link badge",
                             text:"Proposals",
                             href:"",
-                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            onClick:() => {this.state.proposalsList.handleOpen(); firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).get()
+                        .then((snap) => {
+
+                            if(!snap.empty){
+                            let batch = firebase.firestore().batch();
+
+                            snap.forEach(doc => {
+                                batch.update(firebase.firestore().collection("proposals").doc(doc.id), {state:"read"})
+                            })
+
+                            batch.commit();
+                        }
+                        })},
                             icon:"list",
+                            count:this.state.proposalsUnread,
                             key:2
                         },
                         {
@@ -1223,7 +1271,7 @@ export default class Home extends React.Component {
                           
 
                        
-                            <div className="form-group col mb-4">
+                            <div className="form-group col mb-4" style={{display:"none"}}>
 
                             <div className="flex-container">
                             <div className="text-center mb-3">Skills</div>
@@ -1434,15 +1482,17 @@ export default class Home extends React.Component {
                             let date;
                             
                             try {
-                            date = project.created.toDate().toDateString();
+                            date = project.created.toDate()
                             
                             }catch(e){
                             
-                                date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
+                                date =  firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate()
                             }
+
+                            let dateString = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString();
                 
 
-                            return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} openUser={(id) => {this.state.profileViewer.handleOpen(id)}} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            return <JobModule status={project.status} author={project.author} handleStates={this.props.handleStates} openUser={(id) => {this.state.profileViewer.handleOpen(id)}} date={dateString} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border"></div>:<div className="">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {

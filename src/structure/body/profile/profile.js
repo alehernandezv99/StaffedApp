@@ -29,6 +29,7 @@ import InventoryCreator from "./inventoryCreator";
 import InventoryCard from "./inventoryCard";
 import ProfileViewer from "../profileViewer";
 import HelpDrawer from "../helpDrawer";
+import KeywordsGeneration from "../../../utils/keywordsGeneration";
 
 import Chat from "../chat";
 import ProposalsList from "../proposalsList";
@@ -46,6 +47,7 @@ export default class Profile extends React.Component {
         this.state = {
             inputInvitation:"",
             feedback:null,
+            proposalsUnread:0,
             helpDrawer:{
                 isOpen:false,
                 handleOpen:() => {
@@ -619,8 +621,8 @@ export default class Profile extends React.Component {
             this.setState(state => {
                 let base = state.proposalsViewer;
                 base.isOpen = true;
-                base.projectId = action.id;
-                base.proposalId = action.id2;
+                base.projectID = action.id;
+                base.proposalID = action.id2;
 
                 return ({proposalsViewer:base});
             })
@@ -757,9 +759,27 @@ export default class Profile extends React.Component {
     }
 
     loadInbox = (id)=> {
+        if(this.inboxListener !== undefined){
+            this.inboxListener(); //Clear the listener
+        }
+    
+        if(this.proposalsListener !== undefined){
+            this.proposalsListener() //Clear hte listener
+        }
             firebase.firestore().collection("users").doc(id).get()
             .then(async doc => {
-               firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
+                this.proposalsListener =  firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).onSnapshot(snap => {
+                    let count = snap.size
+               
+                    if(this._mounted){
+                        this.setState({
+                            proposalsUnread:count
+                        })
+                    }
+    
+                   
+                })
+              this.inboxListener =  firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
                    
                 let count = 0
                 let elements = [];
@@ -800,6 +820,7 @@ export default class Profile extends React.Component {
                     uid:this.props.userId,
                     uemail:doc.data().email,
                     username:doc.data().displayName?doc.data().displayName:"",
+                    keywords:KeywordsGeneration.generate(doc.data().displayName?doc.data().displayName:"").concat([""]),
                     description:[],
                     experience:[],
                     education:[],
@@ -880,10 +901,36 @@ export default class Profile extends React.Component {
         }
     }
 
+    componentDidUpdate(){
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
+    }
+
 
     componentDidMount(){
 
         this._mounted = true;
+
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
         
 
         $(document).ready(function(){
@@ -1046,6 +1093,7 @@ export default class Profile extends React.Component {
 
                     firebase.firestore().collection("CVs").doc(id).set({
                         type:"machines&vehicles",
+                        keywords:KeywordsGeneration.generate(firebase.auth().currentUser.email).concat(KeywordsGeneration.generate(this.state.CV.description)).concat([""]),
                         inventory:[],
                         uid:firebase.auth().currentUser.uid,
                         uemail:firebase.auth().currentUser.email,
@@ -1084,6 +1132,7 @@ export default class Profile extends React.Component {
                     type:"company",
                     staff:[],
                     uid:firebase.auth().currentUser.uid,
+                    keywords:KeywordsGeneration.generate(firebase.auth().currentUser.email).concat(this.state.CV.description).concat([""]),
                     uemail:firebase.auth().currentUser.email,
                     id:id,
                     description:this.state.CV.description,
@@ -1488,11 +1537,24 @@ export default class Profile extends React.Component {
                             key:6
                         },
                         {
-                            type:"link",
+                            type:"link badge",
                             text:"Proposals",
                             href:"",
-                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            onClick:() => {this.state.proposalsList.handleOpen(); firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).get()
+                        .then((snap) => {
+
+                            if(!snap.empty){
+                            let batch = firebase.firestore().batch();
+
+                            snap.forEach(doc => {
+                                batch.update(firebase.firestore().collection("proposals").doc(doc.id), {state:"read"})
+                            })
+
+                            batch.commit();
+                        }
+                        })},
                             icon:"list",
+                            count:this.state.proposalsUnread,
                             key:2
                         },
                         {
@@ -1704,7 +1766,7 @@ export default class Profile extends React.Component {
                 <div className="tab-content">
                     <div className="tab-pane container cv-container active" id="home">
                     <div className="container-fluid"> 
-                    <div className="container text-center">
+                    <div className="container text-center" style={{display:"none"}}>
                         <div className="form-group mb-4" style={{position:"relative"}}>
                             <h4 className="text-center mb-2 mt-3">Skills</h4>
                                 <div >

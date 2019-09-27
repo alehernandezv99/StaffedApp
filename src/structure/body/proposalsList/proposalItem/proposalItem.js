@@ -58,10 +58,13 @@ export default class ProposalItem extends React.Component {
                 {this.state.active === true?<div className="job-status">
                     <div>Active</div>
                 </div>:null}
-                <div className="card-body mt-2" >
+                <div className="card-body mt-3" >
                    <h4 className="text-center">{this.props.title}</h4>
                    <p className="mt-3 text-center">{this.props.cover}</p>
+                   <h5>{this.props.price + "$"}</h5>
                 </div>
+
+                <div className="hour-posted">{this.props.date}</div>
             </div>
         )
     }

@@ -22,7 +22,7 @@ export default class ProposalsList extends React.Component {
             })
         }
 
-       let ref = firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).orderBy("created","desc")
+       let ref = firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).orderBy("updated","desc")
 
        if(page === true){
            ref= ref.startAfter(this.state.lastSeem).limit(6)
@@ -61,6 +61,7 @@ export default class ProposalsList extends React.Component {
                 }
             }
            }else {
+               if(this.state.proposals === null){
             if(this._mounted){
                 this.setState(state => ({
                     proposals:[],
@@ -68,6 +69,14 @@ export default class ProposalsList extends React.Component {
                     loadMore:false
                 }))
             }
+        }else {
+            if(this._mounted){
+                this.setState(state => ({
+                    pending:false,
+                    loadMore:false
+                }))
+            }
+        }
            }
        })
     }
@@ -90,15 +99,17 @@ export default class ProposalsList extends React.Component {
                  <div className={`${Classes.DIALOG_BODY}`}>
                      {this.state.proposals === null?<div className="spinner-border mt-3"></div>:this.state.proposals.length > 0?this.state.proposals.map((e,i) => {
 
+                         let date = e.created.toDate();
+                         date = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString() 
                          return(
-                         <ProposalsItem key={i} projectID={e.projectID} proposalID={e.id} title={e.title} cover={e.presentation} openProposal={() => {this.props.openProposal(e.projectID,e.id)}} addToast={this.props.addToast} />
+                         <ProposalsItem price={e.price} key={i} date={date} projectID={e.projectID} proposalID={e.id} title={e.title} cover={e.presentation} openProposal={() => {this.props.openProposal(e.projectID,e.id)}} addToast={this.props.addToast} />
                          )
                      }):<div className="mt-3">No proposals</div>}
 
-                    {this.state.proposals !== null? this.state.proposals.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {
+                    {this.state.proposals !== null? this.state.proposals.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={(e) => {e.preventDefault();
                                this.fetchProposals(true)
                                
-                            }}>Load More</a>:<div className="spinner-border"></div>} </div>:null:null}
+                            }} >Load More</a>:<div className="spinner-border"></div>} </div>:null:null}
                  </div>
                  </div>
             </Drawer>

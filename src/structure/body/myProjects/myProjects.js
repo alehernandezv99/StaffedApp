@@ -39,6 +39,7 @@ export default class MyProjects extends React.Component {
             chat:{
                 payload:null
             },
+            proposalsUnread:0,
             helpDrawer:{
                 isOpen:false,
                 handleOpen:() => {
@@ -370,7 +371,9 @@ export default class MyProjects extends React.Component {
             let projects =[]
             if(!snapshot.empty){
                snapshot.forEach(doc => {
+                   if(doc.data().involved.includes(firebase.auth().currentUser.email)){
                    projects.push(doc.data())
+                   }
                })
 
                let size = snapshot.size
@@ -379,7 +382,7 @@ export default class MyProjects extends React.Component {
                   
                    this.setState({
                        projects:projects,
-                       loadMore:size < this.state.pageSize.value?false:true,
+                       loadMore:projects.length < this.state.pageSize.value?false:true,
                        pending:false,
                        size:size
                    })
@@ -397,6 +400,7 @@ export default class MyProjects extends React.Component {
             }
         })
         .catch(e => {
+            console.log(e);
             if(this._mounted){
                 this.setState({
                     pending:false
@@ -419,8 +423,8 @@ export default class MyProjects extends React.Component {
             this.setState(state => {
                 let base = state.proposalsViewer;
                 base.isOpen = true;
-                base.projectId = action.id;
-                base.proposalId = action.id2;
+                base.projectID = action.id;
+                base.proposalID = action.id2;
 
                 return ({proposalsViewer:base});
             })
@@ -518,9 +522,28 @@ export default class MyProjects extends React.Component {
     }
 
     async updateUser(id){
+
+        if(this.inboxListener !== undefined){
+            this.inboxListener(); //Clear the listener
+        }
+    
+        if(this.proposalsListener !== undefined){
+            this.proposalsListener() //Clear hte listener
+        }
         firebase.firestore().collection("users").doc(id).get()
         .then(async doc => {
-           firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
+            this.proposalsListener =  firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).onSnapshot(snap => {
+                let count = snap.size
+           
+                if(this._mounted){
+                    this.setState({
+                        proposalsUnread:count
+                    })
+                }
+
+               
+            })
+           this.inboxListener = firebase.firestore().collection("users").doc(id).collection("inbox").orderBy("sent","desc").onSnapshot(messages => {
                
             let count = 0
             let elements = [];
@@ -637,7 +660,32 @@ export default class MyProjects extends React.Component {
        }
        }
 
+       componentDidUpdate(){
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
+       }
+
     componentDidMount(){
+        if(this.state.inbox.count == 0){
+            $(".inbox").hide();
+        }else {
+            $(".inbox").show();
+        }
+
+        if(this.state.proposalsUnread === 0){
+            $(".proposals-list").hide();
+        }else {
+            $(".proposals-list").show();
+        }
 
         $(document).ready(function(){
             // Add smooth scrolling to all links
@@ -819,11 +867,24 @@ export default class MyProjects extends React.Component {
                             key:6
                         },
                         {
-                            type:"link",
+                            type:"link badge",
                             text:"Proposals",
                             href:"",
-                            onClick:() => {this.state.proposalsList.handleOpen()},
+                            onClick:() => {this.state.proposalsList.handleOpen(); firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).get()
+                        .then((snap) => {
+
+                            if(!snap.empty){
+                            let batch = firebase.firestore().batch();
+
+                            snap.forEach(doc => {
+                                batch.update(firebase.firestore().collection("proposals").doc(doc.id), {state:"read"})
+                            })
+
+                            batch.commit();
+                        }
+                        })},
                             icon:"list",
+                            count:this.state.proposalsUnread,
                             key:2
                         },
                         {
@@ -1008,7 +1069,9 @@ export default class MyProjects extends React.Component {
                                 date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
                             }
 
-                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            let dateString = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString();
+
+                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={dateString} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                              {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1084,7 +1147,9 @@ export default class MyProjects extends React.Component {
                                 date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
                             }
 
-                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            let dateString = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString();
+
+                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={dateString} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                         {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1158,7 +1223,9 @@ export default class MyProjects extends React.Component {
                                 date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
                             }
 
-                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            let dateString = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString();
+
+                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={dateString} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
                             
 
@@ -1235,7 +1302,9 @@ export default class MyProjects extends React.Component {
                                 date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
                             }
 
-                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            let dateString = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString();
+
+                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={dateString} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="mt-3 mb-5">No projects found</div>}
 
                              {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1313,7 +1382,9 @@ export default class MyProjects extends React.Component {
                                 date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
                             }
 
-                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            let dateString = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString();
+
+                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={dateString} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="my-3">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {
@@ -1389,7 +1460,9 @@ export default class MyProjects extends React.Component {
                                 date = firebase.firestore.Timestamp.fromMillis((project.created.seconds !== undefined ?project.created.seconds:project.created._seconds)*1000).toDate().toDateString()
                             }
 
-                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={date} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
+                            let dateString = date.getHours() + " : " + date.getMinutes() + " " + date.toDateString();
+
+                            return <JobModule openUser={(id) => {this.state.profileViewer.handleOpen(id)}} status={project.status} author={project.author} handleStates={this.props.handleStates} date={dateString} addToast={this.addToast} id={project.id} isSaved={referencesCheck} toggleLoading={this.toggleLoading} key={index} title={title} description={description} skills={skillsObj} specs={specs} onClick={() => {this.state.drawerJob.handleOpen(project.id)}} />
                         }):this.state.size === null?<div className="spinner-border mt-3 mb-5"></div>:<div className="my-3">No projects found</div>}
 
                            {this.state.projects.length === 0?null:this.state.loadMore?<div className="text-center mt-3">{this.state.pending === false?<a href="" onClick={async(e) => {

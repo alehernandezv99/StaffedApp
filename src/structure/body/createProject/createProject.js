@@ -222,8 +222,9 @@ componentWillUnmount(){
       
 
       Object.keys(checkObj).forEach(key => {
+        if(key !== "skills"){
         if(this.checkCriteria(checkObj[key]["value"], checkObj[key]["criteria"]).check === false){
-          if(key !== "category" && key !== "subCategory"){
+          if(key !== "category" && key !== "subCategory" ){
           messages.push(this.checkCriteria(checkObj[key]["value"], checkObj[key]["criteria"], key).message);
           }else if(key === "category"){
             messages.push("Category Not Selected");
@@ -232,6 +233,7 @@ componentWillUnmount(){
           }
           pass = 1;
         }
+      }
       })
 
     }
@@ -340,7 +342,16 @@ componentWillUnmount(){
         data.author = id;
         data.involved = [snapshot.data().email]
 
-        firebase.firestore().collection("projects").doc(this.props.id).update(data)
+        let batch = firebase.firestore().batch();
+
+        batch.update(firebase.firestore().collection("projects").doc(this.props.id), data)
+
+        
+        let logID = firebase.firestore().collection("projects").doc(this.props.id).collection("logs").doc().id
+        batch.set(firebase.firestore().collection("projects").doc(this.props.id).collection("logs").doc(logID), data)
+        
+
+        batch.commit()
       .then(async () => {
         this.toggleLoading();
           console.log("Project Updated");
@@ -417,7 +428,13 @@ componentWillUnmount(){
         data.author = id;
         data.involved = [snapshot.data().email]
 
-        firebase.firestore().collection("projects").doc(data.id).set(data)
+        let batch = firebase.firestore().batch();
+        batch.set(firebase.firestore().collection("projects").doc(data.id), data)
+
+        let logID = firebase.firestore().collection("projects").doc(data.id).collection("logs").doc().id
+        batch.set(firebase.firestore().collection("projects").doc(data.id).collection("logs").doc(logID), data)
+
+        batch.commit()
       .then(async () => {
         this.toggleLoading();
           console.log("Project Created");
@@ -536,7 +553,7 @@ componentWillUnmount(){
                                 </div>
                               </div>
 
-                              <div className="form-group mt-2" ref={el => this.skills = el} id="skills">
+                              <div className="form-group mt-2" ref={el => this.skills = el} id="skills" style={{display:"none"}}>
                                 <label >* Skills</label>
                                 <div>
                                 {this.state.formA.skills.value.map((skill, index) => {
