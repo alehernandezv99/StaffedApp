@@ -20,6 +20,7 @@ import { isDate } from "util";
 
 
 
+
 export default class DrawerJob extends React.Component {
     constructor(props){
         super(props);
@@ -1022,8 +1023,8 @@ export default class DrawerJob extends React.Component {
                                 <div><h6 className="text-left px-3">{this.state.project[0].level}</h6></div>
                                 </div>
                                 <div className="col-sm-4">
-                                    <div><h5><i className="material-icons align-middle">library_books</i> Proposals</h5></div>
-                                    <div><h6 className="text-left px-3">{this.state.project[0].quantity}</h6></div>
+                                    <div><h5><i className="material-icons align-middle">library_books</i> Bids</h5></div>
+                                    <div><h6 className="text-left px-3">{this.state.project[0].proposals !== undefined?this.state.project[0].proposals:"0"}</h6></div>
                                 </div>
                             </div>
                         </div>

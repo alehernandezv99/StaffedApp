@@ -111,11 +111,11 @@ export default class ContractModule extends React.Component {
                     {this.state.endContract.isOpen && this.props.isOpen? <EndContractDrawer projectID={this.props.projectID} addToast={this.props.addToast} isOpen={this.state.endContract.isOpen} handleClose={this.state.endContract.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
                     {this.state.openDispute.isOpen && (this.props.openDispute === false || this.props.openDispute ===  undefined)? <OpenDisputeDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.openDispute.isOpen}  handleClose={this.state.openDispute.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}  />:null}
                 </div>
-                {this.props.openDispute === false || this.props.openDispute === undefined?
+                {(this.props.openDispute === false || this.props.openDispute === undefined) && (this.props.client === firebase.auth().currentUser.uid)?
                 <EditBtn btns={this.props.isOpen?
                     [
                         {
-                            text:"End Contract",
+                            text:"Cancel Project",
                             callback:()=> {this.state.endContract.handleOpen()}
                         }
                     ]:[
@@ -131,12 +131,12 @@ export default class ContractModule extends React.Component {
                 <UserBox id={this.props.client} openUser={this.props.openUser} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
             </div>
             <div className="form-group mt-3">
-                <h4>Freelancer</h4>
+                <h4>Contracter</h4>
                <UserBox id={this.props.freelancer} openUser={this.props.openUser} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />
             </div>
             <div className="container-fluid">
                 <div className="card">
-                    <div className="card-header">Terms</div>
+                    <div className="card-header"><h3>Contract</h3></div>
                     <div className="card-body">
                         <div className="form-group">
                             <h4>Description</h4>
@@ -146,6 +146,11 @@ export default class ContractModule extends React.Component {
                         <div className="form-group mt-2">
                             <h4>Price</h4>
                             <h6>{this.props.price}$</h6>
+                        </div>
+                        <hr/>
+                        <div className="form-group mt-2">
+                            <h4>Receive</h4>
+                            <h6>{String(Number(this.props.price) - (Number(this.props.price)*0.15))}$</h6>
                         </div>
                         <hr />
                         <div className="form-group mt-2">
@@ -165,7 +170,7 @@ export default class ContractModule extends React.Component {
                     :null}
                     {this.state.status === "billed"?<div className="m-3"><i className="material-icons align-middle">done</i> <span>Payment Complete</span></div>:null}
                     <div className="card-footer">
-                        <button type="button" className="btn btn-custom-1 mt-1" onClick={this.props.openProposal}>View Proposal</button>
+                        <button type="button" className="btn btn-custom-1 mt-1" onClick={this.props.openProposal}>View Bid</button>
                     </div>
                 </div>
             </div>

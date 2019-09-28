@@ -97,16 +97,20 @@ export default class ProposalsViewer extends React.Component {
 
                         <div className="card mt-3" style={{position:"relative"}}>
                             <div className="card-header">
-                                <h3>Proposal</h3>
+                                <h3>Bid</h3>
                             </div>
                         <div className="card-body">
                          <div className="form-group">
-                             <h4>Freelancer</h4>
+                             <h4>Contracter</h4>
                              <h6>{this.state.user}</h6>
                          </div>
                          <div className="form-group">
                              <h4>Price</h4>
                              <h6>{this.state.proposal.price}$</h6>
+                        </div>
+                        <div className="form-group">
+                             <h4>Receive</h4>
+                             <h6>{String(Number(this.state.proposal.price) - (Number(this.state.proposal.price)*0.15))}$</h6>
                         </div>
                         <div className="form-group">
                             <h4>Deadline</h4>
