@@ -1062,7 +1062,7 @@ export default class MyProjects extends React.Component {
                             let date;
                             
                             try {
-                            date = project.created.toDate().toDateString();
+                            date = project.created.toDate()
                             
                             }catch(e){
                             
@@ -1140,7 +1140,7 @@ export default class MyProjects extends React.Component {
                             let date;
                             
                             try {
-                            date = project.created.toDate().toDateString();
+                            date = project.created.toDate()
                             
                             }catch(e){
                             
@@ -1216,7 +1216,7 @@ export default class MyProjects extends React.Component {
                             let date;
                             
                             try {
-                            date = project.created.toDate().toDateString();
+                            date = project.created.toDate()
                             
                             }catch(e){
                             
@@ -1295,7 +1295,7 @@ export default class MyProjects extends React.Component {
                             let date;
                             
                             try {
-                            date = project.created.toDate().toDateString();
+                            date = project.created.toDate()
                             
                             }catch(e){
                             
@@ -1375,7 +1375,7 @@ export default class MyProjects extends React.Component {
                             let date;
                             
                             try {
-                            date = project.created.toDate().toDateString();
+                            date = project.created.toDate()
                             
                             }catch(e){
                             
@@ -1453,7 +1453,7 @@ export default class MyProjects extends React.Component {
                             let date;
                             
                             try {
-                            date = project.created.toDate().toDateString();
+                            date = project.created.toDate()
                             
                             }catch(e){
                             

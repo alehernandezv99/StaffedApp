@@ -4,6 +4,7 @@ import firebase from "../../../../firebaseSetUp";
 import UserBox from "../../profile/userBox";
 import EditBtn from "../../profile/editBtn";
 import EndContractDrawer  from "../endContractDrawer";
+import OpenDisputeDrawer from "../openDisputeDrawer";
 
 
 export default class ContractModule extends React.Component {
@@ -38,6 +39,33 @@ export default class ContractModule extends React.Component {
                     }
                 }
             },
+            openDispute:{
+                isOpen:false,
+                handleClose: () => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.openDispute;
+                            base.isOpen = false;
+
+                            return {
+                                openDispute:base
+                            }
+                        })
+                    }
+                },
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.openDispute;
+                            base.isOpen = true
+
+                            return {
+                                openDispute:base
+                            }
+                        })
+                    }
+                }
+            }
         }
     }
 
@@ -80,7 +108,9 @@ export default class ContractModule extends React.Component {
             <div className="container-fluid" style={{position:"relative"}}>
                 <div id="portalContainer2">
                     {this.state.endContract.isOpen && this.props.isOpen? <EndContractDrawer projectID={this.props.projectID} addToast={this.props.addToast} isOpen={this.state.endContract.isOpen} handleClose={this.state.endContract.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
+                    {this.state.openDispute.isOpen && (this.props.openDispute === false || this.props.openDispute ===  undefined)? <OpenDisputeDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.openDispute.isOpen}  handleClose={this.state.openDispute.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}  />:null}
                 </div>
+                {this.props.openDispute === false?
                 <EditBtn btns={this.props.isOpen?
                     [
                         {
@@ -90,10 +120,11 @@ export default class ContractModule extends React.Component {
                     ]:[
                         {
                             text:"Open a Dispute",
-                            callback:() => {}
+                            callback:() => {this.state.openDispute.handleOpen()}
                         }
                     ]
                 }/>
+            :null}
             <div className="form-group">
                 <h4>Client</h4>
                 <UserBox id={this.props.client} openUser={this.props.openUser} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />

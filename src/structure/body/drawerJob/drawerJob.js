@@ -306,7 +306,8 @@ export default class DrawerJob extends React.Component {
                     description:project.data().description,
                     title:project.data().title,
                     status:"In Process",
-                    isOpen:true
+                    isOpen:true,
+                    openDispute:false
                 })
 
                 batch.update(firebase.firestore().collection("projects").doc(idProject), {status:"In Development"})
@@ -535,7 +536,7 @@ export default class DrawerJob extends React.Component {
             status:"pending",
             deadline:this.state.proposal.deadline.value,
             created:firebase.firestore.Timestamp.now(),
-            uodated:firebase.firestore.Timestamp.now(),
+            updated:firebase.firestore.Timestamp.now(),
             id:firebase.firestore().collection("proposals").doc().id,
             projectID:this.state.project[0].id,
             title:this.state.project[0].title,
@@ -853,7 +854,7 @@ export default class DrawerJob extends React.Component {
 
      setValue = async (obj, prop, value,index,cb, objA, propA, coeficent)=> {
          await this.setState(state => {
-            let valueCollected = value.value;
+            let valueCollected = value.value !== undefined?value.value:"";
 
             if(!(Number.isNaN(Number(valueCollected))) && valueCollected !== ""){
                 valueCollected = Number(valueCollected)
@@ -994,9 +995,7 @@ export default class DrawerJob extends React.Component {
                             <h3 className="mt-4">{this.state.project[0].title}</h3>
                         </div>
                         <div className="card-body">
-                        <div class="tooltip">Hover over me
-  <span class="tooltiptext">Tooltip text</span>
-</div>
+                  
                         <div className="container-fluid mt-2">
                         <h4>Description</h4>
                         <h6 className="mt-3">{this.state.project[0].description}</h6>
@@ -1299,7 +1298,7 @@ export default class DrawerJob extends React.Component {
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-4","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                       {this.state.contract !== ""?
-                     <ContractModule isOpen={this.state.contract.isOpen} openUser={this.props.openUser} id={this.state.contract.id} freelancer={this.state.contract.freelancer} title={this.state.contract.title} projectID={this.state.contract.idProject} status={this.state.contract.status} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
+                     <ContractModule openDispute={this.state.contract.openDispute} isOpen={this.state.contract.isOpen} openUser={this.props.openUser} id={this.state.contract.id} freelancer={this.state.contract.freelancer} title={this.state.contract.title} projectID={this.state.contract.idProject} status={this.state.contract.status} openProposal={() => {this.props.openProposal(this.state.contract.idProject, this.state.contract.idProposal)}} client={this.state.contract.client} price={this.state.contract.price} deadline={this.state.contract.deadline} description={this.state.contract.description} addToast={this.addToast} handleStates={this.props.handleStates} />:
                           null}
                     {this.state.isOwner === true && this.state.contract === ""?    
                    <div className="container-fluid">

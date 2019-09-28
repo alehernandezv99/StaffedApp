@@ -45,12 +45,12 @@ export default class EndContractDrawer extends React.Component {
                 }
             },
             reference:"",
-            reason:{value:"", criteria:{type:"text", minLength:1}},
-            experience:{value:"",criteria:{type:"text", minLength:1}},
-            communication:{value:"",criteria:{type:"text", minLength:1}},
-            skills:{value:"",criteria:{type:"text", minLength:1}},
-            availability:{value:"", criteria:{type:"text", minLength:1}},
-            message:{value:"", criteria:{type:"text", minLength:1}}
+            reason:{value:"Successfully Completed", criteria:{type:"text", minLength:1}},
+            experience:{value:"1",},
+            communication:{value:"1",},
+            skills:{value:"1",},
+            availability:{value:"1",},
+            message:{value:"",}
         }
     }
 
@@ -215,7 +215,7 @@ export default class EndContractDrawer extends React.Component {
                 <select className="custom-select" value={this.state.reason.value}  onChange={(e) => {
                         this.handleChangeValue("reason", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The reason is required")
                     }}>
-                    <option value="">-Select-</option>
+    
                     <option value="Successfully Completed">Successfully Completed</option> 
                     <option value="Project Incompeted">Project Incompleted</option>
                     <option value="Problems With Freelancer">Problems With Freelancer</option>
@@ -229,12 +229,12 @@ export default class EndContractDrawer extends React.Component {
                     <select className="custom-select" value={this.state.experience.value}  onChange={(e) => {
                         this.handleChangeValue("experience", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The exerience is required")
                     }}>
-                    <option value="">-Select-</option>   
+           
                     <option value="1">1</option> 
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
-                    <option value="4">5</option>
+                    <option value="5">5</option>
                   </select>
                   <div className="invalid-feedback"></div>
                 </div>
@@ -247,12 +247,12 @@ export default class EndContractDrawer extends React.Component {
                     <select className="custom-select" value={this.state.communication.value}  onChange={(e) => {
                         this.handleChangeValue("communication", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The communication is required")
                     }}>
-                    <option value="">-Select-</option>
+      
                     <option value="1">1</option> 
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
-                    <option value="4">5</option>
+                    <option value="5">5</option>
                   </select>
                   <div className="invalid-feedback"></div>
                 </div>
@@ -262,12 +262,12 @@ export default class EndContractDrawer extends React.Component {
                     <select className="custom-select" value={this.state.skills.value}  onChange={(e) => {
                         this.handleChangeValue("skills", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The skills is required")
                     }}>
-                    <option value="">-Select-</option>
+   
                     <option value="1">1</option> 
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
-                    <option value="4">5</option>
+                    <option value="5">5</option>
                   </select>
                   <div className="invalid-feedback"></div>
                 </div>
@@ -277,12 +277,12 @@ export default class EndContractDrawer extends React.Component {
                     <select className="custom-select" value={this.state.availability.value} onChange={(e) => {
                         this.handleChangeValue("availability", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The availability is required")
                     }}>
-                    <option value="">-Select-</option>
+          
                     <option value="1">1</option> 
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
-                    <option value="4">5</option>
+                    <option value="5">5</option>
                   </select>
                   <div className="invalid-feedback"></div>
                 </div>
