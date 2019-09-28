@@ -899,7 +899,7 @@ export default class Home extends React.Component {
 
             if(this.state.budget[1] < 50000 || this.state.budget[0] > 10){
         ;
-                ref2 = ref2.orderBy("budget","desc")
+               // ref2 = ref2.orderBy("budget","desc")
                 ref2= ref2.where("budget",">=",Number(this.state.budget[0])).where("budget","<=",Number(this.state.budget[1]))
              
                 
@@ -907,13 +907,17 @@ export default class Home extends React.Component {
 
             if((Number(this.state.proposals[0]) > 0 || Number(this.state.proposals[1]) < 100) && !(Number(this.state.budget[1]) < 50000 || Number(this.state.budget[0]) > 10)){
             
-                ref2 = ref2.orderBy("proposals","desc")
+               // ref2 = ref2.orderBy("proposals","desc")
                 ref2= ref2.where("proposals",">=",Number(this.state.proposals[0])).where("proposals","<=",Number(this.state.proposals[1]));
             }
     
             if(this.state.country !== ""){
                 ref2= ref2.where("country","==",this.state.country)
               
+            }
+
+            if(!(Number(this.state.proposals[0]) > 0 || Number(this.state.proposals[1]) < 100) && !(Number(this.state.budget[1]) < 50000 || Number(this.state.budget[0]) > 10)){
+            ref2 = ref2.orderBy("created","desc")
             }
             if(page === true){
             
@@ -936,16 +940,6 @@ export default class Home extends React.Component {
                 projects.push(doc.data())
             })
 
-            if(!(Number(this.state.budget[1]) < 50000 || Number(this.state.budget[0]) > 10)){
-
-            projects.sort(function(a, b) {
-                var dateA = new Date(a.created.toDate()), dateB = new Date(b.created.toDate());
-                return dateA - dateB;
-            });
-        
-            projects.reverse();
-        }
-        
         if(!snapshot2.empty){
           if(this._mounted){
             this.setState({
@@ -1174,7 +1168,7 @@ export default class Home extends React.Component {
                         },
                         {
                             type:"link badge",
-                            text:"Proposals",
+                            text:"Bids",
                             href:"",
                             onClick:() => {this.state.proposalsList.handleOpen(); firebase.firestore().collection("proposals").where("user","==",firebase.auth().currentUser.uid).where("state","==","unread").orderBy("created","desc").limit(10).get()
                         .then((snap) => {
@@ -1357,7 +1351,7 @@ export default class Home extends React.Component {
                             </div>
 
                             <div  className="form-group mb-4 col">
-                                  <div className="text-center mb-2">Proposals</div>
+                                  <div className="text-center mb-2">Bids</div>
 
                                   <div className="flex-container">
                                   <div className="input-group mb-3 input-group-sm m-2">
@@ -1408,7 +1402,7 @@ export default class Home extends React.Component {
                      {this.state.drawerJob.projectID === ""?null:<TODO addToast={this.addToast} isOpen={this.state.TODO.isOpen} projectID={this.state.drawerJob.projectID} handleClose={this.state.TODO.handelClose} />}
                      <InboxMessages handleAction={(e) => {this.handleInboxEvent(e)}} handleClose={this.state.inboxDrawer.handleClose} isOpen={this.state.inboxDrawer.isOpen} />
                    {this.state.drawerJob.projectID === ""?null:
-                    <DrawerJob openUser={this.state.profileViewer.handleOpen} editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat}  handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={this.state.drawerJob.handleClose}  toastHandler={(message) => {this.addToast(message)}}/>}
+                    <DrawerJob openUser={this.state.profileViewer.handleOpen} editProject={this.editProject} openTODO={() =>{this.state.TODO.handleOpen()}} providePayloadToChat={this.providePayloadToChat}  handleStates={this.props.handleStates} openProposal={(id,id2) => {this.state.proposalsViewer.handleOpen(id,id2)}} action={this.state.drawerJob.action} id={this.state.drawerJob.projectID} isOpen={this.state.drawerJob.isOpen} handleClose={() => {this.state.drawerJob.handleClose(); this.state.proposalsList.handleClose();}}  toastHandler={(message) => {this.addToast(message)}}/>}
                     {this.state.proposalsViewer.projectID ===""?null:<ProposalsViewer openProject={(id) => {this.state.drawerJob.handleOpen(id); this.state.proposalsViewer.handleClose("","")}} handleClose={() => {this.state.proposalsViewer.handleClose("","")}} projectId={this.state.proposalsViewer.projectID} proposalId={this.state.proposalsViewer.proposalID} isOpen={this.state.proposalsViewer.isOpen} />}
                    {this.state.createProject.isOpen? <CreateProject id={this.state.createProject.id} mode={this.state.createProject.mode} reloadProjects={() => {
                         if(this.state.searchBar === false){

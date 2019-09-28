@@ -24,7 +24,7 @@ export default class CreateProject extends React.Component{
           },
           formB:{
             type:{value:"Fixed Price", criteria:{type:"text", minLength:2}},
-            budget:{value:0, criteria:{type:"number", min:10, max:50000}},
+            budget:{value:0, criteria:{type:"number", min:5, max:50000}},
             level:{value:"Intermediate", criteria:{type:"text", minLength:2}},
           },
           mode:"",

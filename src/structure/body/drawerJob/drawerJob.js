@@ -68,8 +68,8 @@ export default class DrawerJob extends React.Component {
             action:"",
             proposal:{
                 price:{value:"", criteria:{type:"number", min:10, max:50000}},
-                receive:{value:"", criteria:{type:"number", min:10}},
-                message:{value:"", criteria:{type:"text", minLength:5, maxLength:10000}},
+                receive:{value:"", criteria:{type:"number", min:5}},
+                message:{value:"", criteria:{type:"text", minLength:2, maxLength:10000}},
                 deadline:{value:new Date(), criteria:{}}
             },
             proposalFetched:null,
@@ -245,21 +245,23 @@ export default class DrawerJob extends React.Component {
 
                     firebase.firestore().collection("proposals").doc(id).update(data)
                     .then(async () => {
-                        this.addToast("Proposal Updated");
+                        this.addToast("Bid Updated");
                         this.toggleLoading2()
                         let authorId = await firebase.firestore().collection("users").where("uid","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
-                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.proposalFetchedListener.id, id2:id})
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a bid in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.state.proposalFetched.id, id2:id})
                     })
                         this.props.handleClose();
                     })
                     .catch(e => {
+                       
                         this.addToast("Ohoh something went wrong!")
                         this.toggleLoading2()
                     })
                 }
             })
             .catch(e => {
+            
                 this.toggleLoading2();
                 this.addToast("Ohoh something went wrong!")
             })
@@ -317,8 +319,8 @@ export default class DrawerJob extends React.Component {
                     this.addToast("Proposal Accepted");
                     let userId = await firebase.firestore().collection("proposals").doc(idProposal).get()
                     
-                        this.sendMessage(`The owner of the project "${this.state.project[0].title}" accepted you the proposal `,userId.data().user,{type:"view contract" ,id:idProject})
-                        this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the proposal`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
+                        this.sendMessage(`The owner of the project "${this.state.project[0].title}" accepted you the bid `,userId.data().user,{type:"view contract" ,id:idProject})
+                        this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the bid`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
                     this.toggleLoading2()
                 this.toggleLoading();
                     this.startInterview(idProject,idProposal);
@@ -334,7 +336,7 @@ export default class DrawerJob extends React.Component {
             }
             })
             }else {
-                this.addToast("Proposal does not exist");
+                this.addToast("Bid does not exist");
                 this.toggleLoading2()
                 this.toggleLoading();
             }
@@ -347,7 +349,7 @@ export default class DrawerJob extends React.Component {
         })
     
 }else {
-    this.addToast("There is an accepted proposal already");
+    this.addToast("There is an accepted bid already");
     this.toggleLoading2()
 }
 })
@@ -365,7 +367,7 @@ export default class DrawerJob extends React.Component {
              if(!(Number.isNaN(Number(this.state.proposalFetchedListener[key]["value"]))) && (this.state.proposalFetchedListener[key]["value"] !== "")){
                 check = 1
              }else {
-                 if(this.state.proposalFetchedListener[key]["value"].toDate() === undefined || !isDate(this.state.proposalFetchedListener[key]["value"].toDate())){
+                 if(this.state.proposalFetchedListener[key]["value"].toDate === undefined || !isDate(this.state.proposalFetchedListener[key]["value"])){
                 if(this.state.proposalFetchedListener[key]["value"].toLowerCase() !== reference[key]["value"].toLowerCase()){
 
                     check = 1
@@ -593,10 +595,10 @@ export default class DrawerJob extends React.Component {
                    batch.update(firebase.firestore().collection("projects").doc(this.props.id), {applicants:applicants,proposals:applicants.length, involved:involved, updated:firebase.firestore.Timestamp.now()})
 
                    batch.commit().then(async () => {
-                    this.addToast("Proposal Submitted");
+                    this.addToast("Bid Submitted");
                     let authorId = await firebase.firestore().collection("users").where("email","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
-                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has made you a proposal in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.props.id, id2:data.id})
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has made you a bid in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.props.id, id2:data.id})
                     })
                     this.toggleLoading2()
                     this.props.handleClose();
@@ -706,10 +708,15 @@ export default class DrawerJob extends React.Component {
                        
                              if(((Number.isNaN(Number(proposals[key]))) || proposals[key] === "") && proposals[key].seconds === undefined){
                                  obj.value = proposals[key];
-                                 obj.criteria = {type:"text", minLength:4, maxLength:500}
+                                 obj.criteria = {type:"text", minLength:0, maxLength:10000}
                              }else if(!((Number.isNaN(Number(proposals[key]))) && proposals[key] !== "")){
+                                 if(key === "price"){
                                  obj.value = proposals[key];
                                  obj.criteria = {type:"number", min:10, max:50000}
+                                 }else {
+                                    obj.value = proposals[key];
+                                    obj.criteria = {type:"number", min:5, max:50000}
+                                 }
                              }else {
                                 
                                if(key !== "id"){
@@ -721,8 +728,9 @@ export default class DrawerJob extends React.Component {
                              }
                              proposalFetched[key] = Object.assign({},obj);
                          })
-                         proposalFetched["received"] = {value:Math.round((proposalFetched["price"]["value"] - proposalFetched["price"]["value"]*0.15)*100)/100, criteria:{type:"number", min:10}}
- 
+                         proposalFetched["received"] = {value:Math.round((proposalFetched["price"]["value"] - proposalFetched["price"]["value"]*0.15)*100)/100, criteria:{type:"number", min:5}}
+
+                         proposalFetched["presentation"] = {value:proposals["presentation"], criteria:{type:"text", minLength:3, maxLength:10000}}
                          
                          
                       this.proposalFetchedListener = Object.assign({}, proposalFetched)
@@ -1039,10 +1047,10 @@ export default class DrawerJob extends React.Component {
                     
                         {
                         this.state.isSaved === true?<div className="action-btns text-center">
-                        <button onClick={() => {this.removeFromFavorites()}} className="btn btn-custom-1 mr-2 mt-3 btn-sm"><i className="material-icons align-middle">favorite_border</i>Remove From Favorites</button>
+                        <button onClick={() => {this.removeFromFavorites()}} className="btn  mr-2 mt-3 btn-sm"><i className="material-icons align-middle">favorite</i></button>
                             </div>:
                         <div className="action-btns text-center">
-                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project Saved","Upps Problem Saving The Project", this.props.handleClose)}} className="btn btn-custom-1 mr-2 mt-3 btn-sm"><i className="material-icons align-middle">favorite</i> Mark As Favorite</button>
+                    <button onClick={() => {this.performTransaction("projects","references",firebase.auth().currentUser.email,"array","Project added to favorites","Upps Problem Saving The Project", this.props.handleClose)}} className="btn  mr-2 mt-3 btn-sm"><i className="material-icons align-middle">favorite_border</i></button>
                         </div>
                         }
                         <div className="container-fluid mt-4">
@@ -1187,7 +1195,7 @@ export default class DrawerJob extends React.Component {
                                       let base = state.alert;
                                       base.isOpen = true;
                                       base.confirm = () => {this.submitProposal()}
-                                      base.text = "Sure you want to submit this proposal?"
+                                      base.text = "Sure you want to submit this bid?"
                                       return {
                                           alert:base
                                       }
@@ -1206,7 +1214,13 @@ export default class DrawerJob extends React.Component {
                 <div className={`${Classes.DIALOG_BODY}`}>
                       <button type="button" className="btn btn-custom-1 mb-3 btn-sm " onClick={() => {this.changePage("#dj-section-3","#dj-section-1")}}><i className="material-icons align-middle">chevron_left</i> Back</button>
                     <div className="card">
-                        <div className="card-header">
+                        <div className="card-header" style={{position:"relative"}}>
+                            <EditBtn btns={[
+                                {
+                                    text:"Delete Bid",
+                                    callback:() => {}
+                                }
+                            ]} />
                             <h3>Bid</h3>
                         </div>
                     <div className="card-body">
@@ -1267,14 +1281,14 @@ export default class DrawerJob extends React.Component {
                       </div>
 
                       <div className="card-footer text-center">
-                          {this.state.hasChanged === true?
+                        
                           <button type="button" className="btn btn-custom-1" onClick={()=> {
                               if(this._mounted){
                                   this.setState(state => {
                                       let base = state.alert;
                                       base.isOpen = true;
                                       base.confirm = () => {this.updateProposal()}
-                                      base.text ="Sure you want to update this proposal?"
+                                      base.text ="Sure you want to update this bid?"
                                       return {
                                           alert:base
                                       }
@@ -1282,8 +1296,8 @@ export default class DrawerJob extends React.Component {
                               }
                               
                             }}><i className="material-icons align-middle">send</i> Confirm Edit</button>
-                          :null
-                          }
+                        
+                          
                       </div>
                   </div>
                   </div>
@@ -1319,7 +1333,7 @@ export default class DrawerJob extends React.Component {
                                     let base =state.alert;
                                     base.isOpen = true;
                                     base.confirm = () => {this.acceptProposal(this.props.id, proposal.id)}
-                                    base.text ="Sure you want to accept this proposal?"
+                                    base.text ="Sure you want to accept this bid?"
                                     return {
                                         alert:base
                                     }

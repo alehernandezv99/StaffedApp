@@ -6,21 +6,21 @@ let checkCriteria = (value, criteria, subject) => {
       if(criteria.type === "text"){
 
         if(criteria.minLength){
-        if(!(value.length >= criteria.minLength)){
+        if(!(String(value).length >= criteria.minLength)){
           check = 1;
           message += ` The ${subject} is less than ${criteria.minLength} characters` 
         }
       }
 
       if(criteria.maxLength){
-        if(!(value.length <= criteria.maxLength)){
+        if(!(String(value).length <= criteria.maxLength)){
           message += ` The ${subject} is greater than ${criteria.maxLength} characters`;
           check = 1;
         }
       }
 
       if(criteria.pattern){
-        if(criteria.pattern.test(value) === false){
+        if(criteria.pattern.test(String(value)) === false){
           check = 1
           message += ` The ${subject} contain invalid characters`
         }

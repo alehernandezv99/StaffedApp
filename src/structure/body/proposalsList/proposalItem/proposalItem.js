@@ -61,6 +61,8 @@ export default class ProposalItem extends React.Component {
                 <div className="card-body mt-3" >
                    <h4 className="text-center">{this.props.title}</h4>
                    <p className="mt-3 text-center">{this.props.cover}</p>
+                   <hr/>
+                   <h4>Price</h4>
                    <h5>{this.props.price + "$"}</h5>
                 </div>
 

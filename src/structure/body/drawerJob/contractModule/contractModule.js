@@ -7,6 +7,7 @@ import EndContractDrawer  from "../endContractDrawer";
 import OpenDisputeDrawer from "../openDisputeDrawer";
 
 
+
 export default class ContractModule extends React.Component {
     constructor(props){
         super(props);
@@ -110,7 +111,7 @@ export default class ContractModule extends React.Component {
                     {this.state.endContract.isOpen && this.props.isOpen? <EndContractDrawer projectID={this.props.projectID} addToast={this.props.addToast} isOpen={this.state.endContract.isOpen} handleClose={this.state.endContract.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
                     {this.state.openDispute.isOpen && (this.props.openDispute === false || this.props.openDispute ===  undefined)? <OpenDisputeDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.openDispute.isOpen}  handleClose={this.state.openDispute.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}  />:null}
                 </div>
-                {this.props.openDispute === false?
+                {this.props.openDispute === false || this.props.openDispute === undefined?
                 <EditBtn btns={this.props.isOpen?
                     [
                         {
