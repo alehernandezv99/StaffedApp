@@ -21,6 +21,7 @@ import { isDate } from "util";
 
 
 
+
 export default class DrawerJob extends React.Component {
     constructor(props){
         super(props);
@@ -549,15 +550,13 @@ export default class DrawerJob extends React.Component {
 
         
 
-        firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
-        .then((user) => {
-        if(user.data().cards >= this.state.project[0].cards){
-         let newCards = Number(user.data().cards - this.state.project[0].cards);
+ 
+   
          //let previewPorposals = user.data().proposals !== undefined? user.data().proposals:[];
         // previewPorposals.push({projectId:this.props.id ,proposalId:data.id});
          let batch = firebase.firestore().batch();
          //batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid), {proposals:previewPorposals})
-         batch.update(firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid),{cards:newCards} )
+        
 
          let inboxID = firebase.firestore().collection("users").doc(this.state.project[0].author).collection("inbox").doc().id
           batch.set(firebase.firestore().collection("users").doc(this.state.project[0].author).collection("inbox").doc(inboxID), {
@@ -616,14 +615,8 @@ export default class DrawerJob extends React.Component {
         })
    
 
-    }else {
-        this.addToast("You don't have enough cards");
-        this.props.handleClose();
-    }
-        })
-        .catch(e => {
-            this.addToast(e.message);
-        })
+ 
+       
         
         }else {
             for(let i = 0; i < messages.length; i++){
@@ -1196,6 +1189,8 @@ export default class DrawerJob extends React.Component {
                                   this.setState(state => {
                                       let base = state.alert;
                                       base.isOpen = true;
+                                      base.icon = "info-sign";
+                                      base.intent = Intent.WARNING;
                                       base.confirm = () => {this.submitProposal()}
                                       base.text = "Sure you want to submit this bid?"
                                       return {
@@ -1220,7 +1215,46 @@ export default class DrawerJob extends React.Component {
                             <EditBtn btns={[
                                 {
                                     text:"Delete Bid",
-                                    callback:() => {}
+                                    callback:() => {
+                                        if(this._mounted){
+                                            this.setState(state => {
+                                                let base =state.alert;
+                                                base.isOpen = true;
+                                                base.intent = Intent.DANGER;
+                                                base.icon = "trash";
+                                                base.text = "Sure you want to delete this bid?";
+                                                base.confirm = () => {
+
+                                                    this.toggleLoading2();
+                                                    firebase.firestore().collection("proposals").doc(this.state.proposalFetched.id).delete()
+                                                    .then(() => {
+                                                        
+                                                        this.addToast("Bid Deleted!");
+                                                        this.toggleLoading2();
+                                                        this.changePage("#dj-section-3","#dj-section-1")
+                                                        if(this.projectListener !== undefined){
+                                                            this.projectListener();
+                                                            this.projectListener =  firebase.firestore().collection("projects").doc(this.props.id).onSnapshot(snapshot => {
+                                                                this.fetchProjectProps();
+                                                            })
+                                                        }else {
+                                                            this.projectListener =  firebase.firestore().collection("projects").doc(this.props.id).onSnapshot(snapshot => {
+                                                                this.fetchProjectProps();
+                                                            })
+                                                        }
+                                                        
+                                                    })
+                                                    .catch(e => {
+                                                        this.addToast("Ohoh something went wrong!");
+                                                        this.toggleLoading2();
+                                                    })
+                                                }
+                                                return {
+                                                    alert:base
+                                                }
+                                            })
+                                        }
+                                    }
                                 }
                             ]} />
                             <h3>Bid</h3>
@@ -1289,6 +1323,8 @@ export default class DrawerJob extends React.Component {
                                   this.setState(state => {
                                       let base = state.alert;
                                       base.isOpen = true;
+                                      base.icon = "info-sign";
+                                      base.intent = Intent.WARNING;
                                       base.confirm = () => {this.updateProposal()}
                                       base.text ="Sure you want to update this bid?"
                                       return {

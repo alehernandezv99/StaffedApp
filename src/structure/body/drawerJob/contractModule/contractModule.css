@@ -3,3 +3,9 @@
     top:20px;
     right:100px;
 }
+
+.daily-report {
+    position: absolute;
+    top:100px;
+    right:20px
+}

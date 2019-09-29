@@ -403,9 +403,24 @@ export default class Payments extends React.Component {
 
     }
 
-    addToast = (message) => {
+    addToast = (message, action) => {
         if(this._mounted){
+            if(action === undefined){
         this.toaster.show({ message: message});
+            }else {
+                this.toaster.show({ message: message, action:{text:"Resend", onClick:() => {
+                    this.toggleLoading();
+                    firebase.auth().currentUser.sendEmailVerification()
+                    .then(() => {
+                        this.toggleLoading();
+                        this.addToast("Email Sent");
+                    })
+                    .catch(e => {
+                        this.addToast("Ohoh something went wrong!");
+                        this.toggleLoading();
+                    })
+                }}});
+            }
         }
     }
 
@@ -637,7 +652,7 @@ export default class Payments extends React.Component {
                 this.uid = user.uid
               // User is signed in.
               if(user.emailVerified === false){
-                  this.addToast("Please Verify Your Email")
+                  this.addToast("Please Verify Your Email" ,true)
               }
                 this.fetchUser(user.uid)
             this.fetchBalance(user)

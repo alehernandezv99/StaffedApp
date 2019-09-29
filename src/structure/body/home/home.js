@@ -5,7 +5,7 @@ import JobModule from "./jobModule";
 import firebase from "../../../firebaseSetUp";
 import HomeLoading from "../../loading/homeLoading";
 import LoadingSpinner from "../../loading/loadingSpinner";
-import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, RangeSlider} from "@blueprintjs/core";
+import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, RangeSlider, IToastOptions} from "@blueprintjs/core";
 import CreateProject from "../createProject";
 import $ from "jquery";
 import autocomplete from "../../../utils/autocomplete";
@@ -26,6 +26,7 @@ import InvitationDrawer from "../invitationDrawer";
 import Chat from "../chat";
 
 import "./home.css";
+
 
 
 
@@ -445,9 +446,24 @@ export default class Home extends React.Component {
     }
     }
 
-    addToast = (message) => {
+    addToast = (message, action) => {
         if(this._mounted){
+            if(action === undefined){
         this.toaster.show({ message: message});
+            }else {
+                this.toaster.show({ message: message, action:{text:"Resend", onClick:() => {
+                    this.toggleLoading();
+                    firebase.auth().currentUser.sendEmailVerification()
+                    .then(() => {
+                        this.toggleLoading();
+                        this.addToast("Email Sent");
+                    })
+                    .catch(e => {
+                        this.addToast("Ohoh something went wrong!");
+                        this.toggleLoading();
+                    })
+                }}});
+            }
         }
     }
 
@@ -619,7 +635,7 @@ export default class Home extends React.Component {
             if (user) {
               // User is signed in.
               if(user.emailVerified === false){
-                  this.addToast("Please Verify Your Email")
+                  this.addToast("Please Verify Your Email", true)
               }
               this.updateUser(user.uid)
 
@@ -1111,7 +1127,7 @@ export default class Home extends React.Component {
                 {this.state.isLoading === true? <LoadingSpinner />:null }
                 <Toaster className={Classes.OVERLAY} position={Position.TOP} ref={this.refHandlers.toaster}>
                     {/* "Toasted!" will appear here after clicking button. */}
-                    {this.state.toasts.map(toast => <Toast {...toast} />)}
+                    {this.state.toasts.map(toast => <Toast action={{onClick:() => {}, text:"Resend"}} {...toast} />)}
                 </Toaster>
                 <Navbar logo={{
                     img:logo,
