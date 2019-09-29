@@ -885,7 +885,7 @@ export default class ProfileViewer extends React.Component {
                             </div>
                             :this.state.CV.editable === "never-this-value"?<button type="button" className="btn btn-custom-3 btn-sm m-2" onClick={() => {this.openEditPanel("add",this.state.CV.id,"description")}}>Add Description</button>:<p>No description</p>}
 
-<div class=" mt-4 text-center">
+<div className=" mt-4 text-center">
    
     
        {this.state.user.publicFeedback !== null?this.state.user.publicFeedback === true? <div className="mt-2 text-center" style={{width:"300px", marginLeft:"50%",transform:"translate(-50%,0)"}}>

@@ -250,7 +250,8 @@ export default class DrawerJob extends React.Component {
                         this.toggleLoading2()
                         let authorId = await firebase.firestore().collection("users").where("uid","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
-                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a bid in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id2:this.state.proposalFetched.id, id:id})
+                        console.log("proposal id", this.state.proposalFetched.id);
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a bid in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id2:id, id:this.props.id})
                     })
                         this.props.handleClose();
                     })
@@ -324,7 +325,7 @@ export default class DrawerJob extends React.Component {
                         this.sendMessage(`You in the project "${this.state.project[0].title}" accepted the bid`,firebase.auth().currentUser.uid,{type:"view contract" ,id:idProject})
                     this.toggleLoading2()
                 this.toggleLoading();
-                    this.startInterview(idProject,idProposal);
+                   // this.startInterview(idProject,idProposal);
                 })
                 .catch(e => {
                     this.addToast(e.message);
@@ -733,7 +734,7 @@ export default class DrawerJob extends React.Component {
 
                          proposalFetched["presentation"] = {value:proposals["presentation"], criteria:{type:"text", minLength:3, maxLength:10000}}
                          
-                         
+                         proposalFetched["id"] = proposals["id"]
                       this.proposalFetchedListener = Object.assign({}, proposalFetched)
                       Object.keys(this.proposalFetchedListener).forEach(key => {
                           this.proposalFetchedListener[key] = Object.assign({}, this.proposalFetchedListener[key]);
