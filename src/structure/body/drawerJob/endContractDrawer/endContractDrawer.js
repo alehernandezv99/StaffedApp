@@ -45,11 +45,7 @@ export default class EndContractDrawer extends React.Component {
                 }
             },
             reference:"",
-            reason:{value:"Successfully Completed", criteria:{type:"text", minLength:1}},
-            experience:{value:"1",},
-            communication:{value:"1",},
-            skills:{value:"1",},
-            availability:{value:"1",},
+            reason:{value:"Problems With Freelancer", criteria:{type:"text", minLength:1}},
             message:{value:"",}
         }
     }
@@ -78,7 +74,7 @@ export default class EndContractDrawer extends React.Component {
 
     submit= () => {
         this.toggleLoading();
-        if(checkCriteria(this.state.reason.value, this.state.reason.criteria, "Reason").check && checkCriteria(this.state.experience.value, this.state.experience.criteria, "Experience").check){
+        if(checkCriteria(this.state.reason.value, this.state.reason.criteria, "Reason").check){
        
         firebase.firestore().collection("contracts").doc(this.props.id).get()
         .then(doc => {
@@ -89,7 +85,8 @@ export default class EndContractDrawer extends React.Component {
 
                     let data = {
                         reason:this.state.reason.value,
-                        experience:this.state.experience.value,
+                        message:this.state.message.value,
+                        date:firebase.firestore.Timestamp.now()
                     }
 
                     batch.update(firebase.firestore().collection("contracts").doc(this.props.id),{
@@ -97,26 +94,8 @@ export default class EndContractDrawer extends React.Component {
                         closeDetails:data
                     })
 
-
-                    let targetUser ="";
-
-                    if(this.props.client === firebase.auth().currentUser.uid){
-                        targetUser = this.props.freelancer
-                    }else{
-                        targetUser = this.props.client
-                    }
-
-                    let review = {
-                        communication:Number(this.state.communication.value),
-                        skills:Number(this.state.skills.value),
-                        availability:Number(this.state.availability.value),
-                        message:this.state.message.value
-                    }
-
-                    let idReview = firebase.firestore().collection("users").doc(targetUser).collection("reviews").doc().id
-                    batch.set(firebase.firestore().collection("users").doc(targetUser).collection("reviews").doc(idReview), review)
                     batch.update(firebase.firestore().collection("projects").doc(this.props.projectID), {
-                        status:this.state.reason.value === "Successfully Completed"?"Completed":"Cancelled"
+                        status:"Cancelled"
                     })
                 
 
@@ -141,14 +120,7 @@ export default class EndContractDrawer extends React.Component {
     }else {
         this.toggleLoading()
         let messages = []
-        if(!checkCriteria(this.state.reason.value, this.state.reason.criteria, "Reason").check){
-            messages.push(checkCriteria(this.state.reason.value, this.state.reason.criteria, "Reason").message)
-        }
-
-        if(!checkCriteria(this.state.experience.value, this.state.experience.criteria, "Experience").check){
-            messages.push(checkCriteria(this.state.experience.value, this.state.experience.criteria, "Experience").message)
-        }
-
+  
         for(let i = 0; i < messages.length; i++){
             this.props.addToast(messages[i])
         }
@@ -215,9 +187,7 @@ export default class EndContractDrawer extends React.Component {
                 <select className="custom-select" value={this.state.reason.value}  onChange={(e) => {
                         this.handleChangeValue("reason", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The reason is required")
                     }}>
-    
-                    <option value="Successfully Completed">Successfully Completed</option> 
-                    <option value="Project Incompeted">Project Incompleted</option>
+
                     <option value="Problems With Freelancer">Problems With Freelancer</option>
                     <option value="Other">Other</option>
              </select>
@@ -225,83 +195,21 @@ export default class EndContractDrawer extends React.Component {
                 </div>
 
                 <div className="form-group">
-                    <label>Specify The Quality of Your Experience</label>
-                    <select className="custom-select" value={this.state.experience.value}  onChange={(e) => {
-                        this.handleChangeValue("experience", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The exerience is required")
-                    }}>
-           
-                    <option value="1">1</option> 
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                  </select>
-                  <div className="invalid-feedback"></div>
-                </div>
-
-                {this.state.reason.value === "Successfully Completed"?
-                <div>
-                <h4>Feedback To {this.state.reference}</h4>
-                <div className="form-group">
-                    <label>Communication</label>
-                    <select className="custom-select" value={this.state.communication.value}  onChange={(e) => {
-                        this.handleChangeValue("communication", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The communication is required")
-                    }}>
-      
-                    <option value="1">1</option> 
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                  </select>
-                  <div className="invalid-feedback"></div>
-                </div>
-
-                <div className="form-group">
-                    <label>Skills</label>
-                    <select className="custom-select" value={this.state.skills.value}  onChange={(e) => {
-                        this.handleChangeValue("skills", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The skills is required")
-                    }}>
-   
-                    <option value="1">1</option> 
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                  </select>
-                  <div className="invalid-feedback"></div>
-                </div>
-
-                <div className="form-group">
-                    <label>Availability</label>
-                    <select className="custom-select" value={this.state.availability.value} onChange={(e) => {
-                        this.handleChangeValue("availability", e.target.options[e.target.selectedIndex].value, e.target.parentNode.childNodes[2], "The availability is required")
-                    }}>
-          
-                    <option value="1">1</option> 
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                  </select>
-                  <div className="invalid-feedback"></div>
-                </div>
-
-                <div className="form-group">
-                    <label>Additional Message</label>
+                    <label>Message</label>
                     <textarea className="form-control" value={this.state.message.value} onChange={(e) => {
-                        this.handleChangeValue("message", e.target.value, e.target.parentNode.childNodes[2], "The message is required")
+                        e.persist();
+                        this.handleChangeValue("message", e.target.value, e.target.parentNode.childNodes[2], "Message is not required")
                     }}></textarea>
-                    <div className="invalid-feedback"></div>
+                     <div className="invalid-feedback"></div>
                 </div>
-                </div>
-                :null}
+
+            
                 <button className="btn btn-custom-1 mt-3 btn-block" onClick={() => {
                     if(this._mounted){
                         this.setState(state => {
                             let base = state.alert;
                             base.isOpen = true;
-                            base.text = "Sure you want to end this contract?";
+                            base.text = "Sure you want to cancel this project?";
                             base.icon = "info-sign";
                             base.intent = Intent.WARNING;
                             base.confirm = () => {this.submit()}

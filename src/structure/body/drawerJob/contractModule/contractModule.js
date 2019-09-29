@@ -5,6 +5,7 @@ import UserBox from "../../profile/userBox";
 import EditBtn from "../../profile/editBtn";
 import EndContractDrawer  from "../endContractDrawer";
 import OpenDisputeDrawer from "../openDisputeDrawer";
+import FeedbackDrawer from "../feedbackDrawer";
 
 
 
@@ -12,6 +13,7 @@ export default class ContractModule extends React.Component {
     constructor(props){
         super(props);
         this.state ={
+            canGiveFeedback:null,
             status:"",
             owner:false,
             endContract:{
@@ -66,6 +68,34 @@ export default class ContractModule extends React.Component {
                         })
                     }
                 }
+            },
+
+            feedbackDrawer:{
+                isOpen:false,
+                handleOpen:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.feedbackDrawer;
+                            base.isOpen = true;
+
+                            return {
+                                feedbackDrawer:base
+                            }
+                        })
+                    }
+                },
+                handleClose:() => {
+                    if(this._mounted){
+                        this.setState(state => {
+                            let base = state.feedbackDrawer;
+                            base.isOpen = false;
+
+                            return {
+                                feedbackDrawer:base
+                            }
+                        })
+                    }
+                }
             }
         }
     }
@@ -76,6 +106,26 @@ export default class ContractModule extends React.Component {
 
     componentDidMount(){
         this._mounted = true;
+
+        let targetUser = "";
+        if(this.props.client === firebase.auth().currentUser.uid){
+            targetUser = this.props.freelancer;
+        }else {
+            targetUser = this.props.client
+        }
+    firebase.firestore().collection("users").doc(targetUser).collection("reviews").where("author","==", firebase.auth().currentUser.uid).get()
+    .then(snap => {
+        if(snap.empty){
+            if(this._mounted){
+                this.setState({
+                    canGiveFeedback:true
+                })
+            }
+        }
+    })
+    .catch(e => {
+        this.props.addToast("Ohoh something went wrong!")
+    })
 
       firebase.firestore().collection("projects").doc(this.props.projectID).onSnapshot(project => {
        firebase.firestore().collection("transactions").where("projectID","==",this.props.projectID).get()
@@ -107,25 +157,34 @@ export default class ContractModule extends React.Component {
     render(){
         return(
             <div className="container-fluid" style={{position:"relative"}}>
+               {(this.props.isOpen === false)&&(this.state.canGiveFeedback === true)? <div className="feedback"><i className="material-icons align-middle">star</i> <a href="" onClick={(e) => {e.preventDefault(); this.state.feedbackDrawer.handleOpen()}}>Give Feedback</a></div>:null}
                 <div id="portalContainer2">
                     {this.state.endContract.isOpen && this.props.isOpen? <EndContractDrawer projectID={this.props.projectID} addToast={this.props.addToast} isOpen={this.state.endContract.isOpen} handleClose={this.state.endContract.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
                     {this.state.openDispute.isOpen && (this.props.openDispute === false || this.props.openDispute ===  undefined)? <OpenDisputeDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.openDispute.isOpen}  handleClose={this.state.openDispute.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}  />:null}
+                    {this.state.feedbackDrawer.isOpen && (this.props.isOpen === false)? <FeedbackDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.feedbackDrawer.isOpen}  handleClose={this.state.feedbackDrawer.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id} /> : null}
                 </div>
-                {(this.props.openDispute === false || this.props.openDispute === undefined) && (this.props.client === firebase.auth().currentUser.uid)?
+                {(this.props.client === firebase.auth().currentUser.uid)?
                 <EditBtn btns={this.props.isOpen?
                     [
                         {
                             text:"Cancel Project",
                             callback:()=> {this.state.endContract.handleOpen()}
                         }
-                    ]:[
+                    ]:(this.props.openDispute === false || this.props.openDispute === undefined)?[
                         {
                             text:"Open a Dispute",
                             callback:() => {this.state.openDispute.handleOpen()}
                         }
-                    ]
+                    ]:[]
                 }/>
-            :null}
+            :<EditBtn btns={
+                this.props.isOpen?null:(this.props.openDispute === false || this.props.openDispute === undefined)?[
+                    {
+                        text:"Open a Dispute",
+                        callback:() => {this.state.openDispute.handleOpen();}
+                    }
+                ]:[]
+            } />}
             <div className="form-group">
                 <h4>Client</h4>
                 <UserBox id={this.props.client} openUser={this.props.openUser} addToast={this.props.addToast} size={"60px"} handleStates={this.props.handleStates} />

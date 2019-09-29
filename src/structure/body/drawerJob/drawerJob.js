@@ -250,7 +250,7 @@ export default class DrawerJob extends React.Component {
                         this.toggleLoading2()
                         let authorId = await firebase.firestore().collection("users").where("uid","==",this.state.project[0].author).get()
                     authorId.forEach(user => {
-                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a bid in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id:this.state.proposalFetched.id, id2:id})
+                        this.sendMessage(`The user ${firebase.auth().currentUser.email} has updated a bid in the project ${this.state.project[0].title}`,user.id,{type:"view proposal",id2:this.state.proposalFetched.id, id:id})
                     })
                         this.props.handleClose();
                     })
