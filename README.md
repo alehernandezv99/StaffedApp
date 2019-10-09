@@ -1,3 +1,17 @@
+
+# StaffedApp
+React App implemented with firebase for managing projects and cooperative work with other users processing payments with paypal
+# Steeps for installation
+<ul>
+  <li>Clone or Download</li>
+  <li>Open the root project using your favorite code editor</li>
+  <li>Open the terminal at that direction and put <kbd>$ npm install</kbd></li>
+  <li>Wait for the installation of the node packages</li>
+  <li>When finish put in the terminal <kbd>$ npm install</kbd> for serve the app in localhost at port 3000</li>
+  <li>Enjoy</li>
+</ul>
+>>>>>>> 9056561dd841ace15f2706a56d320bb09210ebd4
+
 <<<<<<< HEAD
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
@@ -68,15 +82,3 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/de
 
 This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
 =======
-# StaffedApp
-React App implemented with firebase for managing projects and cooperative work with other users processing payments with paypal
-# Steeps for installation
-<ul>
-  <li>Clone or Download</li>
-  <li>Open the root project using your favorite code editor</li>
-  <li>Open the terminal at that direction and put <kbd>$ npm install</kbd></li>
-  <li>Wait for the installation of the node packages</li>
-  <li>When finish put in the terminal <kbd>$ npm install</kbd> for serve the app in localhost at port 3000</li>
-  <li>Enjoy</li>
-</ul>
->>>>>>> 9056561dd841ace15f2706a56d320bb09210ebd4
