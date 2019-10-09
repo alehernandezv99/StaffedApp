@@ -107,10 +107,11 @@ export default class DailyReport extends React.Component {
 
                
 
-                if((new Date().getDate() !== lastDate.toDate().getDate())){
+            
                     firebase.firestore().collection("contracts").doc(this.props.id).collection("reports").add({
                         created:firebase.firestore.Timestamp.now(),
-                        report:this.state.report
+                        report:this.state.report,
+                        author:this.props.freelancer === firebase.auth().currentUser.uid?"Contracter":"Client"
                     })
                     .then(() => {
                         this.props.addToast("Report Submitted");
@@ -121,43 +122,7 @@ export default class DailyReport extends React.Component {
                         this.props.addToast("Ohoh something went wrong!")
                         this.toggleLoading();
                     })
-                }else {
-                   if(new Date().getMonth() !== lastDate.toDate().getMonth()){
-                    firebase.firestore().collection("contracts").doc(this.props.id).collection("reports").add({
-                        created:firebase.firestore.Timestamp.now(),
-                        report:this.state.report
-                    })
-                    .then(() => {
-                        this.props.addToast("Report Submitted");
-                        this.toggleLoading();
-                        this.fetchReports(false);
-                    })
-                    .catch(e => {
-                        this.props.addToast("Ohoh something went wrong!")
-                        this.toggleLoading();
-                    })
-
-                   } else {
-                       if(new Date().getFullYear() !== lastDate.toDate().getFullYear()){
-                        firebase.firestore().collection("contracts").doc(this.props.id).collection("reports").add({
-                            created:firebase.firestore.Timestamp.now(),
-                            report:this.state.report
-                        })
-                        .then(() => {
-                            this.props.addToast("Report Submitted");
-                            this.toggleLoading();
-                            this.fetchReports(false);
-                        })
-                        .catch(e => {
-                            this.props.addToast("Ohoh something went wrong!")
-                            this.toggleLoading();
-                        })
-                       }else {
-                        this.toggleLoading();
-                        this.props.addToast("You can only submit one report per day")
-                    }
-                   }
-                }
+                
              }else {
                 this.toggleLoading();
                 this.props.addToast("Cannot send an empty report");
@@ -166,7 +131,8 @@ export default class DailyReport extends React.Component {
             }else {
                 firebase.firestore().collection("contracts").doc(this.props.id).collection("reports").add({
                     created:firebase.firestore.Timestamp.now(),
-                    report:this.state.report
+                    report:this.state.report,
+                    author:this.props.freelancer === firebase.auth().currentUser.uid?"Contracter":"Client"
                 })
                 .then(() => {
                     this.props.addToast("Report Submitted");
@@ -205,6 +171,8 @@ export default class DailyReport extends React.Component {
             <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={"50%"} isOpen={this.props.isOpen}>
             <div className={Classes.DRAWER_BODY}>
             <div className={`${Classes.DIALOG_BODY}`}>
+               
+                <div>
                  <div className="form-group text-center">
                     { this.state.inputState === false?<button className="btn btn-custom-1 " onClick={(e) => {this.toggleInputPanel(true);}}><i className="material-icons align-middle">add</i>Add Report</button>:null}
                  </div>
@@ -222,11 +190,14 @@ export default class DailyReport extends React.Component {
                      <button className="btn btn-custom-1 m-3" onClick={() => {this.submitReport();}}>Submit</button> 
                      <button className="btn btn-danger m-3" onClick={() => {this.toggleInputPanel(false)}}>Cancel</button>
                  </div>
+                 </div>
+                
                  <div className="container">
                      {this.state.pending === true?<div className="spinner-border"></div>:this.state.reports !== null?this.state.reports.length > 0?this.state.reports.map((e,i) => {
                          return <div className="card mt-2" key={i} style={{position:"relative"}}>
                              <div className="hour-posted">{e.created.toDate().getHours() + " : " + e.created.toDate().getMinutes() + " " + e.created.toDate().toDateString()}</div>
                              <div className="card-body mt-3">
+                                 <h4>{e.author}</h4>
                                  <TextCollapse  text={e.report} maxWidth={150} />
                                 </div>
                              </div>

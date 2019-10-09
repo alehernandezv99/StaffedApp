@@ -554,7 +554,7 @@ export default class Payments extends React.Component {
     }
 
     fetchBalance =() => {
-        fetch(`https://staffedapp.appspot.com/balance?id=${firebase.auth().currentUser.uid}`)
+        fetch(`https://staffed-app.herokuapp.com/balance?id=${firebase.auth().currentUser.uid}`)
                 .then(res => {
                     return res.json()
                 })

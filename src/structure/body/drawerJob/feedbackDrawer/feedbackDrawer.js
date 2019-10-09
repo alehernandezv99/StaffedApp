@@ -47,7 +47,7 @@ export default class FeedbackDrawer extends React.Component {
             communication:{value:1},
             skills:{value:"1",},
             availability:{value:"1",},
-            message:{value:"",}
+            message:{value:"",},
         }
     }
 
@@ -56,7 +56,9 @@ export default class FeedbackDrawer extends React.Component {
     }
 
     componentDidMount(){
-        this._mounted = true
+        this._mounted = true;
+
+
     }
 
     toggleLoading = () => {
@@ -108,9 +110,11 @@ export default class FeedbackDrawer extends React.Component {
         let targetUser = "";
 
         if(this.props.client === firebase.auth().currentUser.uid){
-            targetUser=  this.props.freelancer
+            targetUser=  this.props.freelancer;
+           
         }else {
             targetUser = this.props.client;
+           
         }
 
         let data = {
@@ -149,7 +153,7 @@ export default class FeedbackDrawer extends React.Component {
                
           
                 <div>
-                <h4>Feedback To {this.state.reference}</h4>
+                <h4>Feedback To {this.props.reference}</h4>
                 <div className="form-group">
                     <label>Communication</label>
                     <select className="custom-select" value={this.state.communication.value}  onChange={(e) => {

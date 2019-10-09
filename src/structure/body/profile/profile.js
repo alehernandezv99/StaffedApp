@@ -1462,9 +1462,9 @@ export default class Profile extends React.Component {
                     let index = 0
                     let acum = 0
                     Object.keys(review).forEach(key => {
-                        if(key !== "message"){
+                        if(key === "comunication" || key === "availability" || key === "skills" ){
                             index++;
-                            acum += review[key];
+                            acum += Number(review[key]);
                         }
                     })
 

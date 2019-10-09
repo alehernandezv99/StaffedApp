@@ -130,14 +130,38 @@ export default class ContractModule extends React.Component {
         this._mounted = false;
     }
 
+    checkFeedback = () => {
+        firebase.firestore().collection("users").doc(this.targetUser).collection("reviews").where("author","==", firebase.auth().currentUser.uid).get()
+    .then(snap => {
+        if(snap.empty){
+            if(this._mounted){
+                this.setState({
+                    canGiveFeedback:true
+                })
+            }
+        }else{
+            if(this._mounted){
+                this.setState({
+                    canGiveFeedback:null
+                })
+            }
+        }
+    })
+    .catch(e => {
+        this.props.addToast("Ohoh something went wrong!")
+    })
+    }
+
     componentDidMount(){
         this._mounted = true;
 
         let targetUser = "";
         if(this.props.client === firebase.auth().currentUser.uid){
             targetUser = this.props.freelancer;
+            this.targetUser = this.props.freelancer;
         }else {
             targetUser = this.props.client
+            this.targetUser = this.props.client
         }
     firebase.firestore().collection("users").doc(targetUser).collection("reviews").where("author","==", firebase.auth().currentUser.uid).get()
     .then(snap => {
@@ -184,12 +208,12 @@ export default class ContractModule extends React.Component {
         return(
             <div className="container-fluid" style={{position:"relative"}}>
                {(this.props.isOpen === false)&&(this.state.canGiveFeedback === true)? <div className="feedback"><i className="material-icons align-middle">star</i> <a href="" onClick={(e) => {e.preventDefault(); this.state.feedbackDrawer.handleOpen()}}>Give Feedback</a></div>:null}
-               {((this.props.isOpen === true) && (this.props.client === firebase.auth().currentUser.uid))?<div className="daily-report"><i className="material-icons align-middle">calendar_today</i> <a href="" onClick={(e) => {e.preventDefault(); this.state.dailyReport.handleOpen()}} href="">Daily Report</a></div>:null}
+               {(this.props.isOpen === true)?<div className="daily-report"><i className="material-icons align-middle">calendar_today</i> <a href="" onClick={(e) => {e.preventDefault(); this.state.dailyReport.handleOpen()}} href="">Daily Report</a></div>:null}
                 <div id="portalContainer2">
                     {this.state.endContract.isOpen && this.props.isOpen? <EndContractDrawer projectID={this.props.projectID} addToast={this.props.addToast} isOpen={this.state.endContract.isOpen} handleClose={this.state.endContract.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
                     {this.state.openDispute.isOpen && (this.props.openDispute === false || this.props.openDispute ===  undefined)? <OpenDisputeDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.openDispute.isOpen}  handleClose={this.state.openDispute.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}  />:null}
-                    {this.state.feedbackDrawer.isOpen && (this.props.isOpen === false)? <FeedbackDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.feedbackDrawer.isOpen}  handleClose={this.state.feedbackDrawer.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id} /> : null}
-                    {((this.props.isOpen) && (this.props.client === firebase.auth().currentUser.uid) &&(this.state.dailyReport.isOpen))?<DailyReport projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.dailyReport.isOpen}  handleClose={this.state.dailyReport.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
+                    {this.state.feedbackDrawer.isOpen && (this.props.isOpen === false)? <FeedbackDrawer projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.feedbackDrawer.isOpen}  handleClose={() => {this.state.feedbackDrawer.handleClose(); this.checkFeedback()}} client={this.props.client} reference={firebase.auth().currentUser.uid === this.props.freelancer?"Client":"Contracter"} freelancer={this.props.freelancer} id={this.props.id} /> : null}
+                    {((this.props.isOpen) &&(this.state.dailyReport.isOpen))?<DailyReport projectID={this.props.projectID} addToast={this.props.addToast}  isOpen={this.state.dailyReport.isOpen}  handleClose={this.state.dailyReport.handleClose} client={this.props.client} freelancer={this.props.freelancer} id={this.props.id}/>:null}
                 </div>
                 {(this.props.client === firebase.auth().currentUser.uid)?
                 this.props.isOpen?<EditBtn btns={
@@ -240,7 +264,7 @@ export default class ContractModule extends React.Component {
                         </div>
                     </div>
                     {this.props.status === "In Process" && this.state.status === "" && this.state.owner === true?
-                     <form action={`https://staffedapp.appspot.com/pay`} target="_blank" className="m-3" method="POST" >
+                     <form action={`https://staffed-app.herokuapp.com/pay`} target="_blank" className="m-3" method="POST" >
                          <input type="text" name="freelancer" value={this.props.freelancer} style={{display:"none"}}/>
                          <input type="text" name="client" value={this.props.client} style={{display:"none"}} />
                          <input type="text"  name="projectID" value={this.props.projectID} style={{display:"none"}} />
