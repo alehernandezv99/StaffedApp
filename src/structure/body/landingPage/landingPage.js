@@ -365,61 +365,61 @@ export default class LandingPage extends React.Component {
                     ]
                 }
                 />
-            <div className="container-fluid  text-center padding-1"  id="top">
-            <img src={MainGraphic} width="450px"/>
-                <h1>Welcome to StaffedApp</h1>            
-                <h5 style={{fontWeight:"normal"}} className="m-3">The Moderm and Simplest Solution for Managing Your Projects
+            <div className="container-fluid  text-center bg-top"  id="top" style={{paddingTop:"4em", paddingBottom:"10em", paddingRight:"4em", paddingLeft:"5em"}}>
+            <img src={MainGraphic} width="420px"/>
+                <h1 style={{fontSize:"50px", color:"rgb(80,80,80)", fontWeight:700}}>Welcome to StaffedApp</h1>            
+                <h4 style={{fontWeight:"normal", color:"rgb(100,100,100)", fontSize:"20px", fontWeight:600}} className="m-3">The Moderm and Simplest Solution for Managing Your Projects
                  And Hiring Professional Freelancers
-                </h5>
-                <button type="button" onClick={this.state.signUpDrawer.handleOpen} className="btn btn-custom-1 btn-lg m-3">Join Today</button>
+                </h4>
+                <button type="button" onClick={this.state.signUpDrawer.handleOpen} className="btn btn-custom-1 btn-lg m-3" style={{fontSize:"24px"}}>Join Today</button>
             </div>
-            <div className="container-fluid text-center bg-gradient-1 padding-2" id="productInfo">
-                <h2 className="m-b-3" style={{color:"white"}}>Product Info</h2>
-                <div className="row text-center">
-                    <div className="col bg-color-white rounded m-3 p-3">
-                        <h4><i className="material-icons mr-sm-2 align-middle special-icon">trending_up</i> Professional Freelancers</h4>
-                        <h6>Turn On Your Business And Start Making Profit With The Best Freelancers</h6>
-                        <img src={imgFeature1} style={{width:"200px"}} alt="feature one"/>
+            <div className="container-fluid text-center bg-gradient-1 padding-3" >
+                <h2 className="m-b-3" style={{color:"white", fontSize:"40px", fontWeight:700}} id="productInfo">Product Info</h2>
+                <div className="row text-center mt-5">
+                    <div className="col bg-color-white rounded m-3 px-4 py-5 shadow ">
+                        <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}><i className="material-icons mr-sm-2 align-middle " style={{fontSize:"40px"}}>trending_up</i> Professional Freelancers</h4>
+                        <h5 className="mt-3" style={{fontWeight:500, color:"rgb(100,100,100)"}}>Turn On Your Business And Start Making Profit With The Best Freelancers</h5>
+                        <img  className="mt-4" src={imgFeature1} style={{width:"200px"}} alt="feature one"/>
                     </div>
-                    <div className="col bg-color-white rounded m-3 p-3">
-                        <h4><i className="material-icons mr-sm-2 align-middle special-icon">security</i> Secure Payment</h4>
-                        <h6>Payments Between Clients And Freelancers Made Secure With Scrow System</h6>
-                        <img src={imgFeature2} style={{width:"200px"}} alt="feature two"/>
+                    <div className="col bg-color-white rounded m-3 px-4 py-5 shadow">
+                        <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}><i className="material-icons mr-sm-2 align-middle" style={{fontSize:"40px"}}>security</i> Secure Payment</h4>
+                        <h5 className="mt-3"  style={{fontWeight:500,color:"rgb(100,100,100)"}}>Payments Between Clients And Freelancers Made Secure With Scrow System</h5>
+                        <img className="mt-4" src={imgFeature2} style={{width:"200px"}} alt="feature two"/>
                     </div>
-                    <div className="col bg-color-white rounded m-3 p-3">
-                        <h4><i className="material-icons mr-sm-2 align-middle special-icon">contact_support</i> Support</h4>
-                        <h6>Support For Clients And Freelancers</h6>
-                        <img src={imgFeature3} style={{width:"200px"}} alt="feature three"/>
+                    <div className="col bg-color-white rounded m-3 px-4 py-5 shadow">
+                        <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}><i className="material-icons mr-sm-2 align-middle" style={{fontSize:"40px"}}>contact_support</i> Support</h4>
+                        <h5 className="mt-3"  style={{fontWeight:500,color:"rgb(100,100,100)"}}>Support For Clients And Freelancers. Any doubt or issue, we'll be there for you</h5>
+                        <img className="mt-4" src={imgFeature3} style={{width:"200px"}} alt="feature three"/>
                     </div>
                 </div>
             </div>
-            <div className="container-fluid text-center  padding-2" id="howToUse">
-                <h2>How To Use</h2>
-                <div className="row">
-                    <div className="col bg-color-white rounded m-3 p-3 shadow-sm">
-                        <h4>Steep 1</h4>
-                        <p>Register</p>
+            <div className="container-fluid text-center bg-bottom "  style={{paddingTop:"14em", paddingLeft:"4em", paddingRight:"4em", paddingBottom:"8em"}}>
+                <h2 style={{color:"rgb(80,80,80)", fontSize:"40px" ,fontWeight:700}} id="howToUse">How To Use</h2>
+                <div className="row mt-5">
+                    <div className="col bg-color-white rounded m-3 p-3 shadow">
+                        <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}>Steep 1</h4>
+                        <p style={{fontWeight:500, color:"rgb(100,100,100)"}}>Register</p>
                         <img src={imgSteep4} alt="steep 1" style={{width:"200px"}}/>
                     </div>
-                    <div className="col bg-color-white rounded m-3 p-3 shadow-sm">
-                        <h4>Steep 2</h4>
-                        <p>Click on Create Project in The Top Right Corner</p>
+                    <div className="col bg-color-white rounded m-3 p-3 shadow">
+                        <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}>Steep 2</h4>
+                        <p style={{fontWeight:500, color:"rgb(100,100,100)"}}>Click on Create Project in The Top Right Corner</p>
                         <img src={imgSteep1} alt="steep 1" style={{width:"200px"}}/>
                     </div>
-                    <div className="col bg-color-white rounded m-3 p-3 shadow-sm">
-                        <h4>Steep 3</h4>
-                        <p>Fill Out The Requeriments and Click Next</p>
+                    <div className="col bg-color-white rounded m-3 p-3 shadow">
+                        <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}>Steep 3</h4>
+                        <p style={{fontWeight:500, color:"rgb(100,100,100)"}}>Fill Out The Requeriments and Click Next</p>
                         <img src={imgSteep2} alt="steep 1" style={{width:"200px"}}/>
                     </div>
-                    <div className="col bg-color-white rounded m-3 p-3 shadow-sm">
-                        <h4>Steep 4</h4>
-                        <p>Stablish Your Budget And That's It!</p>
+                    <div className="col bg-color-white rounded m-3 p-3 shadow">
+                        <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}>Steep 4</h4>
+                        <p style={{fontWeight:500, color:"rgb(100,100,100)"}}>Stablish Your Budget And That's It!</p>
                         <img src={imgSteep3} alt="steep 1" style={{width:"200px"}}/>
                     </div>
                 </div>
             </div>
 
-            <div className="container-fluid" id="portalContainer">
+            <div className="container-fluid" id="portalContainer" >
                 <LoginDrawer isLoading={this.state.isLoading} handleAuth={this.handleAuth} isOpen={this.state.loginDrawer.isOpen} handleClose={this.state.loginDrawer.handleClose} openPanel={() => {this.state.loginDrawer.handleClose(); this.state.signUpDrawer.handleOpen()}}/>
                 <SignUpDrawer isLoading={this.state.isLoading} addToast={this.addToast} skills={this.state.skills} setStates={this.setStates} isOpen={this.state.signUpDrawer.isOpen} handleClose={this.state.signUpDrawer.handleClose} openPanel={() => {this.state.signUpDrawer.handleClose(); this.state.loginDrawer.handleOpen()}}/>
 

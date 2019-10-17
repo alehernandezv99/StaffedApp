@@ -970,7 +970,7 @@ export default class MyProjects extends React.Component {
                 
    
                         <div className="col-sm-8" id="top">
-                        <h4 className="mt-3">My Projects</h4>
+                        <h4 className="mt-3" style={{fontWeight:700}}>My Projects</h4>
 
                         <div className="input-group mb-3 mt-3 mx-auto px-3">
                           <input type="text" className="form-control" placeholder="Search" onChange={async(e) => {await this.setState({queryString:e.target.value});}}/>

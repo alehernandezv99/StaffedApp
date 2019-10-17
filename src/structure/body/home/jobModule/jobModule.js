@@ -110,7 +110,7 @@ export default class JobModule extends React.Component {
 
     render(){
         return(
-            <div className="job-module text-center mt-3" style={{position:"relative",paddingTop:"10px"}}>
+            <div className="job-module text-center mt-3 shadow-sm" style={{position:"relative",paddingTop:"10px"}}>
                 <div className="job-status">
                 
                     <div>{this.capitalize(this.props.status)}</div>
@@ -119,9 +119,9 @@ export default class JobModule extends React.Component {
                 <div className="container mt-5">
                     <UserBox size={"30px"} id={this.props.author} addToast={this.props.addToast} handleStates={this.props.handleStates} openUser={this.props.openUser} />
                 </div>
-                    <h4><a onClick={this.props.onClick}>{this.props.title}</a></h4>
+                    <h4 style={{fontWeight:700,color:"rgb(80,80,80)"}}><a onClick={this.props.onClick}>{this.props.title}</a></h4>
                 <div className="job-module-block text-left mt-3 p-2">
-                    <p>{this.props.description}</p>
+                    <p style={{color:"rgb(100,100,100)",}}>{this.props.description}</p>
                 </div>
                 <div className="mt-2 row">
                 <div className="col-sm-8 text-left" style={{display:"none"}}>
@@ -130,12 +130,12 @@ export default class JobModule extends React.Component {
                 })}
                 </div>
                 <div className="col text-right">
-                    {this.state.isSaved === true? <button className="btn  mr-2 mt-2 btn-sm" title="Remove From Favorites" onClick={() => {this.performTransactionRemove("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Removed From Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite</i></button>:
-                    <button className="btn mr-2 mt-2 btn-sm" title="Mark As Favorite" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Added To Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle">favorite_border</i></button>
+                    {this.state.isSaved === true? <button className="btn  mr-2 mt-2 btn-sm" title="Remove From Favorites" onClick={() => {this.performTransactionRemove("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Removed From Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle" style={{color:"rgb(100,100,100)"}}>favorite</i></button>:
+                    <button className="btn mr-2 mt-2 btn-sm" title="Mark As Favorite" onClick={() => {this.performTransaction("projects","references",this.props.id,firebase.auth().currentUser.email,"array", "Added To Favorites","Ups Something is Worng :(", this.props.toggleLoading)}}><i className="material-icons align-middle" style={{color:"rgb(100,100,100)"}}>favorite_border</i></button>
                     }
                 </div>
                 </div>
-                <div className="mt-2 text-left">
+                <div className="mt-2 text-left specs">
                 {this.props.specs.map(element => {
                     return (<label key={element.key} title={element.desc} className=" mr-2 mt-2 jobModule-label"><i className="material-icons align-middle jobModule-icon" > {element.icon}</i> <span className="ml-0 align-middle">{element.text}</span></label>)
                 })}

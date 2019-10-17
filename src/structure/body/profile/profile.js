@@ -1679,10 +1679,10 @@ export default class Profile extends React.Component {
                         </div>
                     </div>
                    
-                            <h6 className="mt-2">{this.state.user !== null?this.state.user.displayName?this.state.user.displayName:this.state.user.email:"Loading..."}</h6>
+                            <h6 className="mt-4">{this.state.user !== null?this.state.user.displayName?this.state.user.displayName:this.state.user.email:"Loading..."}</h6>
   
                             {this.state.CV.description.length > 0?
-                           <div className="container" style={{position:"relative"}}>
+                           <div className="container mt-4" style={{position:"relative"}}>
                             <h5 className="mt-3" ref={ref => {this.title = ref}}>{this.state.user !== null?this.state.CV.description[0].title:"Loading..."}</h5>
                             <p ref={ref => {this.text = ref}}>{this.state.CV.description[0].text}</p>
 

@@ -10,6 +10,8 @@
 
 body {
   overflow-x: hidden !important;
+  font-weight: 600;
+  color:rgb(100,100,100)
 }
 
 .dropdown-toggle {
@@ -86,7 +88,9 @@ body {
   .btn-custom-3 {
     background-color:rgb(221, 194, 43) !important;
     color:white !important;
+    font-weight: 600;
   }
+
 
   .right-corner-btn {
     position: absolute !important;
@@ -109,9 +113,10 @@ body {
     top:10px;
     right:10px;
     border-top-left-radius: 4px;
-    padding: 4px;
+    padding: .5em;
     border-bottom-left-radius: 4px;
-    background-color:lightgray;
+    background-color:rgb(167, 167, 167);
+    color: white !important;
 }
 
 input::-webkit-outer-spin-button,

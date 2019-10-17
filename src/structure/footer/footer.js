@@ -15,10 +15,10 @@ export default function Footer(){
     <div className="row">
 
      
-      <div className="col-md-6 mt-md-0 mt-3">
+      <div className="col-md-6 mt-md-0 mt-3 px-5">
 
     
-        <h5>StaffedApp support center</h5>
+        <h3 style={{color:"rgb(255,255,255)"}}>StaffedApp Support Center</h3>
       
 
       </div>
@@ -30,21 +30,16 @@ export default function Footer(){
       <div className="col-md-3 mb-md-0 mb-3">
 
    
-        <h5 className="text-uppercase">Links</h5>
+        <h5 className="text-uppercase" style={{color:"rgb(255,255,255)"}}>LEGAL</h5>
 
         <ul className="list-unstyled links-white ">
           <li className="mt-2">
-            <a href="#!" className="links-white ">Link 1</a>
+            <a href="#!" className="links-white ">Terms & Conditions</a>
           </li>
           <li className="mt-2">
-            <a href="#!" className="links-white ">Link 2</a>
+            <a href="#!" className="links-white ">Privacy Policy</a>
           </li>
-          <li className="mt-2">
-            <a href="#!" className="links-white ">Link 3</a>
-          </li>
-          <li className="mt-2">
-            <a href="#!" className="links-white ">Link 4</a>
-          </li>
+      
         </ul>
 
       </div>
@@ -54,20 +49,20 @@ export default function Footer(){
       <div className="col-md-3 mb-md-0 mb-3">
 
      
-        <h5 className="text-uppercase">Links</h5>
+        <h5 className="text-uppercase" style={{color:"rgb(255,255,255)"}}>RESOURCES</h5>
 
         <ul className="list-unstyled links-white">
           <li className="mt-2">
-            <a href="#!" className="links-white mt-2">Link 1</a>
+            <a href="#!" className="links-white mt-2">About</a>
           </li>
           <li className="mt-2">
-            <a href="#!" className="links-white mt-2">Link 2</a>
+            <a href="#!" className="links-white mt-2">Profuct Info</a>
           </li>
           <li className="mt-2">
-            <a href="#!" className="links-white mt-2">Link 3</a>
+            <a href="#!" className="links-white mt-2">How To Use</a>
           </li>
           <li className="mt-2">
-            <a href="#!" className="links-white mt-2">Link 4</a>
+            <a href="#!" className="links-white mt-2">Contact</a>
           </li>
         </ul>
 
@@ -79,7 +74,7 @@ export default function Footer(){
 
   </div>
   
-  <div className="footer-copyright text-center bg-special py-3">© 2019 Copyright:
+  <div className="footer-copyright text-center bg-special py-3"><span className="links-white">© 2019 Copyright:</span>
     <span href="https://mdbootstrap.com/education/bootstrap/" className="links-white"> StaffedApp | All Rights Reserved</span>
   </div>
 

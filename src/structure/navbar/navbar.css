@@ -1,7 +1,9 @@
 .btn-custom-1 {
     border:1px solid #3a7bd5 !important;
     color: white !important;
-    background-color:#3a7bd5
+    background-color:#3a7bd5;
+    font-weight: 600;
+    padding: 0.4em 0.6em !important;
 }
 
 .btn-custom-1:hover {
@@ -10,7 +12,13 @@
 }
 
 .color-0A9FF2 {
-    color:#3a7bd5 !important;
+    color:#75a2e0 !important;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.color-0A9FF2:hover {
+    color:#3a7bd5 !important
 }
 
 .navbar-toggler-icon {
