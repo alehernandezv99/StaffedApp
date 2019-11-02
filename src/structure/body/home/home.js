@@ -1262,7 +1262,7 @@ export default class Home extends React.Component {
                     <div>
 
 <div className="row">
-                            <div className="col-lg-3 form-group" style={{display:"none"}}>
+                            <div className=" form-group" style={{display:"none"}}>
                                 <div className="text-center mb-3">Page Size</div>
                                 <select value={this.state.pageSize.value} className="custom-select-sm text-center" style={{width:"100%"}} onChange={(e) => {this.setState(state => {
                                     let pageSize = state.pageSize;
@@ -1281,7 +1281,7 @@ export default class Home extends React.Component {
                           
 
                        
-                            <div className="form-group col-lg-4 mb-3" style={{display:"none"}}>
+                            <div className="form-group  mb-3" style={{display:"none"}}>
 
                             <div className="flex-container">
                             <div className="text-center mb-3">Skills</div>
@@ -1322,7 +1322,7 @@ export default class Home extends React.Component {
 
                                 </div>
                               </div>
-                              <div  className="form-group mb-4 col-lg-3">
+                              <div  className="form-group mb-4 col-lg-4">
                                   <div className="text-center mb-2">Budget <span>($US Dollars)</span></div>
 
                                   <div className="flex-container">
@@ -1359,14 +1359,14 @@ export default class Home extends React.Component {
                                   </div>
                                   </div>
                               </div>
-                              <div className="form-group mb-4">
+                              <div className="form-group col-lg-4 mb-4 text-center">
                                   <div className="text-center mb-3">Country</div>
                                   <SelectCountry value={this.state.country} onChange={async(e) => { await this.setState({
                                       country: e.target.options[e.target.selectedIndex].value
                                   }); this.triggerSearch()}} />
                             </div>
 
-                            <div  className="form-group mb-4 collg-3">
+                            <div  className="form-group mb-4 col-lg-4">
                                   <div className="text-center mb-2">Bids</div>
 
                                   <div className="flex-container">

@@ -108,6 +108,14 @@ body {
   
   }
 
+  .card, .card-body, .card-header, .CV-container {
+    color:rgb(100,100,100) !important
+  }
+
+  .card:hover, .card-body:hover, .card-header:hover, .CV-container:hover {
+    color:rgb(100,100,100) !important;
+  }
+
   .hour-posted {
     position:absolute;
     top:10px;
