@@ -52,9 +52,7 @@ export default function Footer(){
         <h5 className="text-uppercase" style={{color:"rgb(255,255,255)"}}>RESOURCES</h5>
 
         <ul className="list-unstyled links-white">
-          <li className="mt-2">
-            <a href="#!" className="links-white mt-2">About</a>
-          </li>
+        
           <li className="mt-2">
             <a href="#!" className="links-white mt-2">Profuct Info</a>
           </li>

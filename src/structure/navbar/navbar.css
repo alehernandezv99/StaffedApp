@@ -36,3 +36,7 @@
     color:white !important;
     border-radius:4px;
 }
+
+.active:hover {
+    color:white !important;
+}

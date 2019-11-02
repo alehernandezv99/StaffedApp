@@ -312,13 +312,7 @@ export default class LandingPage extends React.Component {
                 }}
                 leftElements={
                     [
-                        {
-                            type:"link",
-                            text:"About",
-                            href:"#about",
-                            onClick:() => {},
-                            key:1
-                        },
+                      
                         {
                             type:"link",
                             text:"Product Info",

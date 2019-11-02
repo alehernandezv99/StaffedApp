@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
 import {lazy,Suspense} from "react";
 import firebase from "./firebaseSetUp";
 import LoadingSpinner from "./structure/loading/loadingSpinner";
-import HomeLoading from "./structure/loading/homeLoading";
+import GeneralLoading from "./structure/loading/generalLoading";
 import $ from "jquery";
 
 
@@ -149,7 +149,7 @@ class App extends React.Component {
 
   return (
     <div className="App">
-      <Suspense fallback={<HomeLoading />}>
+      <Suspense fallback={<GeneralLoading />}>
         {this.state.currentPage[0] === true?<LandingPage lastID={this.state.lastID} handleStates={this.handleStates}/>:null}
         {this.state.currentPage[1] === true?<Home passLastID={this.passLastID} handleStates={this.handleStates} />:null}
         {this.state.currentPage[2] === true?<MyProjects handleStates={this.handleStates} />:null}
