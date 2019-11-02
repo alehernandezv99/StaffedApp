@@ -133,7 +133,7 @@ export default class InvitationDrawer extends React.Component {
 
     render(){
         return (
-            <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={"50%"} isOpen={this.props.isOpen}>
+            <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={window.innerWidth <= 700?"100%":"50%"} isOpen={this.props.isOpen}>
                  <div className={Classes.DRAWER_BODY}>
                  <div className={`${Classes.DIALOG_BODY}`}>
                      {this.state.isLoading ? <LoadingSpinner />:null}

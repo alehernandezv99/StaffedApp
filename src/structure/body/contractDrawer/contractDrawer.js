@@ -90,7 +90,7 @@ export default class ContractDrawer extends React.Component {
 
     render() {
         return (
-            <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={"50%"} isOpen={this.props.isOpen}>
+            <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} style={{zIndex:999}} onClose={this.props.handleClose} title={""} size={window.innerWidth <= 700?"100%":"50%"} isOpen={this.props.isOpen}>
                  <div className={Classes.DRAWER_BODY}>
                    <div className={`${Classes.DIALOG_BODY}`}>
                        {this.state.contracts.length > 0? this.state.contracts.map((e,i) => {

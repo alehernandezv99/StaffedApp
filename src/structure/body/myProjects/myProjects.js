@@ -969,7 +969,7 @@ export default class MyProjects extends React.Component {
                     
                 
    
-                        <div className="col-sm-8" id="top">
+                        <div className="col-lg-8" id="top">
                         <h4 className="mt-3" style={{fontWeight:700}}>My Projects</h4>
 
                         <div className="input-group mb-3 mt-3 mx-auto px-3">
@@ -1484,7 +1484,7 @@ export default class MyProjects extends React.Component {
                          
                         </div>
                     </div>
-                    <div className="col text-left">
+                    <div className="col-lg-4 text-left">
 
               
                     </div>

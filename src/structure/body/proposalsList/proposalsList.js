@@ -94,7 +94,7 @@ export default class ProposalsList extends React.Component {
 
     render(){
         return (
-            <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={"50%"} isOpen={this.props.isOpen}>
+            <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={window.innerWidth <= 700?"100%":"50%"} isOpen={this.props.isOpen}>
                  <div className={Classes.DRAWER_BODY}>
                  <div className={`${Classes.DIALOG_BODY}`}>
                      {this.state.proposals === null?<div className="spinner-border mt-3"></div>:this.state.proposals.length > 0?this.state.proposals.map((e,i) => {

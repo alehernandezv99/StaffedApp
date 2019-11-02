@@ -22,6 +22,8 @@ export default class SignUpDrawer extends React.Component {
         }
     }
 
+  
+
     clearSkill = (index) => {
       if(this._mounted){
         this.setState(state => {
@@ -97,7 +99,7 @@ export default class SignUpDrawer extends React.Component {
     render(){
         return(
           
-            <Drawer portalContainer={document.getElementById("portalContainer")} onClose={this.props.handleClose} title={""} isOpen={this.props.isOpen}>
+            <Drawer portalContainer={document.getElementById("portalContainer")} onClose={this.props.handleClose} title={""} size={window.innerWidth <= 700?"100%":"50%"} isOpen={this.props.isOpen}>
             <div className={Classes.DRAWER_BODY}>
             <div className={`${Classes.DIALOG_BODY}`}>
               {this.props.isLoading?<LoadingSpinner />:null}

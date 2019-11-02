@@ -1430,7 +1430,7 @@ export default class Home extends React.Component {
                   </div>
 
                         
-                        <div className="col-sm-8" id="top">
+                        <div className="col-lg-8" id="top">
 
                     
                         <div className="input-group mb-3 mt-3 mx-auto">
@@ -1520,7 +1520,7 @@ export default class Home extends React.Component {
                                
                             }}>Load More</a>:<div className="spinner-border"></div>} </div>:null}
                         </div>
-                        <div className="col-sm-4 text-left">
+                        <div className="col-lg-4 text-left">
                           
                         </div>
                     </div>

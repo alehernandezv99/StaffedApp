@@ -63,7 +63,7 @@ export default class ProposalsViewer extends React.Component {
         return(
             <div>
                 
-                 <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={"75%"} isOpen={this.props.isOpen}>
+                 <Drawer portalContainer={document.getElementById("portalContainer")} hasBackdrop={true} onClose={this.props.handleClose} title={""} size={window.innerWidth <= 700?"100%":"75%"} isOpen={this.props.isOpen}>
                  <div className={Classes.DRAWER_BODY}>
                  <div className={`${Classes.DIALOG_BODY}`}>
                      {this.state.proposal === null?<ProposaslsViewerLoading />:
@@ -114,13 +114,13 @@ export default class ProposalsViewer extends React.Component {
                         </div>
                         <div className="form-group">
                             <h4>Deadline</h4>
-                            <h6>{this.state.proposal.deadline.toDate().toDateString()}</h6>
+                            <h6>{this.state.proposal.deadline.toDate().getHours() + " : " + this.state.proposal.deadline.toDate().getMinutes() + " " + this.state.proposal.deadline.toDate().toDateString()}</h6>
                         </div>
                         <div className="form-group mt-4">
                             <h4>Presentation</h4>
                             <h6>{this.state.proposal.presentation}</h6>
                         </div>
-                        <div className="hour-posted">{this.state.proposal.created?this.state.proposal.created.toDate().toString():this.state.proposal.created.toDate().toString()}</div>
+                        <div className="hour-posted">{this.state.proposal.created.toDate().getHours() + " : " + this.state.proposal.created.toDate().getMinutes() + " " + this.state.proposal.created.toDate().toDateString()}</div>
                         </div>
 
                         </div>

@@ -22,7 +22,7 @@ export default class Navbar extends React.Component {
   </button>
 
 
-  <div className="collapse navbar-collapse" id="collapsibleNavbar">
+  <div className="collapse navbar-collapse text-right" id="collapsibleNavbar">
   <ul className="navbar-nav mr-auto">
         {this.props.leftElements.map((element,i) => {
           return <NavItem type={element.type} count={element.count} state={element.state} icon={element.icon} onClick={element.onClick} href={element.href} key={element.key} text={element.text} dataToggle={element.dataToggle} dataTarget={element.dataTarget} dropdownItems={element.dropdownItems} />
