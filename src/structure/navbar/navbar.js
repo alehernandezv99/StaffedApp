@@ -18,7 +18,7 @@ export default class Navbar extends React.Component {
 
 
   <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
-    <span className="navbar-toggler-icon"></span>
+    <i className="material-icons align-middle" style={{fontSize:"30px"}}>menu</i>
   </button>
 
 
