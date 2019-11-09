@@ -359,13 +359,19 @@ export default class LandingPage extends React.Component {
                     ]
                 }
                 />
-            <div className="container-fluid  text-center bg-top"  id="top" style={{paddingTop:"4em", paddingBottom:"10em", paddingRight:"4em", paddingLeft:"5em"}}>
-            <img src={MainGraphic} width="420px"/>
-                <h1 style={{fontSize:"50px", color:"rgb(80,80,80)", fontWeight:700}}>Welcome to StaffedApp</h1>            
+            <div className="row text-center bg-top"  id="top" style={{paddingTop:"4em", paddingBottom:"10em", paddingRight:"4em", paddingLeft:"5em"}}>
+            <div className="col-lg-6">
+              <div className="main-background mb-5" style={{height:"500px"}}></div>
+            </div>
+            
+            <div className="col-lg-6">
+            <h1 style={{fontSize:"50px", color:"rgb(80,80,80)", fontWeight:700}}>Welcome to StaffedApp</h1>            
                 <h4 style={{fontWeight:"normal", color:"rgb(100,100,100)", fontSize:"20px", fontWeight:600}} className="m-3">The Moderm and Simplest Solution for Managing Your Projects
                  And Hiring Professional Freelancers
                 </h4>
                 <button type="button" onClick={this.state.signUpDrawer.handleOpen} className="btn btn-custom-1 btn-lg m-3" style={{fontSize:"24px"}}>Join Today</button>
+            </div>
+                
             </div>
             <div className="container-fluid text-center bg-gradient-1 padding-3" >
                 <h2 className="m-b-3" style={{color:"white", fontSize:"40px", fontWeight:700}} id="productInfo">Product Info</h2>

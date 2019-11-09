@@ -5,6 +5,8 @@
     max-width: 340px;
 } 
 
+
+
 .chat-wrapper-body{
     max-height: 300px;
     overflow: auto;
@@ -14,10 +16,14 @@
     padding: 5px !important;
 }
 
-.btn-close{
+.btn-close-chat-wrapper{
     position: absolute;
-    top:3px;
-    right:3px;
+    top:2px;
+    right:2px;
+    padding: 3px !important;
+    margin: 0 !important;
+    border:none !important;
+    background-color: transparent !important;
 }
 
 .special-icon {
@@ -28,6 +34,7 @@
     cursor: pointer;
     min-width: 340px;
     padding:0px !important;
+    border:none !important
 }
 
 .status-absolute-left-top {
@@ -59,7 +66,7 @@
 }
 
 @keyframes switchColor {
-    0%{background-color: rgb(58,123,213);}
-    50%{background-color: white}
-    100%{background-color: rgb(58,123,213);}
+    0%{background-color: rgb(58,123,213); color: white !important}
+    50%{background-color: white; color:inherit !important}
+    100%{background-color: rgb(58,123,213); color: white !important;}
 }

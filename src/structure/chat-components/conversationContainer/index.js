@@ -26,7 +26,7 @@ export default class ConversationsContainer extends React.Component{
 
     render(){
         return(
-            <div className="card" style={style}>
+            <div className="card conversation-container" style={style}>
                 {(() => {
                      if(this.props.isOpen){
                         $("#conversation-body").slideDown("fast");

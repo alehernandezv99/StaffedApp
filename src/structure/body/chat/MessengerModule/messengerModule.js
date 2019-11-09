@@ -11,6 +11,7 @@ export default class MessengerModule extends React.Component{
 
         this.state = {
             participants:{},
+            lastSeem:null,
             groups:[],
             messages:[],
             message:"",
@@ -21,21 +22,10 @@ export default class MessengerModule extends React.Component{
     }
 
     loadMore = () => {
-        
-        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").get().then(snapshot => {
-            let pages = Math.ceil(snapshot.size/30)
-
-        if((this.state.currentPage + 1 === pages)){
-            this.setState({
-                canLoad:false
-            })
-        }
-        if(this.state.currentPage <= pages){
-        let lastSeem = snapshot.docs[(30)*(this.state.currentPage) -(this.state.currentPage === 0?0:1)];
-
+      
         
 
-        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").startAfter(lastSeem).limit(30).get()
+        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").startAfter(this.state.lastSeem).limit(30).get()
         .then(async snap => {
         
            await this.calculateGroups(snap,true)
@@ -45,28 +35,23 @@ export default class MessengerModule extends React.Component{
         
         })
     }
-        })
-        .catch(e => {
-         
-        })
-    }
+        
+    
 
     getGroups =() => {
-        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").get().then(snapshot => {
-            if(snapshot.size > 30){
-                this.setState({
-                    canLoad:true
-                })
-            }
-        firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").limit(30).onSnapshot(async snap => {
+   
+       this.listener = firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").limit(30).onSnapshot(async snap => {
      
             this.calculateGroups(snap)
+            if(this._mounted){
+                this.setState({
+                    lastSeem:snap.docs[snap.docs.length - 1],
+                    canLoad:snap.docs.length < 30? false:true
+                })
+            }
         })
         
-    })
-    .catch(e => {
-      
-    })
+  
 
     }
 
@@ -198,6 +183,13 @@ export default class MessengerModule extends React.Component{
         })
     }
 
+    componentWillUnmount(){
+        this._mounted = false;
+        if(this.listener !== undefined){
+            this.listener();
+        }
+    }
+
     componentDidMount(){
         this._mounted = true;
        this.getParticipantsData()
@@ -210,7 +202,7 @@ export default class MessengerModule extends React.Component{
     listenMessages = () => {
         
         if(this.props.isOpen){
-            firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").limit(30).get().then(snap => {
+           firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").limit(30).get().then(snap => {
                 
                 let messages = snap.docs;
                 messages.reverse()
@@ -258,7 +250,7 @@ export default class MessengerModule extends React.Component{
                 author:firebase.auth().currentUser.uid,
                 status:"unread"
             })
-        batch.update(firebase.firestore().collection("chat").doc(this.props.id), {lastMessage:this.state.message})
+        batch.update(firebase.firestore().collection("chat").doc(this.props.id), {lastMessage:this.state.message, updated:firebase.firestore.Timestamp.now()})
         batch.commit()
         .then(() => {
 

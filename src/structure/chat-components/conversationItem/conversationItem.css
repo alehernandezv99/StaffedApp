@@ -12,4 +12,7 @@
     position: absolute;
     bottom:2px;
     right:2px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
 }

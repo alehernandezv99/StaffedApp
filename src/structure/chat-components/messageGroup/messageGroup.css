@@ -1,0 +1,12 @@
+.flex-message-group {
+    display:flex !important;
+    flex-direction: column !important;
+}
+
+.flex-message-group-align-start {
+    align-items: flex-start !important;
+}
+
+.flex-message-group-align-end {
+    align-items: flex-end !important;
+}

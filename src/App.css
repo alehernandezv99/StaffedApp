@@ -46,6 +46,12 @@ body {
     z-index: 99999999999 !important;
 }
 
+.media {
+  display:flex !important;
+  align-items: center !important;
+
+}
+
 .autocomplete {
     position: relative;
     display: inline-block;

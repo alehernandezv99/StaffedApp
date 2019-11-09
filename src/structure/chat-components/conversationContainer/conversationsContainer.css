@@ -4,6 +4,9 @@
 
 .conversation-header {
     min-width: 260px;
+    cursor: pointer !important;
+    margin: 0 !important;
+    border:0 !important;
 }
 
 .conversation-body {
@@ -11,4 +14,12 @@
     max-height: 340px !important;
     overflow-y: auto;
     overflow-x: hidden
+}
+
+.conversation-container {
+    padding: 0 !important;
+    border-right: 1px solid rgba(0,0,0,0.2) !important;
+    border-left: 1px solid rgba(0,0,0,0.2) !important;
+    border-top: 1px solid rgba(0,0,0,0.2) !important;
+    outline: none !important;
 }

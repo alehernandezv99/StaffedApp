@@ -1,3 +1,7 @@
 .basic-flex {
     display:flex;
 }
+
+.load-more {
+    cursor: pointer;
+}

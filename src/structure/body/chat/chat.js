@@ -18,7 +18,9 @@ export default class Chat extends React.Component {
             openChats:[],
             chatIsOpen:false,
             unread:0,
-            isLoaded:false
+            isLoaded:false,
+            loadMore:false,
+            lastSeem:{}
         }
 
         this.unread = 0
@@ -71,8 +73,8 @@ export default class Chat extends React.Component {
     }
     }
 
-    getParticipantsData  =(id, index) => {
-   
+    getParticipantsData  =(id) => {
+    
        firebase.firestore().collection("chat").doc(id).get()
         .then((doc) => {
             
@@ -84,16 +86,32 @@ export default class Chat extends React.Component {
                         if(this._mounted){
                             if(firebase.auth().currentUser.uid !== participants[i]){
                         this.setState(state => {
-                            let base = state.conversations
-                            let newArr = [...state.conversations]
-                            let objTarget = newArr[index]
+                            let base = [...state.conversations]
+                            
+                            let objTarget = null;
+                            let index = 0;
+                            let targetIndex = 0
+                    
+                            for(let chat of base){
+                                if(chat.id === id){
+                              
+                                    objTarget = base[index]
+                                    targetIndex = index
+                                }
+                                index++
+                            }
+                            if(objTarget === null){
+                                
+                            }
                             objTarget.name = firebase.auth().currentUser.uid === participants[i]?null:user.data().displayName?user.data().displayName:user.data().email
+                            if(objTarget.photoURL === undefined){
                             objTarget.photoURL = firebase.auth().currentUser.uid === participants[i]?null:user.data().photoURL;
+                            }
                             objTarget.isOnline = user.data().isOnline
-                            newArr[index] = objTarget
+                            base[targetIndex] = objTarget
                             
                             return {
-                                conversations:newArr
+                                conversations:base
                             }
                         }) 
                     } 
@@ -107,55 +125,57 @@ export default class Chat extends React.Component {
 
     componentWillUnmount(){
         this._mounted = false
+        if(this.chatsListener !== undefined){
+            this.chatsListener();
+        }
+
+       
     }
 
     componentDidMount() {
+
+    
         this._mounted = true;
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
               // User is signed in.
-            
-              firebase.firestore().collection("chat").where("participants","array-contains",user.uid).orderBy("updated","asc").onSnapshot(async snapshot => {
-                let chats =[]
-                let index= 0
-                let count = 0
+              this.chatsListener = firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","desc").limit(10).onSnapshot(async snapshot => {
+                   
+           
                 this.unread = 0
+        
+                if(this._mounted){
+                    this.setState({
+                        conversations:[],
+                        lastSeem:snapshot.docs[snapshot.docs.length - 1],
+                        loadMore:snapshot.docs.length < 10?false:true
+                    })
+                }
                snapshot.forEach(chat => {
-                
-                
-                firebase.firestore().collection("chat").doc(chat.id).collection("messages").orderBy("sent","desc").onSnapshot(snap =>{
+
                   
-                    let messages = snap.docs;
-                    let unreadMessages = 0
-                    for(let i = 0; i < messages.length; i++){
-                        let currentMessage = messages[i].data()
-                        if(currentMessage.status){
-                            if(currentMessage.author !== firebase.auth().currentUser.uid){
-                                if(currentMessage.status === "unread"){
-                                    unreadMessages++
-                                }
-                            }
+                let currentChat = chat.data()
+                    currentChat.id = chat.id
+        
+                    this.setState( state => {
+                        let base = state.conversations;         
+                            base.push(currentChat);
+                        
+        
+                        return {
+                        conversations:base,
+                        unread:this.unread
                         }
-                    }
-                    this.unread += unreadMessages;
-                    let currentChat = chat.data()
-                    currentChat.messages = messages.map(e => e.data());
-                    chats.push(currentChat)
-                    count++
-                    if(count === snapshot.size){
-                        this.setState({
-                            conversations:chats,
-                            unread:this.unread
-                        })
-                        this.getParticipantsData(chat.id, index);
-                    }
-                    index++
-               })
+                    })
+                 
+                    this.getParticipantsData(chat.id)
+        
                 })
                 
                 
             })
+             
     
             firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
             .then(doc => {
@@ -229,6 +249,11 @@ export default class Chat extends React.Component {
        }
    }
 
+   loadMoreConversations = () => {
+       
+   }
+
+
     render(){
         return(
             <div>
@@ -288,9 +313,11 @@ export default class Chat extends React.Component {
                         chatIsOpen:!state.chatIsOpen
                         }
                     })
+              
                 }}>
                     {this.state.conversations.map((e,i) => {
-                        let messages = e.messages;
+
+                        let messages = e.messages !== undefined?e.messages:[];
                         let unread =0
                         for(let i = 0; i< messages.length; i++){
                             if(messages[i].author !== firebase.auth().currentUser.uid){
@@ -305,13 +332,14 @@ export default class Chat extends React.Component {
                         )
                     })}
                     {this.state.conversations.length === 0?<div>No Conversations</div>:null}
+                    {this.state.loadMore === true?<div className="load-more text-center m-2" onClick={this.loadMoreConversations}>Load More</div>:null}
                 </ConversationContainer>
                 <div className="basic-flex">
                     {this.state.openChats.map((e,i) => {
               
                         return (
-                        <div style={{position:"relative"}}>
-                        <MessengerModule handleClick={() => {this.handleClickFromMessengerModule(i)}} isOpen={e.isOpen} factor={e.factor} id={e.id} key={i} handleClose={() => {this.handleClose(i)}}/>
+                        <div style={{position:"relative"}} key={i}>
+                        <MessengerModule handleClick={() => {this.handleClickFromMessengerModule(i)}} isOpen={e.isOpen} factor={e.factor} id={e.id} handleClose={() => {this.handleClose(i)}}/>
                         </div>
                         )
                     })}

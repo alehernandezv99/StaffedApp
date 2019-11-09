@@ -20,7 +20,7 @@ export default class MessageItem extends React.Component{
 
     render(){
         return(
-            <div className="container-fluid mt-2" >
+            <span className=" mt-2">
                 {(() => {
                     
                     this.state.hover?$(`#message-sent-${this.id}`).slideDown("fast"):$(`#message-sent-${this.id}`).slideUp("fast")
@@ -29,7 +29,7 @@ export default class MessageItem extends React.Component{
                <h6 style={{maxWidth:"250px"}} className={this.props.isOwn?"message-isOwn":"message-normal"}> <span >{this.props.message}</span></h6>
                 <div className="message-sent"  id={`message-sent-${this.id}`} style={{display:"none"}}><small>{this.props.sent}</small></div>
                 </div>
-            </div>
+            </span>
         )
     }
 }
