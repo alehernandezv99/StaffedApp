@@ -20,10 +20,52 @@ export default class Chat extends React.Component {
             unread:0,
             isLoaded:false,
             loadMore:false,
-            lastSeem:{}
+            lastSeem:{},
+            size:10
         }
 
         this.unread = 0
+    }
+
+    setListenerChats = (size) => {
+        if(this.chatsListener !== undefined){
+            this.chatsListener();
+        }
+        this.chatsListener = firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","desc").limit(size).onSnapshot(async snapshot => {
+                   
+           
+            this.unread = 0
+    
+            if(this._mounted){
+                this.setState({
+                    conversations:[],
+                    lastSeem:snapshot.docs[snapshot.docs.length - 1],
+                    loadMore:snapshot.docs.length < size?false:true
+                })
+            }
+           snapshot.forEach(chat => {
+
+              
+            let currentChat = chat.data()
+                currentChat.id = chat.id
+    
+                this.setState( state => {
+                    let base = state.conversations;         
+                        base.push(currentChat);
+                    
+    
+                    return {
+                    conversations:base,
+                    unread:this.unread
+                    }
+                })
+             
+                this.getParticipantsData(chat.id)
+    
+            })
+            
+            
+        })
     }
 
     openChat = (id) => {
@@ -36,7 +78,14 @@ export default class Chat extends React.Component {
 
         if($(window).width() - factor >= 340){
         if(this.state.openChats.length < 3){
-            if(!this.state.openChats.includes(id)){
+           let flag = false
+           for(let chat of this.state.openChats){
+               if(chat.id === id){
+                   flag = true
+               }
+           }
+
+           if(flag === false){
                 firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).update({openChats:firebase.firestore.FieldValue.arrayUnion({id:id,factor:factor})})
                 .then(() => {
 
@@ -57,11 +106,13 @@ export default class Chat extends React.Component {
                         }
                     })
                 
-        }
+                }else {
+                    this.props.addToast("Cannot open the same chat twice")
+                }
         }else {
             this.setState(state => {
                 let openChats = state.openChats;
-                openChats[2] = id;
+                openChats[openChats.length-1] = id;
 
                 return {
                     openChats:openChats
@@ -100,15 +151,15 @@ export default class Chat extends React.Component {
                                 }
                                 index++
                             }
-                            if(objTarget === null){
-                                
+                            if(objTarget !== null){
+                                objTarget.name = firebase.auth().currentUser.uid === participants[i]?null:user.data().displayName?user.data().displayName:user.data().email
+                                if(objTarget.photoURL === undefined){
+                                objTarget.photoURL = firebase.auth().currentUser.uid === participants[i]?null:user.data().photoURL;
+                                }
+                                objTarget.isOnline = user.data().isOnline
+                                base[targetIndex] = objTarget
                             }
-                            objTarget.name = firebase.auth().currentUser.uid === participants[i]?null:user.data().displayName?user.data().displayName:user.data().email
-                            if(objTarget.photoURL === undefined){
-                            objTarget.photoURL = firebase.auth().currentUser.uid === participants[i]?null:user.data().photoURL;
-                            }
-                            objTarget.isOnline = user.data().isOnline
-                            base[targetIndex] = objTarget
+                           
                             
                             return {
                                 conversations:base
@@ -140,41 +191,7 @@ export default class Chat extends React.Component {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
               // User is signed in.
-              this.chatsListener = firebase.firestore().collection("chat").where("participants","array-contains",firebase.auth().currentUser.uid).orderBy("updated","desc").limit(10).onSnapshot(async snapshot => {
-                   
-           
-                this.unread = 0
-        
-                if(this._mounted){
-                    this.setState({
-                        conversations:[],
-                        lastSeem:snapshot.docs[snapshot.docs.length - 1],
-                        loadMore:snapshot.docs.length < 10?false:true
-                    })
-                }
-               snapshot.forEach(chat => {
-
-                  
-                let currentChat = chat.data()
-                    currentChat.id = chat.id
-        
-                    this.setState( state => {
-                        let base = state.conversations;         
-                            base.push(currentChat);
-                        
-        
-                        return {
-                        conversations:base,
-                        unread:this.unread
-                        }
-                    })
-                 
-                    this.getParticipantsData(chat.id)
-        
-                })
-                
-                
-            })
+              this.setListenerChats(this.state.size)
              
     
             firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).get()
@@ -250,7 +267,17 @@ export default class Chat extends React.Component {
    }
 
    loadMoreConversations = () => {
-       
+
+       this.setState(state => {
+           let size = state.size;
+           size += 10;
+
+           return {
+               size:size
+           }
+       })
+       console.log(this.state.size)
+       this.setListenerChats(this.state.size)
    }
 
 

@@ -166,7 +166,8 @@ export default class MessengerModule extends React.Component{
                             let base = state.participants
                             base[user.id] = user.data()
                             return {
-                                participants:base
+                                participants:base,
+                                chatName:doc.data().projectName
                             }
                         })  
                     } 
@@ -250,6 +251,12 @@ export default class MessengerModule extends React.Component{
                 author:firebase.auth().currentUser.uid,
                 status:"unread"
             })
+        let otherUser = "";
+        Object.keys(this.state.participants).forEach(key => {
+            if(key !== firebase.auth().currentUser.uid){
+                otherUser = key
+            }
+        })
         batch.update(firebase.firestore().collection("chat").doc(this.props.id), {lastMessage:this.state.message, updated:firebase.firestore.Timestamp.now()})
         batch.commit()
         .then(() => {

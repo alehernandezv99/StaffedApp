@@ -49,10 +49,19 @@ export default class ChatWrapper extends React.Component{
                     :<div className="status-absolute bg-danger" style={{right:"8px",bottom:"6px"}}><span className="badge badge-pill badge-danger"></span></div>
                     }
                   <div className="media" onClick={this.props.handleClick}>
-                   <img src={this.props.photoURL?this.props.photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"}  alt="Profile Pic" className="mr-1 ml-2 mb-2 mt-2 rounded-circle align-middle" style={{width:"40px"}}/>
+                 <div style={{backgroundImage:`url(${this.props.photoURL?this.props.photoURL:"https://firebasestorage.googleapis.com/v0/b/freelanceapp-78578.appspot.com/o/Global%2Fprofile%2Fimg_avatar1.png?alt=media&token=95b2b3b3-5e4e-4ea9-b775-fdf2da293c0f"})`,
+                                    backgroundPosition:"center",
+                                    backgroundSize:"cover",
+                                    backgroundRepeat:"no-repeat",
+                                    width:"50px",
+                                    height:"50px",
+                                    marginRight:"20px",
+                                    marginLeft:"20px",
+                                    margin:"10px"
+                                }} className="rounded-circle" ></div>
                      <div className="media-body" style={{position:"relative"}}>
-                       <h6 style={{padding:0,marginTop:"2px"}}>{this.props.name?this.props.name.split("").splice(0,30).concat([".",".","."]).join(""):"Loading..."}</h6>
-                       <p style={{margin:0,padding:0}}>{this.props.chatName.split("").splice(0,30).concat([".",".","."]).join("")}</p>
+                       <h6 style={{padding:0,marginTop:"2px"}}>{this.props.name?this.props.name.length <= 20?this.props.name:this.props.name.split("").splice(0,19).concat([".",".","."]).join(""):"Loading..."}</h6>
+                       <p style={{margin:0,padding:0}}>{this.props.chatName.length <= 20?this.props.chatName:this.props.chatName.split("").splice(0,19).concat([".",".","."]).join("")}</p>
                       
                     </div>
             </div> 
