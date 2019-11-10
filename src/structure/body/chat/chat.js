@@ -50,14 +50,26 @@ export default class Chat extends React.Component {
             for(let openChat of this.state.openChats){
                 if(openChat.id === chat.id){
                    flag = true
-                    if(openChat.isOpen === false){
-                        let targetUser = ""
+
+                   let targetUser = ""
                         for(let user of chat.data().participants){
                             if(user !== firebase.auth().currentUser.uid){
                                 targetUser = user
                             }
                         }
+                    if(openChat.isOpen === false){
+                        
                         unread = chat.data()[targetUser]
+                    }else {
+                        firebase.firestore().collection("chat").doc(chat.id).update({
+                            [targetUser]:0
+                        })
+                        .then(() => {
+
+                        })
+                        .catch(e => {
+
+                        })
                     }
                 } 
             }
@@ -111,7 +123,23 @@ export default class Chat extends React.Component {
                    flag = true
                }
            }
+           let targetUser = "";
+           for(let chat of this.state.conversations){
+               if(chat.id === id){
+                   let participants = chat.participants;
+                  
+                   for(let user of participants){
+                       if(user !== firebase.auth().currentUser.uid){
+                           targetUser = user
+                       }
+                   }
+               }
+           }
 
+           firebase.firestore().collection("chat").doc(id).update({
+               [targetUser]:0
+           })
+           .then(() => {
            if(flag === false){
                 firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).update({openChats:firebase.firestore.FieldValue.arrayUnion({id:id,factor:factor})})
                 .then(() => {
@@ -136,6 +164,11 @@ export default class Chat extends React.Component {
                 }else {
                     this.props.addToast("Cannot open the same chat twice")
                 }
+            })
+            .catch(e => {
+                console.log(e);
+                this.props.addToast("Ohoh something went wrong!")
+            })
         }else {
             this.setState(state => {
                 let openChats = state.openChats;
