@@ -26,7 +26,7 @@ export default class ConversationItem extends React.Component{
                     }
                     
                 </div>
-                {this.props.unread >0?  <div className="unread-static"><span className="badge badge-pill badge-primary">{this.props.unread}</span></div>:null}
+                {this.props.unread >0?  <div className="unread-static" style={{left:"5px"}}><span className="badge badge-pill badge-primary">{this.props.unread}</span></div>:null}
             </div>
         )
     }
