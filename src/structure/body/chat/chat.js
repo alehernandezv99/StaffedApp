@@ -45,10 +45,37 @@ export default class Chat extends React.Component {
             }
            snapshot.forEach(chat => {
 
+            let unread = 0
+            let flag = false;
+            for(let openChat of this.state.openChats){
+                if(openChat.id === chat.id){
+                   flag = true
+                    if(openChat.isOpen === false){
+                        let targetUser = ""
+                        for(let user of chat.data().participants){
+                            if(user !== firebase.auth().currentUser.uid){
+                                targetUser = user
+                            }
+                        }
+                        unread = chat.data()[targetUser]
+                    }
+                } 
+            }
+
+            if(flag === false){
+                let targetUser = ""
+                for(let user of chat.data().participants){
+                    if(user !== firebase.auth().currentUser.uid){
+                        targetUser = user
+                    }
+                }
+                unread = chat.data()[targetUser]
+            }
               
             let currentChat = chat.data()
                 currentChat.id = chat.id
-    
+                currentChat.unread = unread;
+                this.unread += unread
                 this.setState( state => {
                     let base = state.conversations;         
                         base.push(currentChat);
@@ -355,7 +382,7 @@ export default class Chat extends React.Component {
                         
                         }
                         return (
-                            <ConversationItem key={i} unread={unread} isOnline={e.isOnline} name={e.name?e.name:null} photoURL={e.photoURL?e.photoURL:null} date={e.updated.toDate().toDateString()} chatName={e.projectName} lastMessage={e.lastMessage} handleClick={() => {this.openChat(e.id)}} />
+                            <ConversationItem key={i} unread={e.unread} isOnline={e.isOnline} name={e.name?e.name:null} photoURL={e.photoURL?e.photoURL:null} date={e.updated.toDate().toDateString()} chatName={e.projectName} lastMessage={e.lastMessage} handleClick={() => {this.openChat(e.id)}} />
                         )
                     })}
                     {this.state.conversations.length === 0?<div>No Conversations</div>:null}

@@ -114,6 +114,9 @@ export default class MessengerModule extends React.Component{
             }
             if(this._mounted){
                 if(!additional){
+                    if(messages[messages.length -1].data().status === "read"){
+                        unread = 0
+                    }
             await this.setState({
                 groups:groups,
                 unread:unread
@@ -200,6 +203,24 @@ export default class MessengerModule extends React.Component{
     }
     }
 
+    listenMessagesPrototype = () => {
+        if(this.props.isOpen){
+            firebase.firestore().collection("chat").doc(this.props.id).collection("messages").orderBy("sent","desc").limit(1).get()
+            .then(snap => {
+                snap.forEach(doc => {
+                    firebase.firestore().collection("chat").doc(this.props.id).collection("messages").doc(doc.id).update({
+                        status:"read"
+                    })
+                })
+            }).then(() => {
+                this.previous = this.props.isOpen
+            })
+            .catch(e => {
+                
+            })
+        }
+    }
+
     listenMessages = () => {
         
         if(this.props.isOpen){
@@ -211,9 +232,12 @@ export default class MessengerModule extends React.Component{
                 for(let i =0; i < messages.length; i++){
                     let currentMessage = messages[i].data()
                     if(currentMessage.author !== firebase.auth().currentUser.uid){
-                        currentMessage.status = "read"
+                        if(currentMessage.status === "unread"){
+                        currentMessage.status = "read";
+                        batch.update(firebase.firestore().collection("chat").doc(this.props.id).collection("messages").doc(messages[i].id), currentMessage)
+                        }
                     }
-                    batch.update(firebase.firestore().collection("chat").doc(this.props.id).collection("messages").doc(messages[i].id), currentMessage)
+                    
                 }
                 batch.commit()
                 .then(() => {
@@ -257,7 +281,8 @@ export default class MessengerModule extends React.Component{
                 otherUser = key
             }
         })
-        batch.update(firebase.firestore().collection("chat").doc(this.props.id), {lastMessage:this.state.message, updated:firebase.firestore.Timestamp.now()})
+        batch.update(firebase.firestore().collection("chat").doc(this.props.id), {lastMessage:this.state.message, updated:firebase.firestore.Timestamp.now(), [firebase.auth().currentUser.uid]:firebase.firestore.FieldValue.increment(1) })
+
         batch.commit()
         .then(() => {
 
@@ -308,7 +333,7 @@ export default class MessengerModule extends React.Component{
         return(
             <ChatWrapper unread={this.state.unread} handleClick={() => {
                 if(!this.props.isOpen){
-                    this.listenMessages()
+                    this.listenMessagesPrototype()
                 }
                 this.props.handleClick()
             }} isOpen={this.props.isOpen} isOnline={user.isOnline} setInputId={this.setInputId} factor={this.props.factor} photoURL={user.photoURL} name={user.name} focusInput={this.setScrollTop} setId={this.setId}  onChangeInput={this.handleChangeInput} input={this.state.message} onSend={this.handleSendMessage} chatName={this.state.chatName?this.state.chatName:"Loading..."} handleClose={this.props.handleClose}>

@@ -466,7 +466,9 @@ export default class DrawerJob extends React.Component {
                     created:firebase.firestore.Timestamp.now(),
                     updated:firebase.firestore.Timestamp.now(),
                     id:documentID,
-                    lastMessage:"The interview Started"
+                    lastMessage:"The interview Started",
+                    [projectOwner]:1,
+                    [anotherParticipant]:0
                 })
                 batch.set(firebase.firestore().collection("chat").doc(documentID).collection("messages").doc(messageID), {
                     author:projectOwner,
