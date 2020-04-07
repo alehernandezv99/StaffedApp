@@ -8,7 +8,7 @@ import { Button, Position, Toast, Toaster, Classes, Slider, Drawer} from "@bluep
 import CreateProject from "../createProject";
 import $ from "jquery";
 import autocomplete from "../../../utils/autocomplete";
-import logo from "../../../res/Graphics/main_logo.png";
+import logo from "../../../res/Graphics/main_logo_simplified_medium.png";
 import CVContainer from "./CVContainer";
 import ProposalsViewer from "../proposalViewer";
 import DrawerJob from "../drawerJob";

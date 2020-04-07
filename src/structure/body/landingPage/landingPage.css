@@ -46,6 +46,15 @@
     font-size:30px;
 }
 
+.main-title {
+    font-size: 3.5em;
+    font-weight: bold;
+}
+
+.sub-title {
+    font-weight: lighter;
+}
+
 
 
 .modal-dialog {

@@ -1,6 +1,7 @@
 import React from 'react';
 import "./landingPage.css";
-import logo from "../../../res/Graphics/main_logo.png";
+import logo from "../../../res/Graphics/main_logo_simplified_medium.png";
+import mainLogo from "../../../res/background/main_logo.png";
 import icon from "../../../res/Graphics/pionnering_icon.png";
 import imgFeature1 from "../../../res/Graphics/professional_freelancers_icon.svg";
 import imgFeature2 from "../../../res/Graphics/payment_protection_icon.svg";
@@ -365,8 +366,11 @@ export default class LandingPage extends React.Component {
             </div>
             
             <div className="col-lg-6">
-            <h1 style={{fontSize:"50px", color:"rgb(80,80,80)", fontWeight:700}}>Welcome to StaffedApp</h1>            
-                <h4 style={{fontWeight:"normal", color:"rgb(100,100,100)", fontSize:"20px", fontWeight:600}} className="m-3">The Moderm and Simplest Solution for Managing Your Projects
+                <div className="flex-center">
+                    <img src={mainLogo} width={250}/>
+                </div>
+            <h1 className="main-title">Welcome to StaffedApp</h1>            
+                <h4  className="m-3 sub-title">The Moderm and Simplest Solution for Managing Your Projects
                  And Hiring Professional Freelancers
                 </h4>
                 <button type="button" onClick={this.state.signUpDrawer.handleOpen} className="btn btn-custom-1 btn-lg m-3" style={{fontSize:"24px"}}>Join Today</button>

@@ -1,7 +1,7 @@
 import React from "react";
 import "./payments.css";
 import Navbar from "../../navbar";
-import logo from "../../../res/Graphics/main_logo.png";
+import logo from "../../../res/Graphics/main_logo_simplified_medium.png";
 import PaymentsLoading from "../../loading/paymentsLoading";
 import UserBox from "../profile/userBox";
 import firebase from "../../../firebaseSetUp";

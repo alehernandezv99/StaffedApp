@@ -13,7 +13,7 @@ import checkCriteria from "../../../utils/checkCriteria";
 import DrawerJob from "../drawerJob";
 import ContractDrawer from "../contractDrawer";
 import ProposalsViewer from "../proposalViewer";
-import logo from "../../../res/Graphics/main_logo.png";
+import logo from "../../../res/Graphics/main_logo_simplified_medium.png";
 import SelectCountry from "../landingPage/signUpDrawer/selectCountry";
 import InboxMessages from "../InboxMessages";
 import ProposalsList from "../proposalsList";

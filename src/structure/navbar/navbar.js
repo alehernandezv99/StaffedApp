@@ -13,7 +13,7 @@ export default class Navbar extends React.Component {
             <nav className={"navbar navbar-expand-md shadow-sm bg-white sticky-top " + this.props.className }>
 
   <a className="navbar-brand" href={this.props.logo.href} onClick={(e) => {e.preventDefault();}}>
-      <img src={this.props.logo.img}  style={{width:'20px'}}/>
+      <img src={this.props.logo.img}  style={{width:'50px'}}/>
       </a>
 
 

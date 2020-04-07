@@ -2,7 +2,7 @@ import React from "react";
 import "./profile.css";
 
 import Navbar from "../../navbar";
-import logo from "../../../res/Graphics/main_logo.png";
+import logo from "../../../res/Graphics/main_logo_simplified_medium.png";
 import firebase from "../../../firebaseSetUp";
 import TODO from "../drawerJob/TO-DO";
 import { Button, Position, Toast, Toaster, Classes, Slider, Drawer, Divider ,Alert, Intent} from "@blueprintjs/core";

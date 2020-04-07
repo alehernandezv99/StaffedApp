@@ -2,7 +2,7 @@ import React from "react";
 import "./myProjects.css";
 import Navbar from "../../navbar";
 import firebase from "../../../firebaseSetUp";
-import logo from "../../../res/Graphics/main_logo.png";
+import logo from "../../../res/Graphics/main_logo_simplified_medium.png";
 import TODO from "../drawerJob/TO-DO";
 import autocomplete from "../../../utils/autocomplete";
 import { Button, Position, Toast, Toaster, Classes, Slider} from "@blueprintjs/core";
